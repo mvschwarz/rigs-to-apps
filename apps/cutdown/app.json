@@ -1,0 +1,44 @@
+{
+  "manifest_version": 1,
+  "id": "cutdown",
+  "name": "Cutdown",
+  "summary": "Turn hours of footage into the best minutes — agent-cut.",
+  "category": "create",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/cutdown-linkpix.png", "alt": "The Cutdown review surface: a footage list, a punch-in/out player, and the cuts panel with per-version chips" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/cutdown",
+    "surface": {
+      "entry": "app/cutdown.html",
+      "path": "/cutdown.html",
+      "glyph": "✂",
+      "hint": "Punch the best moments out of long footage; your crew cuts them"
+    },
+    "server": {
+      "command": "node app/cutdown-server.mjs --port $PORT",
+      "port": { "env": "PORT", "preferred": 8795 }
+    },
+    "verify": [
+      "Open the surface entry and confirm it renders",
+      "The server boots and serves the page",
+      "GET /api/clips returns a list of clips",
+      "GET /api/markers returns the marker list",
+      "GET /api/cuts returns cuts, cutting, and failed"
+    ]
+  },
+  "verbs": [
+    { "method": "GET",  "path": "/api/clips",      "purpose": "List clips (proxy files) with marker counts" },
+    { "method": "GET",  "path": "/api/markers",    "purpose": "List punch markers" },
+    { "method": "POST", "path": "/api/markers",    "purpose": "Append a punch marker (or a deletion record)" },
+    { "method": "GET",  "path": "/api/cuts",       "purpose": "List cuts, their versions, and cutting/failed state" },
+    { "method": "POST", "path": "/api/stabilize",  "purpose": "Queue a smoothing pass at a level" },
+    { "method": "POST", "path": "/api/pick",       "purpose": "Lock which version a cut uses" },
+    { "method": "POST", "path": "/api/cut-note",   "purpose": "Edit or add a cut's note" },
+    { "method": "POST", "path": "/api/cut-retry",  "purpose": "Retry a failed cut" },
+    { "method": "POST", "path": "/api/cut-delete", "purpose": "Archive a cut (restorable)" }
+  ]
+}
