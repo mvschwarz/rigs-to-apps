@@ -28,7 +28,7 @@ rigs-to-apps/
 
 ```bash
 node tools/validate.mjs fixtures/valid/wedding-cutdown/app.json     # OK wedding-cutdown
-node tools/validate.mjs --registry registry.json                    # OK registry (1 manifest)
+node tools/validate.mjs --registry registry.json                    # OK registry (count derived from registry.json)
 node tools/probe.mjs                                                 # PROBE PASS  (run twice)
 node tools/format-install-request.mjs --repo <label|url> --manifest <path>
 ```
