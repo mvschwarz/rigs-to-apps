@@ -117,7 +117,15 @@ for (const [scenario, sub] of INVALID)
 })();
 
 // --- registry cases (root registry.json under REGISTRY_ROOT; fixtures under FIXTURES) ---
-expectRegistry(path.join(REGISTRY_ROOT, "registry.json"), "root registry.json", 0, "OK registry (0 manifests)");
+// The root registry may be empty (canonical base) or hold packaged apps; expect
+// the ACTUAL bare-list length (correct singular/plural). The validator still
+// enforces the bare-list / relative-path / manifest-identity rules — this only
+// generalizes the SUCCESS string so a populated real registry passes too.
+{
+  const rootReg = path.join(REGISTRY_ROOT, "registry.json");
+  const n = JSON.parse(fs.readFileSync(rootReg, "utf8")).length;
+  expectRegistry(rootReg, "root registry.json", 0, `OK registry (${n} manifest${n === 1 ? "" : "s"})`);
+}
 expectRegistry(fx("registry/bare-ok.json"), "registry/bare-ok", 0, "OK registry (1 manifest)");
 expectRegistry(fx("registry/metadata-bad.json"), "registry/metadata-bad", 1, "registry must be a bare list of manifest paths");
 expectRegistry(fx("registry/path-escape.json"), "registry/path-escape", 1, "registry path escapes root (absolute or ..)");
