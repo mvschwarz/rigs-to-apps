@@ -16,7 +16,7 @@ review, no dependency graph, no auth.
 ```
 rigs-to-apps/
 ├── README.md · SCHEMA.md            # this + the schema (the validator IS the schema)
-├── registry.json                    # [] — a bare, REGISTRY_ROOT-relative list of manifest paths
+├── registry.json                    # a bare, REGISTRY_ROOT-relative list of manifest paths; registry.json is the single source of truth for what is packaged
 ├── tools/
 │   ├── validate.mjs                 # validate a manifest, or --registry <list.json>
 │   ├── probe.mjs                    # hermetic probe over fixtures/ (green twice)
@@ -28,7 +28,7 @@ rigs-to-apps/
 
 ```bash
 node tools/validate.mjs fixtures/valid/wedding-cutdown/app.json     # OK wedding-cutdown
-node tools/validate.mjs --registry registry.json                    # OK registry (0 manifests)
+node tools/validate.mjs --registry registry.json                    # OK registry (1 manifest)
 node tools/probe.mjs                                                 # PROBE PASS  (run twice)
 node tools/format-install-request.mjs --repo <label|url> --manifest <path>
 ```
@@ -47,9 +47,9 @@ count-free. The registry location supplies the source; the ops agent resolves
 and records the commit SHA at install, so no source/ref/version lives in a
 manifest.
 
-## Adding an app (future)
+## Adding an app
 
 Drop an id-matching directory (the dir name equals the manifest `id`) carrying
 `app.json` + `README.md` + the referenced surface/assets, then add its
-REGISTRY_ROOT-relative `app.json` path to `registry.json` and validate. This
-slice packages no app — `registry.json` is `[]`.
+REGISTRY_ROOT-relative `app.json` path to `registry.json` and validate.
+`registry.json` lists what is currently packaged.
