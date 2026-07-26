@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Install-request FORMATTER — emits a plain-text request the box owner pastes
-// into their OWN box copilot chat. Slice 14 emits the STRING only; it never
-// contacts a box, mints no qitem, holds no secret. The trusted copilot inside
+// to their OWN box's lead agent. Slice 14 emits the STRING only; it never
+// contacts a box, mints no qitem, holds no secret. The trusted lead agent inside
 // the box's trust boundary acts on it with judgment (concierge is the alt path).
 //
 //   node tools/format-install-request.mjs --repo <label|url> --manifest <path>
@@ -65,6 +65,6 @@ if (verbs.length) {
   for (const v of verbs) lines.push(`  ${v.path} — ${v.purpose}`);
 }
 lines.push("");
-lines.push("(You are my trusted box copilot; act inside the box. Nothing here calls out.)");
+lines.push("(You are my trusted box lead agent; act inside the box. Nothing here calls out.)");
 
 console.log(lines.join("\n"));

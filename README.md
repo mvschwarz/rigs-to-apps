@@ -7,7 +7,7 @@ standard library only; no dependencies, no build.
 A mini-app is a single-file agent-in-the-middle surface plus its manifest
 (`app.json`). This repo defines the **manifest contract** and the **registry**
 (`registry.json`, a bare list of manifest paths). It has two readers: the
-rigs.to website (metadata) and a box copilot/ops agent (install instructions it
+rigs.to website (metadata) and a box's lead/ops agent (install instructions it
 applies with judgment). It is **not** a package manager — trusted cohort, no
 review, no dependency graph, no auth.
 
@@ -33,10 +33,10 @@ node tools/probe.mjs                                                 # PROBE PAS
 node tools/format-install-request.mjs --repo <label|url> --manifest <path>
 ```
 
-The formatter emits a **string** the box owner pastes into their own box copilot
-chat; the trusted copilot mints the durable install task from inside the box's
-trust boundary. This repo never contacts a box, holds no secret, and performs no
-install side effect.
+The formatter emits a **string** the box owner pastes to their own box's lead
+agent; the trusted lead agent mints the durable install task from inside the
+box's trust boundary. This repo never contacts a box, holds no secret, and
+performs no install side effect.
 
 ## Registry
 

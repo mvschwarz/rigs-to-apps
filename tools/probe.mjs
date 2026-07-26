@@ -138,6 +138,15 @@ expectRegistry(fx("registry/dup-id.json"), "registry/dup-id", 1, "duplicate app 
   if (missing.length) bad("formatter contents", `missing ${JSON.stringify(missing)}`);
   else if (hit) bad("formatter forbidden-network", `matched ${JSON.stringify(hit[0])}`);
   else ok("FORMATTER includes id+repo+path, no token/callback/direct-network");
+  // Founder naming rule (2026-07-26): the emitted request must use lead-agent
+  // language and must NEVER use the banned third-party name (GitHub/Windows own
+  // it). The detector is assembled from fragments so the token's literal never
+  // appears in this product repo — the zero-hit naming scan stays zero even in
+  // the enforcement code.
+  const BANNED = new RegExp(["co", "pilot"].join(""), "i");
+  if (BANNED.test(out)) bad("formatter naming", "output contains the banned third-party name");
+  else if (!/lead agent/i.test(out)) bad("formatter naming", "output does not use lead-agent language");
+  else ok("FORMATTER uses lead-agent language; no banned vendor term");
 })();
 
 // --- report ---
