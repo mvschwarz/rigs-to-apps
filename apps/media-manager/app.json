@@ -1,0 +1,41 @@
+{
+  "manifest_version": 1,
+  "id": "media-manager",
+  "name": "Media Manager",
+  "summary": "Tag, curate, and route your studio's media — an agent-run asset library.",
+  "category": "create",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/media-manager-linkpix.png", "alt": "The Media Manager library: a smart-groups + tags rail, a media tile grid, and version/lock/tag badges" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/media-manager",
+    "surface": {
+      "entry": "app/media-manager.html",
+      "path": "/media-manager.html",
+      "glyph": "▤",
+      "hint": "Tag and curate your media library; route assets into the timeline"
+    },
+    "verify": [
+      "The box's shared export-server (the runtime provider — not shipped in this package) serves this surface at /media-manager.html and it renders",
+      "GET /api/project-assets, /api/tags, and /api/curation answer via the shared provider",
+      "Compare the canonical installed source at ~/studio/apps/media-manager against the box's served surface: repair (copy the canonical source in) ONLY if the box surface is missing, provably broken, or provably older than the canonical source; if the box surface is newer (forward drift) leave it untouched and report; if relative age or health is ambiguous, leave it untouched and report to the box lead agent — take no destructive action"
+    ]
+  },
+  "verbs": [
+    { "method": "GET",  "path": "/api/project-assets", "purpose": "List the project's indexed media assets (the library grid)" },
+    { "method": "GET",  "path": "/api/curation",       "purpose": "Read cut version and lock state (the box proxies it from the Cutdown surface)" },
+    { "method": "GET",  "path": "/api/tags",           "purpose": "List tags and their asset bindings" },
+    { "method": "POST", "path": "/api/tags",           "purpose": "Add or remove a tag on assets" },
+    { "method": "POST", "path": "/api/selections",     "purpose": "Pin a durable named selection for the agent" },
+    { "method": "GET",  "path": "/api/library",        "purpose": "List the shared media library" },
+    { "method": "GET",  "path": "/api/library/media",  "purpose": "Serve a file from the shared library" },
+    { "method": "GET",  "path": "/api/media",          "purpose": "Serve or download a project media file" },
+    { "method": "GET",  "path": "/api/exports",        "purpose": "List the exports shelf" },
+    { "method": "POST", "path": "/api/focus",          "purpose": "Report what the human is looking at (selection and view)" },
+    { "method": "POST", "path": "/api/library/route",  "purpose": "Route a library asset into the project bundle" },
+    { "method": "GET",  "path": "/api/patch",          "purpose": "Read the current timeline patch/diff state" }
+  ]
+}
