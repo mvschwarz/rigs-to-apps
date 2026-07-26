@@ -1,0 +1,32 @@
+{
+  "manifest_version": 1,
+  "id": "wedding-cutdown",
+  "name": "Wedding Cutdown",
+  "summary": "Turn hours of footage into the best two minutes, agent-cut.",
+  "category": "create",
+  "maker": {
+    "name": "Mike Schwarz",
+    "url": "https://github.com/mvschwarz"
+  },
+  "media": {
+    "screenshots": []
+  },
+  "install": {
+    "destination": "~/studio/apps/wrong",
+    "surface": {
+      "entry": "app/cutdown.html",
+      "path": "/apps/wedding-cutdown",
+      "glyph": "✂"
+    },
+    "verify": [
+      "Open the surface entry and confirm it renders"
+    ]
+  },
+  "verbs": [
+    {
+      "method": "GET",
+      "path": "/api/cutdown/markers",
+      "purpose": "List current markers"
+    }
+  ]
+}

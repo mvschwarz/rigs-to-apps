@@ -1,0 +1,57 @@
+{
+  "manifest_version": 1,
+  "id": "wedding-cutdown",
+  "name": "Wedding Cutdown",
+  "summary": "Turn hours of footage into the best two minutes, agent-cut.",
+  "category": "create",
+  "maker": {
+    "name": "Mike Schwarz",
+    "url": "https://github.com/mvschwarz"
+  },
+  "media": {
+    "screenshots": [
+      {
+        "src": "assets/shot-timeline.png",
+        "alt": "Timeline with markers"
+      },
+      {
+        "src": "assets/shot-cut.png",
+        "alt": "A finished cutdown"
+      }
+    ],
+    "demo": "assets/demo.mp4"
+  },
+  "install": {
+    "destination": "~/studio/apps/wedding-cutdown",
+    "surface": {
+      "entry": "app/cutdown.html",
+      "path": "/apps/wedding-cutdown",
+      "glyph": "✂",
+      "hint": "Cut footage down to the best moments"
+    },
+    "server": {
+      "command": "node app/cutdown-server.mjs --port $PORT",
+      "port": {
+        "env": "PORT",
+        "preferred": 8795
+      }
+    },
+    "verify": [
+      "Open the surface entry and confirm it renders",
+      "GET the markers verb returns a list",
+      "One cut writes a versioned level under the bundle"
+    ]
+  },
+  "verbs": [
+    {
+      "method": "GET",
+      "path": "/api/cutdown/markers",
+      "purpose": "List current markers"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cutdown/cut",
+      "purpose": "Cut clips at markers into a versioned level"
+    }
+  ]
+}

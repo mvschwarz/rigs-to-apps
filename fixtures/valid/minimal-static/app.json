@@ -1,0 +1,32 @@
+{
+  "manifest_version": 1,
+  "id": "minimal-static",
+  "name": "Minimal Static",
+  "summary": "A pure static surface with no server.",
+  "category": "system",
+  "maker": {
+    "name": "Mike Schwarz",
+    "url": "https://github.com/mvschwarz"
+  },
+  "media": {
+    "screenshots": []
+  },
+  "install": {
+    "destination": "~/studio/apps/minimal-static",
+    "surface": {
+      "entry": "app/entry.html",
+      "path": "/apps/minimal-static",
+      "glyph": "□"
+    },
+    "verify": [
+      "Open the surface entry and confirm it renders"
+    ]
+  },
+  "verbs": [
+    {
+      "method": "GET",
+      "path": "/api/ping",
+      "purpose": "Liveness"
+    }
+  ]
+}
