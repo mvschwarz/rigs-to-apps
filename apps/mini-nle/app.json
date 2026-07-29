@@ -1,0 +1,66 @@
+{
+  "manifest_version": 1,
+  "id": "mini-nle",
+  "name": "Mini-NLE",
+  "summary": "A lightweight agent-paired video editor — storyboard + timeline cockpit, distilled from hundreds of hours of real human+agent editing.",
+  "category": "create",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/mini-nle-brass.png", "alt": "The Mini-NLE editing cockpit (brass machined skin): a video stage with transport, a multi-card timeline with A1/A2 tracks and the cut-health strip, and a storyboard of scenes below" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/mini-nle",
+    "surface": {
+      "entry": "app/mini-nle.html",
+      "path": "/mini-nle.html",
+      "glyph": "▦",
+      "hint": "Trim, patch, and export your cut on a machined horizontal timeline"
+    },
+    "verify": [
+      "The box's shared export-server (the runtime provider — not shipped in this package) serves this surface at /mini-nle.html and it renders the brass (Obsidian) skin",
+      "GET /api/patch, /api/project-assets, /api/timelines, and /api/project-info answer via the shared provider",
+      "Compare the canonical installed source at ~/studio/apps/mini-nle against the box's served surface: repair (copy the canonical source in) ONLY if the box surface is missing, provably broken, or provably older than the canonical source; if the box surface is newer (forward drift) leave it untouched and report; if relative age or health is ambiguous, leave it untouched and report to the box lead agent — take no destructive action"
+    ]
+  },
+  "verbs": [
+    { "method": "GET",  "path": "/api/patch",             "purpose": "Read the current timeline patch/diff draft state" },
+    { "method": "GET",  "path": "/api/note",              "purpose": "List saved feedback notes (drafts and dispatched)" },
+    { "method": "GET",  "path": "/api/receivers",         "purpose": "List the known note receivers" },
+    { "method": "GET",  "path": "/api/templates",         "purpose": "List the section and card templates" },
+    { "method": "GET",  "path": "/api/slot-history",      "purpose": "Read a slot's take and version history" },
+    { "method": "GET",  "path": "/api/health",            "purpose": "Read cut-health (per-slot fill and coverage) for the timeline" },
+    { "method": "GET",  "path": "/api/project-assets",    "purpose": "List the project's indexed media assets" },
+    { "method": "GET",  "path": "/api/timelines",         "purpose": "List the timeline-shaped JSON files in the slice root" },
+    { "method": "GET",  "path": "/api/project-info",      "purpose": "Read project doctrine, current-export pointer, and filing health" },
+    { "method": "GET",  "path": "/api/media",             "purpose": "Serve or download a project media file" },
+    { "method": "GET",  "path": "/api/history-since",     "purpose": "Read history events since a marker" },
+    { "method": "GET",  "path": "/api/probe-duration",    "purpose": "Probe a media file's real duration" },
+    { "method": "GET",  "path": "/api/thumb",             "purpose": "Serve a thumbnail for a media asset" },
+    { "method": "GET",  "path": "/api/library",           "purpose": "List the shared media library" },
+    { "method": "GET",  "path": "/api/library/media",     "purpose": "Serve a file from the shared library" },
+    { "method": "GET",  "path": "/api/tags",              "purpose": "List tags and their asset bindings" },
+    { "method": "GET",  "path": "/api/export-status/<id>", "purpose": "Poll an export job's status by id" },
+    { "method": "GET",  "path": "/api/validate-export",   "purpose": "Validate the timeline for export (mode via ?mode=)" },
+    { "method": "GET",  "path": "/api/validate-audio",    "purpose": "Validate the audio plan (mode via ?mode=)" },
+    { "method": "POST", "path": "/api/patch",             "purpose": "Save the working edit patch as a draft" },
+    { "method": "POST", "path": "/api/patch/validate",    "purpose": "Validate a patch against the timeline (probe)" },
+    { "method": "POST", "path": "/api/patch/apply",       "purpose": "Apply the draft patch (guarded, backup first)" },
+    { "method": "POST", "path": "/api/patch/discard",     "purpose": "Discard the draft patch" },
+    { "method": "POST", "path": "/api/note",              "purpose": "Save or dispatch a feedback note" },
+    { "method": "POST", "path": "/api/note/flush",        "purpose": "Flush pending notes for dispatch" },
+    { "method": "POST", "path": "/api/note/done",         "purpose": "Mark a note done" },
+    { "method": "POST", "path": "/api/approve",           "purpose": "Approve a slot or cut decision" },
+    { "method": "POST", "path": "/api/annotation",        "purpose": "Save a frame annotation" },
+    { "method": "POST", "path": "/api/reconform",         "purpose": "Re-conform scratch VO and rebuild the playable board" },
+    { "method": "POST", "path": "/api/timeline/select",   "purpose": "Switch the active timeline in the slice root" },
+    { "method": "POST", "path": "/api/project-assets/rebuild", "purpose": "Rebuild the project asset index" },
+    { "method": "POST", "path": "/api/reveal-file",       "purpose": "Reveal an indexed asset in the OS file manager" },
+    { "method": "POST", "path": "/api/library/route",     "purpose": "Route a library asset into the project bundle" },
+    { "method": "POST", "path": "/api/tags",              "purpose": "Add or remove a tag on assets" },
+    { "method": "POST", "path": "/api/focus",             "purpose": "Report what the human is looking at (selection and view)" },
+    { "method": "POST", "path": "/api/export-review",     "purpose": "Start a review-quality export job" },
+    { "method": "POST", "path": "/api/export-final",      "purpose": "Start a final-quality export job (validates first)" }
+  ]
+}

@@ -2,12 +2,9 @@
 
 Tag, curate, and route your studio's media — an agent-run asset library.
 
-Media Manager is the studio's asset surface: a smart-groups + **tags** rail (tags,
-not folders), a media tile grid (video / image / audio) with version, lock, and
-tag badges, a contextual verb bar, and a modal player. You tag and pin what
-matters; your box's agents route assets into the timeline and lock the versions a
-cut should use. It reads its state from the box's shared media services — it holds
-no state of its own.
+Every clip, photo, and render in one place. Media lands, the agent files and tags
+it; you search, preview, and route assets to whatever app needs them next. Lock the
+keepers. Keep every version. Never lose the good take again.
 
 ## What this package contains
 

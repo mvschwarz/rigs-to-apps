@@ -3,16 +3,15 @@
 Turn hours of footage into the best minutes — agent-cut.
 
 Point Cutdown at a pile of raw footage — a vacation, a birthday, a wedding, a
-night out, a game, an event, a shoot — and review it fast. You watch the
-proxies in the browser, **punch in / punch out** the moments worth keeping, and
-your studio rig cuts them for you. Each cut lives on disk with its versions
-side by side (original plus smoothing levels), and you **lock** the one the
-video should use. The original footage is never touched; deletes are archived
-and restorable.
+shoot. Watch the proxies in your browser, punch in on the moments worth keeping,
+and your studio rig cuts them for you. Every cut lives on disk with its versions
+side by side — lock the one the video should use. Your original footage is never
+touched.
 
-Wedding footage is the case that proved the pattern, but Cutdown is
-general-purpose: any long footage where the best two minutes are buried in
-hours.
+Built the hard way: a full wedding film was its proving run. It works on anything
+where the best two minutes are buried in hours.
+
+Cutdown reviews and records; the cutting itself runs on your studio box.
 
 ## What this package contains
 

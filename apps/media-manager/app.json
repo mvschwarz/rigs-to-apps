@@ -7,7 +7,7 @@
   "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
   "media": {
     "screenshots": [
-      { "src": "assets/media-manager-linkpix.png", "alt": "The Media Manager library: a smart-groups + tags rail, a media tile grid, and version/lock/tag badges" }
+      { "src": "assets/media-manager-linkpix.png", "alt": "The Media Manager library: a media-type LIBRARY rail, a tile grid of video and image assets with version badges, and a filter and lock bar" }
     ]
   },
   "install": {
