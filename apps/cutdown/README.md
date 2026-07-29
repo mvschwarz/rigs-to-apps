@@ -5,7 +5,7 @@ Turn hours of footage into the best minutes — agent-cut.
 Point Cutdown at a pile of raw footage — a vacation, a birthday, a wedding, a
 night out, a game, an event, a shoot — and review it fast. You watch the
 proxies in the browser, **punch in / punch out** the moments worth keeping, and
-your studio crew cuts them for you. Each cut lives on disk with its versions
+your studio rig cuts them for you. Each cut lives on disk with its versions
 side by side (original plus smoothing levels), and you **lock** the one the
 video should use. The original footage is never touched; deletes are archived
 and restorable.

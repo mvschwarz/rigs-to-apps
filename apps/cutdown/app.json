@@ -16,7 +16,7 @@
       "entry": "app/cutdown.html",
       "path": "/cutdown.html",
       "glyph": "✂",
-      "hint": "Punch the best moments out of long footage; your crew cuts them"
+      "hint": "Punch the best moments out of long footage; your rig cuts them"
     },
     "server": {
       "command": "node app/cutdown-server.mjs --port $PORT",
