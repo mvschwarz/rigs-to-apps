@@ -1,0 +1,39 @@
+{
+  "manifest_version": 1,
+  "id": "files",
+  "name": "Files",
+  "summary": "Browse, read, edit, and preview every file in your home-scoped roots — and ask an allowlisted agent seat to edit alongside you, live.",
+  "category": "build",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/files-linkpix.png", "alt": "The Files everything-editor in LinkPix-dark: a roots + folder-tree rail on the left and a file preview on the right" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/files",
+    "surface": {
+      "entry": "app/files.html",
+      "path": "/files.html",
+      "glyph": "▤",
+      "hint": "Read, edit, and preview your home-scoped files; ask an allowlisted agent seat to edit alongside you"
+    },
+    "verify": [
+      "The box's shared serve-shell (the runtime provider on :8789 — not shipped in this package) serves this surface at /files.html and it renders",
+      "GET /api/files/tree answers via the shared provider (a read verb only — never a write or roots verb in verify)",
+      "Compare the canonical installed source at ~/studio/apps/files against the box's served surface: repair (copy the canonical source in) ONLY if the box surface is missing, provably broken, or provably older than the canonical source; if the box surface is newer (forward drift) leave it untouched and report; if relative age or health is ambiguous, leave it untouched and report to the box lead agent — take no destructive action"
+    ]
+  },
+  "verbs": [
+    { "method": "GET",  "path": "/api/files/tree",   "purpose": "List a file root's folder tree (the browser rail)" },
+    { "method": "GET",  "path": "/api/files/read",   "purpose": "Read a file's contents or preview metadata" },
+    { "method": "GET",  "path": "/api/files/raw",    "purpose": "Serve a raw file (image, video, or binary preview) with range support" },
+    { "method": "GET",  "path": "/api/files/search", "purpose": "Search file names across the home-scoped roots" },
+    { "method": "GET",  "path": "/api/files/goto",   "purpose": "Read the current agent-navigation target the open view follows" },
+    { "method": "GET",  "path": "/api/files/tags",   "purpose": "List the tag ledger for a root" },
+    { "method": "POST", "path": "/api/files/goto",   "purpose": "Point the open view at a file (agent-driven navigation)" },
+    { "method": "POST", "path": "/api/files/write",  "purpose": "Write a file — edit and save, with a backup taken on write" },
+    { "method": "POST", "path": "/api/files/roots",  "purpose": "Add or adjust the home-scoped file roots (guarded: inside home, never a keys or secrets directory)" },
+    { "method": "POST", "path": "/api/demo/say",     "purpose": "Send a prompt to an allowlisted agent seat — the ask-the-agent rail, roster-guarded by the shell" }
+  ]
+}
