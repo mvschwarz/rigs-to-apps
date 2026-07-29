@@ -1,0 +1,41 @@
+{
+  "manifest_version": 1,
+  "id": "canvas",
+  "name": "Canvas",
+  "summary": "An infinite storyboard the agent draws on with you — arrange, sketch, think out loud.",
+  "category": "create",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/canvas-linkpix.png", "alt": "A populated Canvas storyboard with a media card, asset rail, board tabs, and the dark tldraw editor" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/canvas",
+    "surface": {
+      "entry": "app/canvas.html",
+      "path": "/canvas.html",
+      "glyph": "□",
+      "hint": "Think and storyboard with media, notes, ink, arrows, and frames"
+    },
+    "verify": [
+      "The box's shared export-server (the runtime provider — not shipped in this package) serves the canonical Canvas surface at /canvas.html; LinkPix chrome renders around the untouched dark tldraw editor",
+      "GET /api/canvases, GET /api/canvas, GET /api/project-assets, GET /api/library, and GET /api/tags answer through the box's shared provider, and its Canvas create, apply, media, thumbnail, selection, and focus rails answer on disposable state",
+      "Compare the canonical installed surface at ~/studio/apps/canvas with the box's served Canvas surface: if the served surface is missing, provably broken, or provably older, repair only the Canvas surface and re-run provider checks; if the served surface is newer, leave it untouched and report the forward drift to the box lead agent; if relative age or health is ambiguous, leave it untouched, report the ambiguity, and take no destructive action"
+    ]
+  },
+  "verbs": [
+    { "method": "GET",  "path": "/api/canvases",      "purpose": "List Canvas boards and refresh the board tabs" },
+    { "method": "POST", "path": "/api/canvases",      "purpose": "Create a new Canvas board" },
+    { "method": "GET",  "path": "/api/canvas",        "purpose": "Read a board document or poll its revision" },
+    { "method": "POST", "path": "/api/canvas/apply",  "purpose": "Apply a revisioned Canvas document update" },
+    { "method": "GET",  "path": "/api/project-assets","purpose": "List project media available to place on the Canvas" },
+    { "method": "GET",  "path": "/api/library",       "purpose": "List shared-library media available to place" },
+    { "method": "GET",  "path": "/api/tags",          "purpose": "Read media tags used by the Canvas asset rail" },
+    { "method": "GET",  "path": "/api/media",         "purpose": "Serve a project media file used by a card" },
+    { "method": "GET",  "path": "/api/library/media", "purpose": "Serve a shared-library media file used by a card" },
+    { "method": "GET",  "path": "/api/thumb",         "purpose": "Serve a thumbnail for the Canvas asset rail" },
+    { "method": "POST", "path": "/api/selections",    "purpose": "Persist a named selection for the lead agent" },
+    { "method": "POST", "path": "/api/focus",         "purpose": "Report the human's current Canvas focus" }
+  ]
+}
