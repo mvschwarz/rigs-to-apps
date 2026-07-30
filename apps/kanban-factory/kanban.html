@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanban Factory — launcher</title>
+<style>
+  :root { --bg:#0d0f12; --card:#14171c; --line:#232830; --line2:#2c333d; --fg:#e8eaed; --body:#c2c7cf; --dim:#8a919c; --faint:#5f6670; --accent:#d8b24a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--body); font:14px/1.6 ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:820px; margin:0 auto; padding:44px 22px 72px; }
+  .kicker { color:var(--faint); font-size:11px; letter-spacing:.2em; text-transform:uppercase; }
+  h1 { color:var(--fg); font-size:30px; letter-spacing:-.01em; margin:6px 0 10px; }
+  .lead { color:var(--body); font-size:15px; max-width:64ch; margin:0 0 8px; }
+  h2 { color:var(--faint); font-size:11px; letter-spacing:.2em; text-transform:uppercase; font-weight:400; margin:30px 0 10px; }
+  .note { border:1px solid var(--line2); border-left:3px solid var(--accent); border-radius:2px; background:rgba(216,178,74,.06); padding:11px 14px; color:var(--body); font-size:13px; }
+  code, pre { font-family:ui-monospace,Menlo,monospace; }
+  pre { background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:2px; padding:11px 13px; overflow-x:auto; font-size:12px; color:var(--fg); }
+  ul { margin:0; padding-left:20px; } li { margin:3px 0; }
+  figure { margin:0; } figure img { max-width:100%; border:1px solid var(--line2); border-radius:2px; display:block; }
+  figcaption { color:var(--faint); font-size:11px; margin-top:6px; }
+  .verbs li code { color:var(--fg); }
+  footer { color:var(--faint); font-size:11px; margin-top:40px; border-top:1px solid var(--line); padding-top:14px; }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Studio Box · rig</p>
+  <h1>Kanban Factory</h1>
+  <p class="lead">A real Kanban board — open-source <strong>Kanboard (MIT)</strong> — running in one small
+  container on your box, with the agent seats that drive it. An agent pulls a ticket, moves it across the
+  columns, records the work, and closes it — all over the board's own API, terminal-in / terminal-out as the
+  interface.</p>
+
+  <div class="note">
+    <strong>This page is a launcher/explainer, not the board.</strong> The live surface is Kanboard's own
+    authenticated UI, served by the board container once the rig boots — by default at
+    <code>http://127.0.0.1:8791</code> on your box. Boot the rig, then open Kanboard's own UI and sign in
+    there. Nothing on this page is a working board; it renders no live board and holds no credentials.
+  </div>
+
+  <h2>Boot</h2>
+  <pre>docker compose -f docker-compose.yaml up -d      # boots the Kanboard container (loopback, health-gated)
+# then open the board's own UI at its local URL and sign in there</pre>
+
+  <h2>The lifecycle your agent drives</h2>
+  <ul>
+    <li><strong>create</strong> — file a ticket on the board</li>
+    <li><strong>pick up</strong> — the driving agent records an explicit pickup on the ticket</li>
+    <li><strong>move</strong> — across Backlog → Ready → In progress → Done (columns resolved dynamically)</li>
+    <li><strong>work</strong> — one bounded step, recorded on the ticket</li>
+    <li><strong>work complete</strong> — the card lands <em>visibly, open</em> in the Done column</li>
+    <li><strong>terminal closure</strong> — <code>closeTask</code> after it is in Done (a greyed closed card alone is not "work done" — the two states are distinct)</li>
+  </ul>
+
+  <h2>What's in the folder</h2>
+  <ul>
+    <li><code>rig.yaml</code> — the rig: the docker'd board as a managed service + two seats (orchestrator, board-driver)</li>
+    <li><code>docker-compose.yaml</code> — one Kanboard container, SQLite, loopback-only, digest-pinned</li>
+    <li><code>glue/kb.sh</code> — a ~20-line JSON-RPC wrapper (terminal-in/out as the API; dynamic IDs; token from a 0600 env-file, never printed)</li>
+    <li><code>agents/</code> — the orchestrator and board-driver seat guidance</li>
+    <li><code>RUNBOOK.md</code> — boot, token bootstrap, drive, teardown</li>
+  </ul>
+
+  <h2>Agent-facing verbs (JSON-RPC over one POST endpoint <code>/jsonrpc.php</code>)</h2>
+  <ul class="verbs">
+    <li><code>createTask</code> — file a ticket</li>
+    <li><code>getColumns</code> — resolve the board's columns dynamically</li>
+    <li><code>moveTaskPosition</code> — move a card into a named column</li>
+    <li><code>createComment</code> — record pickup and the work step on the ticket</li>
+    <li><code>getTask</code> — read a card's column and open/closed state</li>
+    <li><code>closeTask</code> — terminal closure after Done</li>
+  </ul>
+
+  <h2>What it looks like</h2>
+  <figure>
+    <img src="assets/board-factory-demo.png" alt="A populated Kanban board: cards across Backlog, Ready, Work in progress, and one open in Done" loading="lazy">
+    <figcaption>A populated board — static screenshot for reference. The live board is Kanboard's own UI at your local board URL.</figcaption>
+  </figure>
+
+  <footer>Kanboard is open-source (MIT). This rig runs it in one container on your box and drives it with agent seats — an existing tool your agents operate, not a bespoke app.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,27 @@
+name: board-driver
+version: "1.0"
+description: Picks up the ticket, moves it through the columns, does one bounded work step, and lands it visibly in Done.
+
+defaults:
+  runtime: claude-code
+
+profiles:
+  default:
+    uses:
+      skills: []
+      guidance: [role]
+      subagents: []
+      plugins: []
+      runtime_resources: []
+
+resources:
+  guidance:
+    - id: role
+      path: guidance/role.md
+
+startup:
+  files:
+    - path: guidance/role.md
+      delivery_hint: send_text
+      required: true
+  actions: []

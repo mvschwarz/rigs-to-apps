@@ -1,0 +1,8 @@
+ok  reachable+auth, project=2
+ok  columns resolved dynamically (first=5 done=8)
+ok  createTask -> 1
+ok  moved through columns into Done (8)
+ok  work step recorded on ticket (comment=1)
+ok  VISIBLE OPEN in Done (column_id=8 is_active=1)
+ok  NEGATIVE: bogus column rejected, card stays in Done
+LIFECYCLE GREEN (project=2 task=1)

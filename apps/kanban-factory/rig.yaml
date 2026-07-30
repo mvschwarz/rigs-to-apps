@@ -1,0 +1,40 @@
+version: "0.2"
+name: kanban-factory
+summary: >
+  A minimal agent-managed-app rig: an open-source Kanban board (Kanboard) runs
+  as a managed service, and two seats drive the full ticket lifecycle over the
+  board's JSON-RPC API — terminal-in/out as the API. The board's own UI is the
+  surface. This is the "agents run your existing tools" data point.
+
+# Managed service: the docker'd board boots (and passes health) BEFORE any seat
+# launches (rig-spec.md Services Block). Loopback-only, digest-pinned.
+services:
+  kind: compose
+  compose_file: docker-compose.yaml
+  project_name: s07p2-kanban-factory
+  wait_for:
+    - url: http://127.0.0.1:8791/login   # 2xx once Kanboard is ready
+
+pods:
+  - id: board
+    label: Board
+    summary: Files a ticket, then drives it through the board to visible Done.
+    members:
+      - id: orchestrator
+        label: Orchestrator
+        summary: Files one ticket on the board (the visitor/orchestrator side).
+        agent_ref: "local:agents/orchestrator"
+        profile: default
+        runtime: claude-code
+        cwd: "."
+      - id: driver
+        label: Board driver
+        summary: Picks up the ticket, moves it through the columns, does one bounded work step, lands it visibly in Done.
+        agent_ref: "local:agents/board-driver"
+        profile: default
+        runtime: claude-code
+        cwd: "."
+    edges:
+      - kind: delegates_to
+        from: orchestrator
+        to: driver

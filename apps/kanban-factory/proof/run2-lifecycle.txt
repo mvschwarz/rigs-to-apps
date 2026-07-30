@@ -1,0 +1,14 @@
+=== KANBAN FACTORY — GENUINE AGENT-DRIVEN LIFECYCLE (run 2, unique ticket) ===
+agent (driver): dev-planner@openrig-build   board: http://127.0.0.1:8791   20260729T174839Z
+project_id=2 (dynamic)  first_column=5  done_column=8
+createTask -> task_id=2  title="assemble the sizzle teaser (20260729T174839Z)"
+--- PICKUP FIRST (before any move) ---
+pickup comment_id=3 (names session)   pre-move state: column_id=5 is_active=1  [expect column_id=5 is_active=1]
+--- MOVE across named columns into Done ---
+  -> column 6 (Ready): True   now: column_id=6 is_active=1
+  -> column 7 (Work in progress): True   now: column_id=7 is_active=1
+  -> column 8 (Done): True   now: column_id=8 is_active=1
+--- work step comment_id=4 ---
+WORK COMPLETE (visible open Done): column_id=8 is_active=1   [expect column_id=8 is_active=1]
+TERMINAL CLOSURE closeTask=True -> column_id=8 is_active=0   [expect column_id=8 is_active=0]
+LIFECYCLE run 2 complete: project=2 task=2 unique. Two states distinct.

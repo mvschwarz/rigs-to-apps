@@ -1,0 +1,9 @@
+# Never commit the token or run-local secrets
+.kbenv
+.kbtoken
+*.token
+# transient local run scratch (evidence is committed explicitly in the proof commit)
+proof/evidence/tmp/
+.kbcookies
+.kbsession
+.demo_pid

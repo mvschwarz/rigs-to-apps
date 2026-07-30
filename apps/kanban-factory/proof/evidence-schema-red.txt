@@ -1,0 +1,10 @@
+# Canonical validator REDs at frozen tip b2375da (captured before the schema repair)
+# host rig 0.4.6 (a0c17305)
+=== rig spec validate rig.yaml --json ===
+{"valid":false,"errors":["pods[0].edges[0].kind: must be one of delegates_to, spawned_by, can_observe, collaborates_with, escalates_to (got \"hands_off_to\")"]}
+=== rig agent validate agents/orchestrator/agent.yaml --json ===
+{"valid":false,"errors":["profiles.default.uses.hooks: removed in plugin-primitive (Phase 3a). Reference plugins via profiles.default.uses.plugins[] instead."]}
+=== rig agent validate agents/board-driver/agent.yaml --json ===
+{"valid":false,"errors":["profiles.default.uses.hooks: removed in plugin-primitive (Phase 3a). Reference plugins via profiles.default.uses.plugins[] instead."]}
+=== rig spec preflight rig.yaml --rig-root . --json ===
+{"ready":false,"errors":["pods[0].edges[0].kind: must be one of delegates_to, spawned_by, can_observe, collaborates_with, escalates_to (got \"hands_off_to\")"],"warnings":[]}

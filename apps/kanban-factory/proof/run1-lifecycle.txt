@@ -1,0 +1,33 @@
+=== KANBAN FACTORY — GENUINE AGENT-DRIVEN LIFECYCLE (run 1) ===
+agent (driver): dev-planner@openrig-build   board: http://127.0.0.1:8791   20260729T174235Z
+
+project resolved dynamically: project_id=1
+columns (dynamic):
+    1 Backlog
+    2 Ready
+    3 Work in progress
+    4 Done
+first_column=1  done_column=4
+
+createTask -> task_id=1  title="ship the 90s highlight reel (20260729T174235Z)"
+
+--- PICKUP (first action, before any move) ---
+pickup comment recorded on ticket: comment_id=1 (names the driving session)
+state BEFORE first move: column_id=1 is_active=1   [expect column_id=1 is_active=1]
+
+--- MOVE across named columns into Done ---
+  moveTaskPosition -> column 2 (Ready): True   now: column_id=2 is_active=1
+  moveTaskPosition -> column 3 (Work in progress): True   now: column_id=3 is_active=1
+  moveTaskPosition -> column 4 (Done): True   now: column_id=4 is_active=1
+
+--- one bounded work step recorded ON the ticket ---
+work-step comment_id=2
+
+--- WORK COMPLETE: visible OPEN Done ---
+  column_id=4 is_active=1   [expect column_id=4 is_active=1]
+
+--- TERMINAL CLOSURE: closeTask AFTER Done ---
+  closeTask -> True
+  column_id=4 is_active=0   [expect column_id=4 is_active=0 — still in Done, now closed]
+
+LIFECYCLE run 1 complete: project=1 task=1 (created -> picked-up-by-dev-planner@openrig-build -> moved -> Done/open -> closed). Two terminal states recorded distinctly.

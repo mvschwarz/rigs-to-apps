@@ -1,0 +1,26 @@
+# The docker'd board the rig drives — Kanboard, single container, SQLite.
+# Digest-pinned for reproducibility; bound to loopback only (never 0.0.0.0).
+# Verified in the Phase-2 first-act scratch proof: kanboard v1.2.53.
+services:
+  kanboard:
+    image: kanboard/kanboard@sha256:e9dc25fa37246a89a9b353b5657222961bd221afa463c32112307bc0385cca29
+    container_name: s07p2-kanboard
+    ports:
+      - "127.0.0.1:8791:80"          # loopback-only
+    volumes:
+      - s07p2-kanboard-data:/var/www/app/data
+    healthcheck:
+      # PHP is always present in the image (no curl dependency); succeeds once
+      # Kanboard answers, fails on connection refused.
+      test: ["CMD-SHELL", "php -r \"exit(@file_get_contents('http://localhost/')===false?1:0);\""]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  s07p2-kanboard-data:
+    name: s07p2-kanboard-data
+
+networks:
+  default:
+    name: s07p2-kanboard-net

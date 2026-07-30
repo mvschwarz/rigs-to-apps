@@ -1,0 +1,35 @@
+{
+  "manifest_version": 1,
+  "id": "kanban-factory",
+  "name": "Kanban Factory",
+  "summary": "The ticket board your agents actually run — pick up the card, move it across the columns, do the work, close it.",
+  "category": "build",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/board-factory-demo.png", "alt": "A populated Kanban board: cards across Backlog, Ready, and Work in progress, with one open in the Done column" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/kanban-factory",
+    "surface": {
+      "entry": "kanban.html",
+      "path": "/kanban.html",
+      "glyph": "▤",
+      "hint": "Boot the board, then drive tickets to Done from your agent"
+    },
+    "verify": [
+      "docker compose boots the single Kanboard container (SQLite, loopback-only, digest-pinned) and it answers on its local board URL",
+      "An agent files a ticket, records an explicit pickup on it, and moves it across the dynamically-resolved columns into the Done column",
+      "The card lands visibly OPEN in Done (work complete), then closeTask closes it (terminal) — both states recorded distinctly, over JSON-RPC and never the browser UI"
+    ]
+  },
+  "verbs": [
+    { "method": "POST", "path": "/jsonrpc.php", "purpose": "createTask — file a ticket on the board" },
+    { "method": "POST", "path": "/jsonrpc.php", "purpose": "getColumns — resolve the board columns dynamically" },
+    { "method": "POST", "path": "/jsonrpc.php", "purpose": "moveTaskPosition — move a card into a named column" },
+    { "method": "POST", "path": "/jsonrpc.php", "purpose": "createComment — record pickup and the work step on the ticket" },
+    { "method": "POST", "path": "/jsonrpc.php", "purpose": "getTask — read a card's column and open/closed state" },
+    { "method": "POST", "path": "/jsonrpc.php", "purpose": "closeTask — terminal closure after the card is in Done" }
+  ]
+}
