@@ -4,10 +4,16 @@
   "name": "Kanban Factory",
   "summary": "The ticket board your agents actually run — pick up the card, move it across the columns, do the work, close it.",
   "category": "build",
-  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "maker": {
+    "name": "Mike Schwarz",
+    "url": "https://github.com/mvschwarz"
+  },
   "media": {
     "screenshots": [
-      { "src": "assets/board-factory-demo.png", "alt": "A populated Kanban board: cards across Backlog, Ready, and Work in progress, with one open in the Done column" }
+      {
+        "src": "assets/board-factory-demo.png",
+        "alt": "The Kanban Factory board (open-source Kanboard) running as a live surface inside the studio-box app shell with the agent sidebar (a live operator seat; terminal content redacted for card privacy). Agent-run tickets move across the columns: Backlog (ingest raw footage), Ready (log and tag the selects), Work in progress (cut the 90s highlight reel), and Done (assemble the sizzle teaser)"
+      }
     ]
   },
   "install": {
@@ -25,11 +31,35 @@
     ]
   },
   "verbs": [
-    { "method": "POST", "path": "/jsonrpc.php", "purpose": "createTask — file a ticket on the board" },
-    { "method": "POST", "path": "/jsonrpc.php", "purpose": "getColumns — resolve the board columns dynamically" },
-    { "method": "POST", "path": "/jsonrpc.php", "purpose": "moveTaskPosition — move a card into a named column" },
-    { "method": "POST", "path": "/jsonrpc.php", "purpose": "createComment — record pickup and the work step on the ticket" },
-    { "method": "POST", "path": "/jsonrpc.php", "purpose": "getTask — read a card's column and open/closed state" },
-    { "method": "POST", "path": "/jsonrpc.php", "purpose": "closeTask — terminal closure after the card is in Done" }
+    {
+      "method": "POST",
+      "path": "/jsonrpc.php",
+      "purpose": "createTask — file a ticket on the board"
+    },
+    {
+      "method": "POST",
+      "path": "/jsonrpc.php",
+      "purpose": "getColumns — resolve the board columns dynamically"
+    },
+    {
+      "method": "POST",
+      "path": "/jsonrpc.php",
+      "purpose": "moveTaskPosition — move a card into a named column"
+    },
+    {
+      "method": "POST",
+      "path": "/jsonrpc.php",
+      "purpose": "createComment — record pickup and the work step on the ticket"
+    },
+    {
+      "method": "POST",
+      "path": "/jsonrpc.php",
+      "purpose": "getTask — read a card's column and open/closed state"
+    },
+    {
+      "method": "POST",
+      "path": "/jsonrpc.php",
+      "purpose": "closeTask — terminal closure after the card is in Done"
+    }
   ]
 }

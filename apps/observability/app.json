@@ -7,7 +7,7 @@
   "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
   "media": {
     "screenshots": [
-      { "src": "assets/observability-dashboard.png", "alt": "A dark Grafana dashboard: System CPU-busy, Memory used (12.2%) and Disk used (5.41%) gauges and a Networking receive/transmit time series — this captured system and network data is node-exporter reading Docker's Linux VM layer on this Mac, not the macOS host; a YC-visitors panel showing 0 local, with YC visitors on the demo VPS; and a Provider auth / rate-limit panel reading UNKNOWN — the stack honest about an unavailable source instead of a fabricated zero" }
+      { "src": "assets/observability-dashboard.png", "alt": "The Observability Grafana dashboard running as a live surface inside the studio-box app shell with the agent sidebar (a live operator seat; terminal content redacted for card privacy). System CPU-busy, Memory used (12.1%) and Disk used (5.41%) gauges and a Networking receive/transmit series — this captured system and network data is node-exporter reading Docker's Linux VM layer on this Mac, not the macOS host; a YC-visitors panel showing 0 local, with YC visitors on the demo VPS; and a Provider auth / rate-limit panel reading UNKNOWN — the stack honest about an unavailable source instead of a fabricated zero" }
     ]
   },
   "install": {

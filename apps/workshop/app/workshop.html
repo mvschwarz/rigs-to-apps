@@ -1,0 +1,993 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noons — Scene Workshop</title>
+<style>
+  /* the approved v4 mockup's system (scene-workshop-mockup.html), wired live */
+  /* LinkPix-dark reskin — workshop-v2 (CSS-only; markup + JS byte-identical to
+     workshop.html). Color is entirely class-driven, so redefining the var values
+     (below) + one appended override block (before the closing style tag) reskins with no
+     markup/JS change. dev-driver3 ruling: good = quiet default (no green hue);
+     warn = coral ONLY where the human must act, otherwise a dim named state;
+     coral = human-must-act, indigo = routing/links, selection = INVERT, radius 2px. */
+  :root{
+    --bg:#121214; --panel:rgba(255,255,255,.07); --panel2:rgba(255,255,255,.04); --raise:rgba(255,255,255,.12);
+    --edge:rgba(255,255,255,.10); --edge2:rgba(255,255,255,.16);
+    --amber:rgba(255,255,255,.52); --amber-dim:rgba(255,255,255,.06);
+    --good:rgba(255,255,255,.68); --warn:#ff6b5a; --ink:rgba(255,255,255,.95); --dim:rgba(255,255,255,.52); --faint:rgba(255,255,255,.38);
+    --mono:Helvetica,"Helvetica Neue",Arial,sans-serif;
+    /* LinkPix additions */
+    --fg:rgba(255,255,255,.95); --body:rgba(255,255,255,.68);
+    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.16);
+    --coral:#ff6b5a; --indigo:#8b93ff; --sage:#7ea36f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.55 var(--mono);min-height:100vh}
+  ::selection{background:#d9a44133}
+  button{font:inherit;cursor:pointer;color:inherit}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
+  .lbl{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .num{font-variant-numeric:tabular-nums}
+  .app{display:grid;grid-template-columns:225px minmax(0,1fr);min-height:100vh}
+
+  /* ===== left: library ===== */
+  .rail{background:var(--panel2);border-right:1px solid var(--edge);padding:1rem .85rem;display:flex;flex-direction:column;gap:1rem;max-height:100vh;position:sticky;top:0;overflow:auto}
+  .brand{color:var(--amber);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase}
+  .brand small{display:block;color:var(--dim);letter-spacing:.04em;text-transform:none;font-size:10px;margin-top:.25rem}
+  .lib{display:flex;flex-direction:column;gap:.25rem}
+  .scene-item{background:transparent;border:0;border-left:2px solid transparent;text-align:left;padding:.4rem .6rem;font-size:11.5px;line-height:1.35;color:var(--ink)}
+  .scene-item small{display:block;color:var(--faint);font-size:10px}
+  .scene-item.active{border-left-color:var(--amber);background:#d9a4410c;color:var(--amber)}
+  .scene-item:hover:not(.active){background:#ffffff06}
+  .railfoot{margin-top:auto;color:var(--faint);font-size:10px;line-height:1.6;border-top:1px solid var(--edge);padding-top:.7rem}
+
+  /* ===== center ===== */
+  .main{padding:0 1.2rem 2rem;display:flex;flex-direction:column;min-width:0}
+  .head{display:flex;align-items:center;gap:.9rem;padding:.8rem 0 .5rem;flex-wrap:wrap}
+  .playall{width:34px;height:34px;border-radius:50%;border:1px solid var(--good);background:#7ec98f10;color:var(--good);font-size:12px;flex:none}
+  .playall:hover{background:#7ec98f22}
+  /* the transport: ONE canonical strip - play, ruler + pinned playhead, position */
+  #transport{display:none;align-items:center;gap:.7rem;padding:.15rem 0 .7rem;border-bottom:1px solid var(--edge)}
+  #transport.on{display:flex}
+  #ruler{flex:1;height:26px;position:relative;background:var(--panel2);border:1px solid var(--edge);border-radius:5px;cursor:pointer;overflow:hidden}
+  #ruler:hover{border-color:var(--edge2)}
+  #ticks{position:absolute;inset:0;display:flex}
+  #ticks div{flex:1;border-right:1px solid var(--edge);color:var(--faint);font-size:8.5px;padding:.15rem .3rem;user-select:none}
+  #ticks div:last-child{border-right:0}
+  #playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--amber);left:0;box-shadow:0 0 5px #d9a44188}
+  #barpos{color:var(--dim);font-size:11px;width:4ch;text-align:right}
+  .title h1{font-size:14px;font-weight:600;margin:0}
+  .title .meta{color:var(--dim);font-size:10.5px}
+  .grow{flex:1}
+  .btn{border:1px solid var(--edge2);background:var(--raise);border-radius:4px;padding:.42rem .7rem;font-size:11.5px}
+  .btn:hover{border-color:#46536a}
+  .btn.primary{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+  .btn.quiet{background:transparent;border-color:var(--edge)}
+  .btn.warnline{border-color:#d96a5a55;color:var(--warn);background:#d96a5a0d}
+  .btn.smart::after{content:"⌁";color:var(--amber);margin-left:.45rem;font-size:10px}
+  .verbar{display:flex;align-items:center;gap:.5rem;padding:.55rem 0;border-bottom:1px solid var(--edge);flex-wrap:wrap}
+  .ver{border:1px solid var(--edge);background:transparent;color:var(--dim);padding:.22rem .65rem;border-radius:99px;font-size:11px}
+  .ver.on{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
+  .ver.new{border-style:dashed;color:var(--faint)}
+  .verhint{color:var(--faint);font-size:10px}
+  .health{display:flex;gap:1.1rem;padding:.6rem 0;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--edge)}
+  .stat{display:flex;align-items:baseline;gap:.45rem}
+  .stat b{font-size:11.5px;font-weight:600}
+  .ok{color:var(--good)} .mid{color:var(--amber)} .bad{color:var(--warn)}
+  #status{color:var(--faint);font-size:10px;padding:.4rem 0 0}
+  #status.err{color:var(--warn)} #status.ok{color:var(--good)}
+
+  .deck{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:.8rem;padding-top:.85rem}
+  .deck.empty{display:flex;align-items:center;justify-content:center;min-height:40vh;color:var(--faint);letter-spacing:.15em;font-size:12px}
+  .ch{background:var(--panel);border:1px solid var(--edge);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+  .ch.flagged{border-color:#d96a5a44}
+  .ch.focused{border-color:var(--amber)}
+  .padhead{display:flex;gap:.55rem;align-items:center;padding:.6rem .7rem;background:var(--raise);border-bottom:1px solid var(--edge);cursor:pointer;position:relative}
+  .pprog{position:absolute;left:0;right:0;bottom:0;height:2px;pointer-events:none}
+  .pprog i{display:block;height:100%;width:0;background:var(--good);opacity:.85}
+  .play{width:29px;height:29px;border-radius:50%;border:1px solid var(--edge2);background:transparent;flex:none;font-size:10px}
+  .playing .play{border-color:var(--good);color:var(--good)}
+  .who{min-width:0;flex:1}
+  .who b{display:block;font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who span{color:var(--dim);font-size:9.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rolechip{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--edge2);border-radius:3px;padding:.1rem .35rem;color:var(--dim);flex:none}
+  .sec{padding:.5rem .7rem;border-bottom:1px solid var(--edge)}
+  .sec:last-child{border-bottom:0}
+  .sec .lbl{display:block;margin-bottom:.4rem}
+  .sec.row{display:flex;align-items:center;gap:.55rem}
+  .sec.row .lbl{display:inline;margin:0;flex:none;width:2.4rem}
+  .sec.row input[type=range]{flex:1}
+  .sliderrow{display:flex;align-items:center;gap:.55rem}
+  .sliderrow input{flex:1}
+  .sliderrow .num{width:3ch;text-align:right;color:var(--dim);font-size:11px}
+  input[type=range]{appearance:none;height:4px;border-radius:2px;background:var(--edge2)}
+  input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:var(--ink);border:2px solid var(--panel)}
+  input[type=range].amberfill::-webkit-slider-thumb{background:var(--amber)}
+  .keyrow{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+  .keyval{border-radius:3px;padding:.16rem .45rem;font-size:10.5px;border:1px solid var(--edge2)}
+  .keyval.inkey{color:var(--good);border-color:#7ec98f3d}
+  .keyval.off{color:var(--warn);border-color:#d96a5a3d}
+  .st{width:23px;height:23px;border:1px solid var(--edge2);background:var(--raise);border-radius:3px;font-size:12px;line-height:1}
+  .vibegrid{display:flex;flex-direction:column;gap:.45rem}
+  .vibegrid select{background:var(--panel2);color:var(--ink);border:1px solid var(--edge2);border-radius:3px;font:inherit;font-size:10.5px;padding:.28rem .3rem}
+  .abrow{display:flex;gap:.4rem;align-items:center}
+  .seg{display:flex;border:1px solid var(--edge2);border-radius:4px;overflow:hidden;flex:1}
+  .seg button{flex:1;border:0;background:transparent;color:var(--faint);padding:.3rem 0;font-size:10px}
+  .seg .on{background:#7ec98f14;color:var(--good)}
+  .keep{border:1px solid var(--edge2);background:var(--raise);border-radius:4px;padding:.3rem .55rem;font-size:10px}
+  .keep:hover{border-color:var(--good);color:var(--good)}
+  .keep.kept{border-color:var(--good);color:var(--good)}
+  .flagnote{color:var(--warn);font-size:10px;margin-top:.4rem}
+  /* agent suggestion cards */
+  #suggs{display:none;flex-direction:column;gap:.5rem;border:1px solid var(--edge);border-left:2px solid var(--amber);border-radius:6px;background:var(--panel2);padding:.65rem .75rem;margin-top:.7rem}
+  #suggs.has{display:flex}
+  #suggs .shead{display:flex;align-items:center;gap:.6rem}
+  .sugg{display:flex;flex-direction:column;gap:.4rem;background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:.55rem .7rem}
+  .sugg.applied{border-left:2px solid #7ec98f66}
+  .sugg .row1{display:flex;align-items:center;gap:.55rem;min-width:0}
+  .sugg .kind{font-size:8px;letter-spacing:.14em;text-transform:uppercase;border:1px solid;border-radius:3px;padding:.1rem .4rem;flex:none}
+  .sugg .kind.safe{color:var(--good);border-color:#7ec98f3d}
+  .sugg .kind.experimental{color:var(--amber);border-color:#d9a4413d}
+  .sugg .row1 b{font-size:11.5px;min-width:0;flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sugg .row1 .pad{color:var(--faint);font-size:9.5px;min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sugg .staged{color:var(--good);font-size:9px;letter-spacing:.1em;flex:none}
+  .sugg .why{color:var(--dim);font-size:10px;line-height:1.5;max-width:80ch;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  .sugg .why.open{-webkit-line-clamp:unset}
+  .sugg .acts{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}
+  .sugg .acts .btn{padding:.24rem .6rem;font-size:10px}
+  .sugg .steer{display:flex;align-items:center;gap:.35rem}
+  .sugg .steer .lbl{margin:0;font-size:8px}
+  .sugg .steer input{width:120px}
+  /* the EAR QUEUE: agent-staged audition rows (collapsed by default) */
+  #ladder{display:none;flex-direction:column;gap:.5rem;border:1px solid var(--edge);border-left:2px solid #7ea6d9;border-radius:6px;background:var(--panel2);padding:.65rem .75rem;margin-top:.7rem}
+  #ladder.has{display:flex}
+  .lad{display:flex;align-items:center;gap:.55rem;background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:.45rem .6rem;font-size:11px;flex-wrap:wrap}
+  .lad.active{border-color:var(--amber)}
+  .lad.verdicted{opacity:.55}
+  .lad b{font-size:11px;flex:none}
+  .lad .lf{color:var(--dim);font-size:10px;flex:1;min-width:12ch}
+  .lad .padtag{color:var(--faint);font-size:9px;flex:none;max-width:18ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lad .btn{padding:.22rem .55rem;font-size:10px}
+  dialog{background:var(--panel);color:var(--ink);border:1px solid var(--amber);font:inherit;max-width:560px}
+  dialog table{border-collapse:collapse;font-size:11.5px;margin:.6rem 0}
+  dialog td,dialog th{padding:.15rem .6rem;text-align:left;border-bottom:1px solid var(--edge)}
+  dialog .flag{color:var(--warn)}
+  dialog button{background:var(--raise);color:var(--ink);border:1px solid var(--edge2);font:inherit;padding:.3rem .8rem;cursor:pointer;margin-right:.5rem}
+  @media(prefers-reduced-motion:no-preference){ .playing .play{animation:pulse 1.02s infinite} }
+  @keyframes pulse{50%{box-shadow:0 0 0 4px rgba(255,255,255,.10)}}
+
+  /* ===== LinkPix-dark semantic overrides (CSS-only; dev-driver3 ruling) ===== */
+  /* radius: rounded 4-6px / 99px pills -> 2px hairline (circular play ICONS kept) */
+  .btn,.ver,.ch,#ruler,.rolechip,.keyval,.st,.vibegrid select,#suggs,.sugg,#ladder,.lad,.seg,.keep,.scene-item,.padhead,dialog,input[type=range]{ border-radius:2px !important; }
+  .playall,.play{ border-radius:50% !important; }
+  /* selection / active = INVERT (solid white bg, black text) */
+  .scene-item.active{ background:var(--fg) !important; color:#111 !important; border-left-color:var(--fg) !important; }
+  .btn.primary{ background:var(--fg) !important; color:#111 !important; border-color:var(--fg) !important; }
+  .ver.on{ background:var(--fg) !important; color:#111 !important; border-color:var(--fg) !important; }
+  /* routing / agent hints = indigo */
+  #suggs{ border-left-color:var(--indigo) !important; }
+  #ladder{ border-left-color:var(--indigo) !important; }
+  .btn.smart::after{ color:var(--indigo) !important; }
+  /* transport position = neutral-bright, not amber */
+  #playhead{ background:var(--fg) !important; box-shadow:none !important; }
+  .playing .play{ border-color:var(--fg) !important; color:var(--fg) !important; }
+  /* WARN SPLIT (ruling): coral ONLY where the human must act; diagnostic states = dim */
+  .btn.warnline{ color:var(--coral) !important; border-color:var(--coral) !important; background:transparent !important; }
+  .ch.flagged{ border-color:var(--coral) !important; }
+  .flagnote{ color:var(--coral) !important; }
+  .bad,.keyval.off,dialog .flag{ color:var(--faint) !important; border-color:var(--line2) !important; }
+  /* good = quiet default (no green hue) */
+  .ok,#status.ok,.keyval.inkey,.seg .on,.keep.kept,.sugg.kind.safe{ color:var(--body) !important; border-color:var(--line2) !important; }
+  .pprog i{ background:var(--body) !important; }
+</style>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">Scene Workshop<small>the bench — one scene, refined together</small>
+      <select id="palSel" title="switch palette — scenes live per-palette" style="margin-top:.5rem;width:100%;background:var(--panel);color:var(--amber);border:1px solid var(--edge);border-radius:4px;font:inherit;font-size:10px;letter-spacing:.08em;padding:.3rem"></select></div>
+    <div>
+      <div class="lbl" style="margin-bottom:.4rem" id="yourHead">Your scenes</div>
+      <nav class="lib" id="yourLib"></nav>
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:.4rem" id="curHead">Curated · agent</div>
+      <nav class="lib" id="curLib"></nav>
+    </div>
+    <div class="railfoot">clicks &amp; keeps are logged as taste data — and the agent sees your focus live.</div>
+  </aside>
+
+  <main class="main">
+    <header class="head">
+      <div class="title">
+        <h1 id="scenetitle">no scene open</h1>
+        <div class="meta num" id="scenemeta">pick a scene from the library</div>
+      </div>
+      <div class="grow"></div>
+      <button class="btn quiet" id="renderBtn">Render mix ↓</button>
+      <button class="btn quiet smart" id="toLiveBtn">Send to Live set</button>
+    </header>
+    <div id="transport">
+      <button class="playall" id="playAll" aria-label="play/stop the whole scene">▶</button>
+      <div id="ruler" title="click a bar to jump">
+        <div id="ticks"></div>
+        <div id="playhead"></div>
+      </div>
+      <span class="num" id="barpos">1.1</span>
+    </div>
+
+    <div class="verbar">
+      <span class="lbl">versions</span>
+      <span id="verlist" style="display:flex;gap:.4rem;flex-wrap:wrap"></span>
+      <button class="ver new" id="dupBtn">＋ duplicate</button>
+      <span class="verhint">snapshots — switching destroys nothing · double-click a chip to name it</span>
+    </div>
+
+    <div class="health">
+      <div class="stat"><span class="lbl">key</span><b class="num" id="keyStat">—</b></div>
+      <div class="stat"><span class="lbl">mix room</span><b id="roomStat">—</b></div>
+      <div class="stat"><span class="lbl">edits vs ORIG</span><b class="num" id="editStat">—</b></div>
+      <div class="grow"></div>
+      <button class="btn" id="suggestBtn" title="ask the agent for new ideas for this scene">⌁ Suggest…</button>
+      <button class="btn" id="matchNotesBtn" title="the layer AFTER key matching: find the OFFENDING NOTES — same key ≠ same chord shape; semitone/tritone rubs and out-of-scale tones, with which pad can afford the edit">⌁ Match notes…</button>
+      <button class="btn" id="matchSpaceBtn" title="the THIRD layer: are two voices standing in the same register at the same time? The not-obviously-off-but-not-quite-right feeling lives here — measures overlap-time × register-proximity per pair">⌁ Match space…</button>
+      <button class="btn primary" id="keylockBtn" title="make every pad agree on one key: proposes the cheapest key for the scene and shifts each pad cleanly to it (anything needing >±3 st is flagged for per-note repair instead)">⌁ Match keys…</button>
+    </div>
+    <div id="status">agent panel: typing there lands at the real seat — Esc interrupts, anything else queues</div>
+    <div id="suggs"><div class="shead"><span class="lbl">agent suggestions</span><span class="verhint" id="sughint"></span></div><div id="sugglist" style="display:flex;flex-direction:column;gap:.55rem"></div></div>
+    <div id="ladder"><div class="shead" id="ladHead" style="cursor:pointer" title="rows the agent staged for your ears — expand, play each, one tap per verdict">
+      <span class="lbl">ear queue</span><span class="verhint" id="ladHint"></span><span class="lbl" id="ladCaret" style="margin-left:auto">▸</span></div>
+      <div id="ladList" style="display:none;flex-direction:column;gap:.45rem"></div></div>
+
+    <div class="deck empty" id="deck">open a scene from the library</div>
+  </main>
+</div>
+<dialog id="kldlg"></dialog>
+<script>
+const NAMES=["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+const NOTE={C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,F:5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11};
+let KIT=null,SCENE=null,PADS=[],VERSIONS=[],CURVER=null,SELPAD=null,PATTERNS=[],SUGGS=[];
+let actx=null,sources=[],gainNodes={},edited=false;
+// scene-local mix state; vol = 0-100 display, stored as dB.
+// act = the set of PLAYING pad tracks (Live-style): pad ▶ joins/leaves the
+// bar-locked loop, scene ▶ is all-or-stop. Playing == act is non-empty.
+// base[track] = this VERSION's kept baseline render (keep promotes staged
+// vibes here; suggestions stack on top of it). vibes[track].staged = the
+// render being auditioned. The A/B compares top-of-chain vs one-below.
+let ws={vols:{},act:new Set(),vibes:{},kept:new Set(),ab:{},base:{},fine:new Set(),over:{}};
+const playing=()=>ws.act.size>0;
+let playT0=null,loopDur=0,seekOff=0;   // scene transport clock
+const bufCache=new Map();
+const $=(s)=>document.querySelector(s);
+const status=(m,c="")=>{const e=$("#status");e.textContent=m;e.className=c;};
+const spb=()=>60/KIT.tempo;
+const volToDb=(v)=>(v-85)*0.4, dbToVol=(db)=>Math.round(db/0.4+85);
+const famRoot=(k)=>{const m=/^([A-G][b#]?)\s+(major|minor|family)/.exec(k||"");if(!m||!(m[1] in NOTE))return null;return m[2]==="minor"?(NOTE[m[1]]+3)%12:NOTE[m[1]];};
+const sounding=(p)=>{const r=famRoot(p.key);return r==null?null:(r+Math.round(p.pitchSemitones)+1200)%12;};
+// pitch may carry CENTS (micro-tuning, the detuned-drone lesson): "+1st −35¢"
+const fmtPitch=(v)=>{if(!v)return"";const t=Math.round(v*100),s=Math.trunc(t/100),c=t-s*100;
+  return[(s?`${s>0?"+":""}${s}st`:""),(c?`${c>0?"+":""}${c}¢`:"")].filter(Boolean).join(" ");};
+const minDist=(f,t)=>((t-f+18)%12)-6;
+const padBy=(t)=>PADS.find((p)=>p.track===t);
+const origPitch=(t)=>{const o=VERSIONS.find((v)=>v.id==="ORIG");const s=o?.state.pads.find((x)=>x.track===t);return s?.pitchSemitones??0;};
+
+// ---- focus bridge (the two-host contract: docs/focus-contract.md) ----
+let focusTimer=null;
+function reportFocus(note=""){
+  clearTimeout(focusTimer);
+  focusTimer=setTimeout(()=>{
+    fetch("/api/focus",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({surface:"workshop",view:SCENE?SCENE.name:"library",
+        selection:SELPAD!=null?[padBy(SELPAD)?.slug||String(SELPAD)]:PADS.map((p)=>p.slug),note})}).catch(()=>{});
+  },600);
+}
+async function inject(brief,openPanel=true){
+  if(openPanel)window.parent.postMessage({t:"open-agent"},"*");
+  const r=await fetch("/api/inject",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({brief})});
+  const d=await r.json();
+  status(d.ok?"brief landed in the agent's session — watch the AGENT panel":"inject failed: "+(d.errors||[]).join("; "),d.ok?"ok":"err");
+  return d.ok;
+}
+
+// ---- library (self-refreshing: new push scenes appear without a reload) ----
+let LIBSIG="";
+const libSig=(k)=>JSON.stringify(k.scenes.map((s)=>[s.name,s.pads.length]));
+function buildLibrary(){
+  const yours=KIT.scenes.filter((s)=>!s.story), cur=KIT.scenes.filter((s)=>s.story);
+  $("#yourHead").textContent=`Your scenes · ${yours.length}`;
+  $("#curHead").textContent=`Curated · agent · ${cur.length}`;
+  $("#yourLib").innerHTML="";$("#curLib").innerHTML="";
+  const mk=(s)=>{
+    const b=document.createElement("button");
+    b.className="scene-item"; b.dataset.scene=s.name;
+    b.innerHTML=`${s.name}<small>${s.pads.length} pads</small>`;
+    if(s.story)b.title=s.story;
+    b.addEventListener("click",()=>openScene(s.name));
+    return b;
+  };
+  for(const s of yours)$("#yourLib").appendChild(mk(s));
+  for(const s of cur)$("#curLib").appendChild(mk(s));
+  libState();
+}
+async function pollLibrary(){
+  try{
+    const k=await (await fetch("/api/kitmeta")).json();
+    const sig=libSig(k);
+    if(sig!==LIBSIG){LIBSIG=sig;KIT.scenes=k.scenes;buildLibrary();}
+  }catch{}
+}
+setInterval(pollLibrary,5000);
+async function boot(){
+  try{
+    const pd=await (await fetch("/api/palettes")).json();
+    const sel=document.getElementById("palSel");
+    for(const p of pd.palettes){
+      const o=document.createElement("option");
+      o.value=p.port;o.textContent=p.label||p.name;
+      if(p.name===pd.current)o.selected=true;
+      sel.appendChild(o);
+    }
+    sel.onchange=()=>{location.href=`http://127.0.0.1:${sel.value}/workshop.html`;};
+    if(!pd.palettes.length)sel.style.display="none";
+  }catch{document.getElementById("palSel").style.display="none";}
+  KIT=await (await fetch("/api/kitmeta")).json();
+  PATTERNS=(await (await fetch("/api/ws/patterns")).json()).patterns;
+  LIBSIG=libSig(KIT);
+  buildLibrary();
+  // refresh friction fix: come back to where you were (URL param wins)
+  let want=new URLSearchParams(location.search).get("scene");
+  try{want=want||localStorage.getItem("ws.lastScene");}catch{}
+  if(want){const s=KIT.scenes.find((x)=>x.name===want)||KIT.scenes.find((x)=>x.name.includes(want));if(s)openScene(s.name);}
+}
+function libState(){
+  document.querySelectorAll(".scene-item").forEach((el)=>{
+    const on=SCENE&&el.dataset.scene===SCENE.name;
+    el.classList.toggle("active",on);
+    const s=KIT.scenes.find((x)=>x.name===el.dataset.scene);
+    el.querySelector("small").textContent=`${s.pads.length} pads${on&&CURVER?` · ${edited?"editing":"on"} v.${CURVER}`:""}`;
+  });
+}
+
+async function openScene(name){
+  for(const s of sources){try{s.stop();}catch{}}
+  sources=[];gainNodes={};
+  const r=await fetch(`/api/ws/scene?scene=${encodeURIComponent(name)}`);
+  if(!r.ok){status(`scene load failed (${r.status})`,"err");return;}
+  const d=await r.json();
+  SCENE=d.scene;PADS=d.pads;VERSIONS=d.versions;SELPAD=null;edited=false;
+  ws={vols:{},act:new Set(),vibes:{},kept:new Set(),ab:{},base:{},fine:new Set(),over:{}};
+  if(!VERSIONS.length)await saveVersion("ORIG",true);
+  CURVER=VERSIONS[0]?.id??null;
+  try{localStorage.setItem("ws.lastScene",SCENE.name);}catch{}
+  $("#scenetitle").textContent=SCENE.name;
+  $("#scenemeta").textContent=`${PADS.length} pads · ${KIT.tempo} bpm · ${KIT.loopBars??8} bars · loops in sync`;
+  // the transport is permanent once a scene is open; contract length = the clock
+  loopDur=(KIT.loopBars??8)*4*spb();
+  seekOff=0;playT0=null;
+  $("#transport").classList.add("on");drawTicks();
+  draw();reportFocus("opened scene");
+  SUGGS=[];drawSuggestions();loadSuggestions();LADDER=[];drawLadder();loadLadder();
+  status(`scene open — hit ▶ to hear all ${PADS.length} pads bar-locked`,"ok");
+}
+
+// ---- health strip ----
+function health(){
+  const tonal=PADS.filter((p)=>sounding(p)!=null);
+  if(tonal.length){
+    const counts={};for(const p of tonal)counts[sounding(p)]=(counts[sounding(p)]??0)+1;
+    const fam=Number(Object.entries(counts).sort((a,z)=>z[1]-a[1])[0][0]);
+    const inFam=tonal.filter((p)=>sounding(p)===fam).length;
+    const el=$("#keyStat");
+    el.textContent=`${inFam} of ${tonal.length} in ${NAMES[fam]} family`;
+    el.className="num "+(inFam===tonal.length?"ok":"mid");
+    return fam;
+  }
+  $("#keyStat").textContent="no tonal pads";$("#keyStat").className="num";
+  return null;
+}
+function room(){
+  const heard=playing()?PADS.filter((p)=>ws.act.has(p.track)):PADS;
+  const roles=new Set(heard.map((p)=>p.role));
+  const crowded=roles.has("vocal")&&roles.has("bass")&&roles.has("synth");
+  const el=$("#roomStat");
+  el.textContent=crowded?"bass+synth under vocal":"no crowding";
+  el.className=crowded?"bad":"ok";
+}
+function edits(){
+  const changed=PADS.filter((p)=>p.pitchSemitones!==origPitch(p.track)||ws.vibes[p.track]||ws.base[p.track]);
+  const kept=changed.filter((p)=>ws.kept.has(p.track)).length;
+  $("#editStat").textContent=changed.length?`${kept} kept · ${changed.length-kept} auditioning`:"none";
+  edited=changed.length>0||Object.keys(ws.vols).length>0;
+}
+
+// ---- the deck ----
+function draw(){
+  const fam=health();room();edits();drawVersions();libState();
+  const deck=$("#deck");
+  deck.className="deck";deck.innerHTML="";
+  for(const p of PADS){
+    const s=sounding(p);   // pc math rounds cents (micro-tune ≠ key change)
+    const fine=ws.fine.has(p.track);   // ± steppers move cents instead of steps
+    const delta=s!=null&&fam!=null?minDist(s,fam):0;
+    const out=s!=null&&fam!=null&&s!==fam;
+    const tooFar=out&&Math.abs(delta)>3;
+    const isOn=ws.act.has(p.track);
+    // seg truth: "edited" lights when a staged/kept render or a pitch edit is
+    // what's sounding; "original" lights at the baseline
+    const hasChain=!!(ws.vibes[p.track]?.staged||ws.base[p.track]);
+    const ab=ws.ab[p.track]==="orig"||(!hasChain&&p.pitchSemitones===origPitch(p.track));
+    const card=document.createElement("section");
+    card.className="ch"+(tooFar?" flagged":"")+(isOn?" playing":"")+(SELPAD===p.track?" focused":"");
+    card.innerHTML=`
+      <div class="padhead"><button class="play" aria-label="${isOn?"stop this pad":"play this pad"}">${isOn?"◼":"▶"}</button>
+        <div class="who"><b>${p.name}</b><span>${[p.artist,p.vibe?.split("·")[1]?.trim(),p.tier].filter(Boolean).join(" · ")||p.slug}</span></div>
+        <span class="rolechip">${p.role}</span>
+        <div class="pprog"><i></i></div></div>
+      <div class="sec row"><span class="lbl">vol</span><input type="range" min="0" max="100" value="${dbToVol(ws.vols[p.track]??0)}" aria-label="volume"><span class="num">${dbToVol(ws.vols[p.track]??0)}</span></div>
+      <div class="sec"><div class="keyrow"><span class="lbl" style="display:inline;margin:0;width:2.4rem">key</span>${s==null
+          ?`<span class="keyval" style="color:var(--dim)" title="${p.role==="drums"?"drums are not key-managed":"no harmony measurement exists for this pad yet — ask the agent to measure it"}">${p.role==="drums"?"atonal":"not measured"}</span>`
+          :`<span class="keyval ${out?"off":"inkey"}">${p.key.replace(/ family.*/,"" )}${p.pitchSemitones?` ${fmtPitch(p.pitchSemitones)}`:""} ${out?"— out of key":"✓"}</span>
+           <button class="st" data-st="${fine?-0.05:-1}" aria-label="${fine?"5 cents down":"semitone down"}">−</button><button class="st" data-st="${fine?0.05:1}" aria-label="${fine?"5 cents up":"semitone up"}">＋</button>
+           <button class="st fineTgl" style="width:auto;padding:0 .35rem;font-size:9px" title="${fine?"± is moving CENTS (5¢ ticks) — click to switch back to semitones":"± is moving SEMITONES — click to fine-tune in cents"}">±${fine?"¢":"st"}</button>
+           ${fine?`<button class="st clearCents" style="width:auto;padding:0 .35rem;font-size:9px" title="clear the cents correction — back to the sample's own natural tuning (whole-step shifts, vibes and versions untouched)">0¢</button>`:""}`}</div>
+        ${tooFar?`<div class="flagnote">⚠ ${delta} st to ${NAMES[fam]} family — too far to shift cleanly</div>`:""}</div>
+      ${tooFar?`<div class="sec"><button class="btn warnline smart repairBtn" style="width:100%">Queue per-note repair</button></div>`:""}
+      <div class="sec vibegrid">
+        <div class="sliderrow"><select aria-label="vibe" style="flex:1"><option value="">vibe: none</option>${PATTERNS.map((n)=>`<option${ws.vibes[p.track]?.name===n?" selected":""}>${n}</option>`).join("")}</select>
+          <input class="amberfill" type="range" min="0" max="100" value="${ws.vibes[p.track]?.amount??0}" aria-label="dose" style="width:90px" title="dose — how much of the pattern (coverage/density), never volume"><span class="num">${ws.vibes[p.track]?.amount??0}</span></div>
+        <div class="abrow"><div class="seg"><button class="segA${ab?"":" on"}">edited</button><button class="segB${ab?" on":""}">original</button></div>
+          <button class="keep${ws.kept.has(p.track)?" kept":""}">${ws.kept.has(p.track)?"kept ✓":"keep ✓"}</button></div></div>`;
+    // wiring
+    card.querySelector(".padhead").addEventListener("click",(e)=>{
+      if(e.target.classList.contains("play"))return;
+      SELPAD=SELPAD===p.track?null:p.track;draw();reportFocus("selected pad");
+    });
+    card.querySelector(".play").addEventListener("click",async()=>{
+      // Live-style: this pad joins/leaves the bar-locked loop, immediately
+      ws.act.has(p.track)?ws.act.delete(p.track):ws.act.add(p.track);
+      await restart();
+    });
+    const vol=card.querySelector('input[aria-label="volume"]');
+    vol.addEventListener("input",()=>{
+      ws.vols[p.track]=volToDb(Number(vol.value));
+      vol.nextElementSibling.textContent=vol.value;
+      if(gainNodes[p.track])gainNodes[p.track].gain.value=gainOf(p.track);
+    });
+    card.querySelectorAll("[data-st]").forEach((b)=>b.addEventListener("click",()=>shiftPad(p.track,Number(b.dataset.st))));
+    card.querySelector(".fineTgl")?.addEventListener("click",()=>{
+      ws.fine.has(p.track)?ws.fine.delete(p.track):ws.fine.add(p.track);
+      draw();
+    });
+    card.querySelector(".clearCents")?.addEventListener("click",()=>{
+      const t=Math.round(p.pitchSemitones*100);
+      setPitch(p.track,Math.trunc(t/100));   // strip cents, keep whole steps
+    });
+    card.querySelector(".repairBtn")?.addEventListener("click",()=>inject(
+      `[workshop ⌁] queue PER-NOTE repair — ${p.slug} (${p.key}${p.pitchSemitones?`, shifted ${p.pitchSemitones>0?"+":""}${p.pitchSemitones}`:""}) → ${NAMES[fam]} family (${delta} st), scene '${SCENE.name}' v.${CURVER}. Too far to whole-shift cleanly; use the per-note lane SOP and report when a candidate is staged.`));
+    const sel=card.querySelector("select"), amt=card.querySelector(".amberfill");
+    const askVibe=()=>{
+      const name=sel.value, amount=Number(amt.value);
+      amt.nextElementSibling.textContent=amount;
+      if(!name||!amount)return;
+      ws.vibes[p.track]={name,amount,rendered:false};
+      inject(`[workshop ⌁] vibe request — pattern '${name}' on pad ${p.slug} (${p.role}) in scene '${SCENE.name}' v.${CURVER}, dose ${amount}/100 (dose = HOW MUCH of the pattern: coverage/density/occurrences, not volume — you pick the axes). Author the plan per the principles doc, render, and write it into -suggestions.json as an applied card so it stages on this pad's A/B.`,false);
+      edits();
+    };
+    sel.addEventListener("change",askVibe);
+    amt.addEventListener("change",askVibe);
+    amt.addEventListener("input",()=>{amt.nextElementSibling.textContent=amt.value;});
+    card.querySelector(".segB").addEventListener("click",()=>abPad(p.track,true));
+    card.querySelector(".segA").addEventListener("click",()=>abPad(p.track,false));
+    card.querySelector(".keep").addEventListener("click",async()=>{
+      // KEEP = promote: the staged render becomes this VERSION's baseline for
+      // the pad (the edit "becomes the original"); next suggestions stack on
+      // it. ORIG never changes - keeping while on ORIG forks a work version.
+      if(ws.vibes[p.track]?.staged){
+        ws.base[p.track]=ws.vibes[p.track].staged;
+        delete ws.vibes[p.track];delete ws.ab[p.track];
+        ws.kept.add(p.track);
+        await persistVersion();
+        draw();
+        status(`kept — '${p.name}' baseline updated in v.${CURVER}; new suggestions stack on it`,"ok");
+      }else{
+        ws.kept.has(p.track)?ws.kept.delete(p.track):ws.kept.add(p.track);
+        await persistVersion();
+        draw();
+      }
+      reportFocus("kept edit");
+    });
+    deck.appendChild(card);
+  }
+}
+
+// per-pad A/B: with a STAGED vibe render, A/B is a pure buffer swap (no
+// world mutation); otherwise original = the ORIG version's pitch
+async function abPad(track,toOrig){
+  const p=padBy(track);
+  if(ws.vibes[track]?.staged||ws.base[track]){
+    ws.ab[track]=toOrig?"orig":undefined;
+    draw();
+    if(ws.act.has(track))await restart();
+    return;
+  }
+  const target=toOrig?origPitch(track):(ws.ab[track+"_edit"]??p.pitchSemitones);
+  if(toOrig)ws.ab[track+"_edit"]=p.pitchSemitones;   // remember the edit to come back
+  if(p.pitchSemitones===target){ws.ab[track]=toOrig?"orig":undefined;draw();return;}
+  ws.ab[track]=toOrig?"orig":undefined;
+  await setPitch(track,target);
+}
+async function setPitch(track,to){
+  to=Math.round((to??0)*100)/100;   // cents resolution, no float dust
+  const proj=await (await fetch("/api/project")).json();
+  const clip=proj.tracks[track].clips[0];
+  if(to)clip.pitchSemitones=to;else delete clip.pitchSemitones;
+  const r=await fetch("/api/save",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(proj)});
+  if(!(await r.json()).ok)return status("pitch save failed","err");
+  padBy(track).pitchSemitones=to;
+  draw();
+  status("re-rendering…");
+  if(playing())await restart();
+  status(`${padBy(track).name} → ${fmtPitch(to)||"original pitch"}`,"ok");
+}
+const shiftPad=(track,delta)=>setPitch(track,(padBy(track).pitchSemitones??0)+delta);
+
+// ---- audio (the push engine, bench edition) ----
+// the pad's render CHAIN: clipwav -> base (kept) -> staged (auditioning).
+// "edited" plays top-of-chain; "original" plays one step below it.
+function chainWav(track){
+  const staged=ws.vibes[track]?.staged, base=ws.base[track]??null;
+  if(ws.ab[track]==="orig")return staged?base:null;   // one step below the top
+  return staged??base;                                 // top (null = plain clip)
+}
+async function buffer(track){
+  const p=padBy(track);
+  const wav=ws.over[track]??chainWav(track);   // ladder in-mix override wins
+  const key=`${track}|${p.pitchSemitones}|${wav??""}`;
+  if(bufCache.has(key))return bufCache.get(key);
+  const url=wav
+    ?`/api/ws/render?f=${encodeURIComponent(wav)}&scene=${encodeURIComponent(SCENE.name)}`
+    :`/api/clipwav?t=${track}&c=0`;
+  const r=await fetch(url);
+  if(!r.ok)throw new Error(`pad render failed (${r.status})`);
+  const buf=await actx.decodeAudioData(await r.arrayBuffer());
+  bufCache.set(key,buf);
+  while(bufCache.size>24)bufCache.delete(bufCache.keys().next().value);
+  return buf;
+}
+const gainOf=(t)=>Math.pow(10,((padBy(t)?.gainDb??0)+(ws.vols[t]??0))/20);
+// ONE playback truth: restart() makes the audio match ws.act exactly.
+// All playing pads restart together at a shared t0 = always bar-locked
+// (the push-engine pattern; buffers come from cache so it's instant).
+async function restart(fromSec=null){
+  for(const s of sources){try{s.stop();}catch{}}
+  sources=[];gainNodes={};
+  const on=PADS.filter((p)=>ws.act.has(p.track));
+  if(!on.length){
+    // stop keeps the playhead where it was (pause-like); ruler jumps anywhere
+    if(playT0!=null&&actx)seekOff=((actx.currentTime-playT0)%loopDur+loopDur)%loopDur;
+    $("#playAll").textContent="▶";playT0=null;draw();status("stopped");return;}
+  actx=actx||new AudioContext();
+  if(actx.state==="suspended")await actx.resume();
+  status("loading pads…");
+  const bufs={};
+  for(const p of on){try{bufs[p.track]=await buffer(p.track);}catch(e){status(e.message,"err");ws.act.delete(p.track);}}
+  // the scene clock: one shared position, every pad offset from it. On a
+  // plain restart, keep the CURRENT position (adding a pad doesn't rewind);
+  // stopped-state ruler clicks are honored via seekOff.
+  seekOff=fromSec!=null?fromSec
+    :playT0!=null?((actx.currentTime-playT0)%loopDur+loopDur)%loopDur
+    :seekOff;
+  const t0=actx.currentTime+0.08;
+  playT0=t0-seekOff;
+  for(const p of on){
+    const buf=bufs[p.track];if(!buf)continue;
+    const src=actx.createBufferSource();
+    src.buffer=buf;src.loop=true;src.loopStart=0;src.loopEnd=buf.duration;
+    const off=((((p.phaseBeats??0)*spb())+seekOff)%buf.duration+buf.duration)%buf.duration;
+    const g=actx.createGain();g.gain.value=gainOf(p.track);
+    src.connect(g);g.connect(actx.destination);
+    src.start(t0,off);
+    sources.push(src);gainNodes[p.track]=g;
+  }
+  // main button shows the ACTION: ◼ only when the whole scene is up
+  $("#playAll").textContent=ws.act.size===PADS.length?"◼":"▶";
+  draw();
+  status(`${sources.length} pad${sources.length>1?"s":""} looping @ ${KIT.tempo} bpm — bar-locked`,"ok");
+}
+// ---- scene transport: one ruler for the shared clock ----
+function drawTicks(){
+  const bars=Math.max(1,Math.round(loopDur/(spb()*4)));
+  const t=$("#ticks");t.innerHTML="";
+  for(let i=0;i<bars;i++){
+    const d=document.createElement("div");
+    d.textContent=i+1;
+    t.appendChild(d);
+  }
+}
+$("#ruler").addEventListener("click",async(e)=>{
+  if(!loopDur)return;
+  const r=$("#ruler").getBoundingClientRect();
+  const frac=Math.min(Math.max((e.clientX-r.left)/r.width,0),0.999);
+  // snap to the bar edge - mid-bar drops are disorienting on loops
+  const bars=Math.max(1,Math.round(loopDur/(spb()*4)));
+  const bar=Math.floor(frac*bars);
+  if(playing()){await restart(bar*(loopDur/bars));status(`jumped to bar ${bar+1}`,"ok");}
+  else{seekOff=bar*(loopDur/bars);status(`play starts at bar ${bar+1}`,"ok");}
+});
+(function tick(){
+  requestAnimationFrame(tick);
+  if(!loopDur||!SCENE)return;
+  const pos=playT0!=null&&actx?((actx.currentTime-playT0)%loopDur+loopDur)%loopDur:seekOff;
+  const frac=pos/loopDur;
+  $("#playhead").style.left=`${frac*100}%`;
+  const bars=Math.max(1,Math.round(loopDur/(spb()*4)));
+  $("#barpos").textContent=`${Math.floor(frac*bars)+1}.${Math.floor((frac*bars%1)*4)+1}`;
+  const w=playing()?`${frac*100}%`:"0";
+  document.querySelectorAll(".ch.playing .pprog i").forEach((el)=>el.style.width=w);
+})();
+async function stopAll(){ws.act.clear();await restart();}
+// main ▶ = the WHOLE scene: fills up to all pads unless all are already
+// playing (then it stops). A partial mix never silently becomes a stop.
+$("#playAll").addEventListener("click",async()=>{
+  if(ws.act.size===PADS.length)return stopAll();
+  ws.act=new Set(PADS.map((p)=>p.track));
+  await restart();
+});
+window.addEventListener("keydown",(e)=>{if(e.code==="Space"&&!["INPUT","SELECT"].includes(e.target.tagName)){e.preventDefault();playing()?stopAll():$("#playAll").click();}});
+
+// ---- versions ----
+const stateNow=()=>({pads:PADS.map((p)=>({track:p.track,pitchSemitones:p.pitchSemitones,
+  gain:ws.vols[p.track]??0,kept:ws.kept.has(p.track),base:ws.base[p.track]??null}))});
+// persist the working state into the CURRENT version (ORIG is immutable -
+// keeping while on ORIG auto-forks a "work" version)
+async function persistVersion(){
+  if(CURVER==="ORIG"||!CURVER){
+    const r=await fetch("/api/ws/version",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({scene:SCENE.name,label:"work",state:stateNow()})});
+    const d=await r.json();
+    if(!d.ok)return status("version fork failed","err");
+    VERSIONS=d.versions;CURVER=VERSIONS[VERSIONS.length-1].id;
+    status(`ORIG is immutable — forked to v.${CURVER}`,"ok");
+    return;
+  }
+  const r=await fetch("/api/ws/version",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({scene:SCENE.name,updateId:CURVER,state:stateNow()})});
+  const d=await r.json();
+  if(d.ok)VERSIONS=d.versions;else status("version update failed","err");
+}
+async function saveVersion(label,silent=false){
+  const r=await fetch("/api/ws/version",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({scene:SCENE.name,label:label||"version",state:stateNow()})});
+  const d=await r.json();
+  if(!d.ok)return status("version save failed","err");
+  VERSIONS=d.versions;CURVER=VERSIONS[VERSIONS.length-1].id;
+  if(!silent){draw();status(`version ${CURVER} banked`,"ok");}
+}
+$("#dupBtn").addEventListener("click",()=>{
+  if(!SCENE)return status("open a scene first","err");
+  // auto-named (A, B, C...) - a version earns its name AFTER you've played it
+  saveVersion("");
+});
+function drawVersions(){
+  const box=$("#verlist");box.innerHTML="";
+  for(const v of VERSIONS){
+    const b=document.createElement("button");
+    b.className="ver"+(v.id===CURVER?" on":"");
+    const named=v.label&&v.label!==v.id&&v.label!=="work"&&v.label!=="version";
+    b.textContent=v.id==="ORIG"?"ORIG":`${v.id}${named?" · "+v.label:""}`;
+    b.title=v.id==="ORIG"?"the untouched scene":`${v.at} — double-click to name`;
+    b.addEventListener("click",()=>applyVersion(v));
+    b.addEventListener("dblclick",async()=>{
+      if(v.id==="ORIG")return;
+      const l=prompt("name this version",named?v.label:"");
+      if(l==null||!l.trim())return;
+      const r=await fetch("/api/ws/version",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({scene:SCENE.name,updateId:v.id,label:l.trim()})});
+      const d=await r.json();
+      if(d.ok){VERSIONS=d.versions;drawVersions();status(`version ${v.id} named '${l.trim()}'`,"ok");}
+      else status((d.errors||["rename failed"]).join("; "),"err");
+    });
+    box.appendChild(b);
+  }
+}
+async function applyVersion(v){
+  status(`switching to ${v.id}…`);
+  ws.vols={};ws.kept=new Set();ws.ab={};ws.base={};ws.vibes={};
+  const moves=[];
+  for(const s of v.state.pads){
+    const p=padBy(s.track);if(!p)continue;
+    if(s.gain)ws.vols[s.track]=s.gain;
+    if(s.kept)ws.kept.add(s.track);
+    if(s.base)ws.base[s.track]=s.base;
+    if((s.pitchSemitones??0)!==p.pitchSemitones)moves.push({track:s.track,to:s.pitchSemitones??0});
+  }
+  if(moves.length){
+    const proj=await (await fetch("/api/project")).json();
+    for(const m of moves){const c=proj.tracks[m.track].clips[0];if(m.to)c.pitchSemitones=m.to;else delete c.pitchSemitones;}
+    const r=await fetch("/api/save",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(proj)});
+    if(!(await r.json()).ok)return status("version pitch apply failed","err");
+    for(const m of moves)padBy(m.track).pitchSemitones=m.to;
+  }
+  CURVER=v.id;edited=false;draw();drawSuggestions();
+  for(const t of Object.keys(gainNodes))gainNodes[t].gain.value=gainOf(Number(t));
+  // baseline changes alter what pads PLAY - refresh the loop if it's running
+  if(playing())await restart();
+  status(`version ${v.id} live — switching destroyed nothing`,"ok");
+  reportFocus(`switched to version ${v.id}`);
+}
+
+// ---- header actions ----
+$("#renderBtn").addEventListener("click",async()=>{
+  if(!SCENE)return status("open a scene first","err");
+  status("rendering mix…");
+  const gains={};for(const[t,db]of Object.entries(ws.vols))gains[t]=db;
+  // render what's heard: the playing set while playing, the whole scene otherwise
+  const mutes=playing()?PADS.filter((p)=>!ws.act.has(p.track)).map((p)=>p.track):[];
+  const r=await fetch("/api/ws/bounce",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({scene:SCENE.name,gains,mutes})});
+  const d=await r.json();
+  if(!d.ok)return status((d.errors||["render failed"]).join("; "),"err");
+  status(`rendered: ${d.name} (downloading)`,"ok");
+  const a=document.createElement("a");a.href=d.file;a.download=d.name;a.click();
+});
+$("#toLiveBtn").addEventListener("click",()=>{
+  if(!SCENE)return status("open a scene first","err");
+  inject(`[workshop ⌁] send scene to Live set — '${SCENE.name}' v.${CURVER}, pads: ${PADS.map((p)=>p.slug).join(", ")}. Use the proven loaders + a scene row; confirm in the terminal when it's in the set.`);
+});
+$("#matchNotesBtn").addEventListener("click",async()=>{
+  if(!SCENE)return status("open a scene first","err");
+  status("analyzing chord shapes (a few seconds per tonal pad)…");
+  const r=await fetch("/api/ws/matchnotes",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({scene:SCENE.name})});
+  const d=await r.json();
+  if(!d.ok)return status((d.errors||["analysis failed"]).join("; "),"err");
+  const dlg=document.getElementById("kldlg");
+  const padRows=d.pads.map((p)=>`<tr><td>${p.name}</td><td>${p.strong.map((s)=>
+    `<span style="color:${d.scale.includes(s.name)?"var(--good)":"var(--warn)"}" title="energy ${s.energy}">${s.name}</span>`).join(" ")}</td><td class="num">${p.afford}</td></tr>`).join("");
+  const offRows=d.offenders.length?d.offenders.map((o)=>`<tr><td class="flag">${o.kind}</td><td>${o.b
+      ?`<b>${o.a.note}</b> (${o.a.pad}) vs <b>${o.b.note}</b> (${o.b.pad})`
+      :`<b>${o.a.note}</b> (${o.a.pad})`}</td><td>${o.suggest.pad
+      ?`${o.suggest.pad}: ${o.suggest.note} → ${o.suggest.to}<br><span style="color:var(--dim);font-size:10px">${o.suggest.why}</span>`
+      :`<span style="color:var(--dim)">${o.suggest.why}</span>`}</td></tr>`).join("")
+    :`<tr><td colspan="3" style="color:var(--good)">no offending pitch classes — if it still rubs, it's voicing/register (exposure), not notes</td></tr>`;
+  dlg.innerHTML=`<h3 style="margin:.2rem 0;color:var(--amber)">MATCH NOTES — ${d.family} family</h3>
+    <div style="font-size:10.5px;color:var(--dim)">scale: ${d.scale.join(" ")} · green = in scale · the pad with more strong tones eats the edit</div>
+    <table><tr><th>pad</th><th>strong tones</th><th>afford</th></tr>${padRows}</table>
+    <table><tr><th>clash</th><th>notes</th><th>suggested fix</th></tr>${offRows}</table>
+    ${d.offenders.length?`<button id="mnQueue" style="border-color:var(--amber);color:var(--amber)">⌁ QUEUE FIX (per-note lane)</button>`:""}
+    <button id="mnClose">close</button>`;
+  dlg.showModal();
+  dlg.querySelector("#mnClose").onclick=()=>dlg.close();
+  dlg.querySelector("#mnQueue")?.addEventListener("click",()=>{
+    dlg.close();
+    const lines=d.offenders.map((o)=>o.b
+      ?`${o.a.note}@${o.a.pad} vs ${o.b.note}@${o.b.pad} (${o.kind})${o.suggest.pad?` -> suggested: ${o.suggest.pad} ${o.suggest.note}->${o.suggest.to} (${o.suggest.why})`:" -> judgment call"}`
+      :`${o.a.note}@${o.a.pad} (${o.kind}) -> ${o.suggest.note}->${o.suggest.to}`).join("; ");
+    inject(`[workshop ⌁] MATCH NOTES fix queue — scene '${SCENE.name}' (${d.family} family, scale ${d.scale.join(" ")}). Offenders: ${lines}. Decide retune-vs-mute per case (founder rules: sparse pads never eat the edit; minimal motion), run the per-note lane, and stage candidates on the EAR QUEUE when ready.`);
+  });
+  status(d.offenders.length?`${d.offenders.length} offending note(s) found — see the report`:"chord shapes are clean","ok");
+});
+$("#matchSpaceBtn").addEventListener("click",async()=>{
+  if(!SCENE)return status("open a scene first","err");
+  status("measuring who stands where (a few seconds per voice)…");
+  const r=await fetch("/api/ws/matchspace",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({scene:SCENE.name})});
+  const d=await r.json();
+  if(!d.ok)return status((d.errors||["analysis failed"]).join("; "),"err");
+  const dlg=document.getElementById("kldlg");
+  const tierC={high:"var(--warn)",mid:"var(--amber)",low:"var(--good)"};
+  const tierWord={high:"same room, same time — the uncanny zone",mid:"some crowding — listen for it",low:"clear of each other"};
+  const rows=d.pairs.map((p)=>`<tr>
+    <td>${p.a.name}<br><span style="color:var(--faint);font-size:9px">×</span> ${p.b.name}</td>
+    <td class="num">${Math.round(p.together*100)}%</td>
+    <td class="num">${Math.round(p.sameRegister*100)}%</td>
+    <td style="color:${tierC[p.tier]}"><b>${p.exposure}</b><br><span style="font-size:9.5px">${tierWord[p.tier]}</span></td></tr>`).join("");
+  const worst=d.pairs[0];
+  dlg.innerHTML=`<h3 style="margin:.2rem 0;color:var(--amber)">MATCH SPACE — who stands where</h3>
+    <div style="font-size:10.5px;color:var(--dim)">the lock feeling = voices NOT living in the same register at the same time. High exposure can't be fixed by notes — it wants an octave move, a volume carve, or a different partner.</div>
+    <table><tr><th>pair</th><th>together</th><th>same register</th><th>exposure</th></tr>${rows}</table>
+    ${worst&&worst.tier!=="low"?`<button id="msQueue" style="border-color:var(--amber);color:var(--amber)">⌁ STAGE FIXES (octave moves → ear queue)</button>`:""}
+    <button id="msClose">close</button>`;
+  dlg.showModal();
+  dlg.querySelector("#msClose").onclick=()=>dlg.close();
+  dlg.querySelector("#msQueue")?.addEventListener("click",()=>{
+    dlg.close();
+    const hot=d.pairs.filter((p)=>p.tier!=="low").map((p)=>
+      `${p.a.name} × ${p.b.name} (together ${Math.round(p.together*100)}%, same register ${Math.round(p.sameRegister*100)}%, exposure ${p.exposure})`).join("; ");
+    inject(`[workshop ⌁] MATCH SPACE fixes — scene '${SCENE.name}'. Crowded pairs: ${hot}. Bake candidates onto the EAR QUEUE: octave moves (±12 st, key-invariant) for whichever voice can register-shift without losing its identity, plus a volume-carve take if octave moves fight the material. Note the exposure doctrine: if nothing decrowds it, say so honestly - some pairs want a different partner, not a fix.`);
+  });
+  status(`exposure measured — worst pair: ${worst?worst.exposure:"n/a"}`,"ok");
+});
+$("#keylockBtn").addEventListener("click",async()=>{
+  if(!SCENE)return status("open a scene first","err");
+  status("analyzing keys…");
+  const r=await fetch("/api/ws/keylock",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({scene:SCENE.name,apply:false})});
+  const d=await r.json();
+  if(!d.ok)return status((d.errors||["keylock failed"]).join("; "),"err");
+  const dlg=$("#kldlg");
+  const alts=(d.alternatives||[]).map((a)=>`<button data-alt="${a.target}">${a.target} (cost ${a.cost})</button>`).join("");
+  const cell=(m)=>m.flagged?`±${Math.abs(m.delta)} st → per-note lane`
+    :[m.delta?`${m.delta>0?"+":""}${m.delta} st`:null,
+      m.cents==null?null:(m.tuneFix?`tune ${m.tuneFix>0?"+":""}${m.tuneFix}¢ (sits ${m.cents>0?"+":""}${m.cents}¢ off grid)`:"in tune")]
+     .filter(Boolean).join(" · ")||"in key";
+  dlg.innerHTML=`<h3 style="margin:.2rem 0;color:var(--amber)">MATCH KEYS → ${d.plan.target} family</h3>
+    <div style="font-size:11px;color:var(--dim)">keys + tuning in one pass — every pad measured against the same grid</div>
+    <table><tr><th>pad</th><th>now</th><th>move</th></tr>${d.plan.moves.map((m)=>
+      `<tr><td>${m.name}</td><td>${m.from}</td><td class="${m.flagged?"flag":""}">${cell(m)}</td></tr>`).join("")}</table>
+    ${alts?`<div style="font-size:10px;color:var(--dim);margin-bottom:.4rem">other keys weighed: ${alts}</div>`:""}
+    <button id="klApply" style="border-color:var(--amber);color:var(--amber)">APPLY</button>
+    <button id="klCancel">cancel</button>`;
+  dlg.showModal();
+  dlg.querySelector("#klCancel").onclick=()=>dlg.close();
+  dlg.querySelectorAll("[data-alt]").forEach((b)=>b.onclick=async()=>{dlg.close();await applyKeylock(b.dataset.alt);});
+  dlg.querySelector("#klApply").onclick=async()=>{dlg.close();await applyKeylock(null);};
+});
+async function applyKeylock(target){
+  status("applying key-lock…");
+  const r=await fetch("/api/ws/keylock",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({scene:SCENE.name,apply:true,...(target?{target}:{})})});
+  const d=await r.json();
+  if(!d.ok)return status((d.errors||["apply failed"]).join("; "),"err");
+  for(const m of d.plan.moves){const p=padBy(m.track);
+    if(p&&!m.flagged)p.pitchSemitones=Math.round((p.pitchSemitones+m.delta+(m.tuneFix||0)/100)*100)/100;}
+  draw();
+  const fl=d.plan.moves.filter((m)=>m.flagged);
+  status(`keys + tuning matched to ${d.plan.target}: ${d.applied} adjustment(s)${fl.length?` · ${fl.length} flagged per-note`:""}`,"ok");
+  if(playing())await restart();
+  reportFocus(`matched keys to ${d.plan.target}`);
+}
+
+// ---- agent suggestions: authored by the seat, clicked by the human ----
+async function loadSuggestions(){
+  if(!SCENE)return;
+  try{
+    const d=await (await fetch(`/api/ws/suggestions?scene=${encodeURIComponent(SCENE.name)}`)).json();
+    const fresh=JSON.stringify(d.suggestions??[]);
+    if(fresh!==JSON.stringify(SUGGS)){SUGGS=d.suggestions??[];drawSuggestions();}
+  }catch{}
+}
+function drawSuggestions(){
+  const box=$("#suggs"),list=$("#sugglist");
+  box.classList.toggle("has",SUGGS.length>0);
+  $("#sughint").textContent=SUGGS.length?"authored from extracts + the principles doc + the taste ledger — tap one to hear it":"";
+  list.innerHTML="";
+  for(const s of SUGGS){
+    if(s.status==="dismissed")continue;
+    const card=document.createElement("div");
+    card.className="sugg"+(s.status==="applied"?" applied":"");
+    const pad=padBy(s.track);
+    // staged truth survives refresh: a render is ON the pad if it's the
+    // session's staged audition OR the version's kept baseline
+    const stagedNow=ws.vibes[s.track]?.staged===s.render||ws.base[s.track]===s.render;
+    card.innerHTML=`
+      <div class="row1"><span class="kind ${s.kind}">${s.kind}</span><b>${s.title}</b><span class="pad">${pad?.name??s.padSlug}</span>
+        ${s.status==="applied"&&stagedNow?`<span class="staged">ON PAD ✓</span>`:""}</div>
+      <div class="why" title="click to read the full reasoning">${s.rationale}</div>
+      <div class="acts">
+      ${s.status==="applied"
+        ?`${stagedNow?"":`<button class="btn quiet" data-hear="${s.id}">stage on pad</button>`}
+          <span class="steer" title="steering for the next take: less ↔ more of the effect — sent with ↻ rework; nothing renders until then">
+            <span class="lbl">less</span><input class="amberfill" type="range" min="0" max="100" value="50" data-steer="${s.id}"><span class="lbl">more</span></span>
+          <button class="btn quiet smart" data-reroll="${s.id}" title="rework THIS take with your less/more steering (centered = a different angle)">↻ rework</button>
+          <button class="btn quiet" data-discard="${s.id}" title="unstage and drop the card">✕</button>`
+        :`<button class="btn primary" data-apply="${s.id}">APPLY</button>`}
+      </div>`;
+    card.querySelector(".why").addEventListener("click",(e)=>e.currentTarget.classList.toggle("open"));
+    card.querySelector("[data-apply]")?.addEventListener("click",()=>applySuggestion(s));
+    card.querySelector("[data-hear]")?.addEventListener("click",()=>stageSuggestion(s));
+    card.querySelector("[data-reroll]")?.addEventListener("click",()=>{
+      const v=Number(card.querySelector("[data-steer]").value);
+      const steer=v<40?`LESS of the effect (dial it back ~${100-v}%: fewer occurrences / lighter presence — you pick the right axis)`
+        :v>60?`MORE of the effect (push it ~${v}%: denser, wider coverage, more occurrences — you pick the right axis)`
+        :"a different angle on the same idea, similar dose (vary slots/shape/heat)";
+      inject(`[workshop ⌁] REWORK suggestion '${s.id}' (${s.title}) for pad ${s.padSlug} in scene '${SCENE.name}'. Founder steering: ${steer}. Author the revised plan, replace the card in -suggestions.json as a fresh proposed card (new id, note what changed); the UI is polling.`);
+      status("rework brief sent with your steering — a revised card will appear","ok");
+    });
+    card.querySelector("[data-discard]")?.addEventListener("click",async()=>{
+      // rollback: unstage from the pad + drop the card (renders stay on disk)
+      if(ws.vibes[s.track]?.staged===s.render){delete ws.vibes[s.track];delete ws.ab[s.track];}
+      await fetch("/api/ws/suggestion-status",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({scene:SCENE.name,id:s.id,status:"dismissed"})});
+      SUGGS=SUGGS.filter((x)=>x.id!==s.id);drawSuggestions();draw();
+      if(ws.act.has(s.track))await restart();
+      status(`'${s.title}' unstaged — back to the baseline`,"ok");
+      reportFocus(`discarded suggestion ${s.id}`);
+    });
+    list.appendChild(card);
+  }
+}
+async function applySuggestion(s,amount){
+  status(`rendering '${s.title}'${amount?` @ ${amount}%`:""}${ws.base[s.track]?" on top of the kept baseline":""}…`);
+  const r=await fetch("/api/ws/apply-suggestion",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({scene:SCENE.name,id:s.id,base:ws.base[s.track]??null,amount:amount??s.amount??50})});
+  const d=await r.json();
+  if(!d.ok)return status((d.errors||["apply failed"]).join("; "),"err");
+  s.status="applied";s.render=d.name;if(amount)s.amount=amount;
+  if(d.witness)status(`'${s.title}' rendered — witness ${d.witness.ok??"ran"}, staging on the pad…`,"ok");
+  await stageSuggestion(s);
+  drawSuggestions();
+  reportFocus(`applied suggestion ${s.id}`);
+}
+async function stageSuggestion(s){
+  if(!s.render)return;
+  if(ws.base[s.track]===s.render){drawSuggestions();return status(`'${s.title}' is already this version's kept baseline`,"ok");}
+  ws.vibes[s.track]={name:s.title,staged:s.render};
+  delete ws.ab[s.track];              // edited side = the staged render
+  ws.act.add(s.track);                // hear it in the loop right away
+  draw();drawSuggestions();
+  await restart();
+  status(`'${s.title}' live on ${padBy(s.track)?.name} — A/B toggles it against the original`,"ok");
+}
+$("#suggestBtn").addEventListener("click",()=>{
+  if(!SCENE)return status("open a scene first","err");
+  const profiles=PADS.map((p)=>`${p.slug}(${p.role}${sounding(p)!=null?", "+NAMES[sounding(p)]+" fam":""})`).join(", ");
+  inject(`[workshop ⌁] SUGGEST for scene '${SCENE.name}' v.${CURVER} — pads: ${profiles}. Run vibe extracts, consult the principles doc + idiom table + ledger, and write workshop suggestions (safe bets AND 1-2 riskier interesting ideas, each with rationale + a ready vibe plan) to the scene's -suggestions.json. The UI is polling; cards appear as soon as the file lands.`);
+  status("asked the agent for suggestions — cards will appear here","ok");
+});
+setInterval(()=>{loadSuggestions();loadLadder();},4000);
+
+
+// ---- EAR QUEUE: agent-staged audition rows, your ears where required ----
+let LADDER=[],ladAudio=null;
+async function loadLadder(){
+  if(!SCENE)return;
+  try{
+    const d=await (await fetch(`/api/ws/ladder?scene=${encodeURIComponent(SCENE.name)}`)).json();
+    const fresh=JSON.stringify(d.items??[]);
+    if(fresh!==JSON.stringify(LADDER)){LADDER=d.items??[];drawLadder();}
+  }catch{}
+}
+function drawLadder(){
+  const box=document.getElementById("ladder");
+  box.classList.toggle("has",LADDER.length>0);
+  const open=LADDER.filter((i)=>!i.verdict).length;
+  document.getElementById("ladHint").textContent=LADDER.length?`${open} to hear · "in mix" swaps the take onto its pad inside the loop, so you always have the reference`:"";
+  const list=document.getElementById("ladList");list.innerHTML="";
+  for(const it of LADDER){
+    const pad=padBy(it.track);
+    const active=ws.over[it.track]===it.render;
+    // a take is STALE if the pad's pitch moved since it was baked
+    const stale=it.basePitch!=null&&pad&&Math.abs(pad.pitchSemitones-it.basePitch)>0.001;
+    const row=document.createElement("div");
+    row.className="lad"+(active?" active":"")+(it.verdict?" verdicted":"");
+    row.innerHTML=`<button class="btn quiet" data-mix>${active?"\u25FC in mix":"\u25B6 in mix"}</button>
+      <button class="btn quiet" data-solo>\u25B6 solo</button>
+      <b>${it.label}</b><span class="lf">${stale?'<span style="color:var(--warn)">STALE — the pad moved since this was baked; ask the agent for a rebake · </span>':""}${it.listenFor??""}</span>
+      <span class="padtag">${pad?.name??""}</span>
+      <button class="btn quiet" data-v="good" title="keeper" style="color:var(--good)">\u2713</button>
+      <button class="btn quiet" data-v="no" title="not it" style="color:var(--warn)">\u2715</button>
+      ${it.verdict?`<span class="staged">${it.verdict==="good"?"\u2713 kept":"\u2715 passed"}</span>`:""}`;
+    row.querySelector("[data-mix]").addEventListener("click",async()=>{
+      if(ladAudio){ladAudio.pause();ladAudio=null;}
+      if(active)delete ws.over[it.track];
+      else{
+        for(const k of Object.keys(ws.over))delete ws.over[k];   // one audition at a time
+        ws.over[it.track]=it.render;
+        if(!ws.act.size)ws.act=new Set(PADS.map((p)=>p.track));
+        ws.act.add(it.track);
+      }
+      drawLadder();await restart();
+      status(active?"back to the pad's own take":`'${it.label}' in the mix on ${pad?.name} — listen for the lock`,"ok");
+    });
+    row.querySelector("[data-solo]").addEventListener("click",()=>{
+      stopAll();
+      if(ladAudio){ladAudio.pause();ladAudio=null;return;}
+      ladAudio=new Audio(`/api/ws/render?f=${encodeURIComponent(it.render)}&scene=${encodeURIComponent(SCENE.name)}`);
+      ladAudio.play();
+      status(`'${it.label}' solo`,"ok");
+    });
+    row.querySelectorAll("[data-v]").forEach((b)=>b.addEventListener("click",async()=>{
+      await fetch("/api/ws/ladder-verdict",{method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({scene:SCENE.name,id:it.id,verdict:b.dataset.v})});
+      it.verdict=b.dataset.v;
+      if(b.dataset.v==="no"&&ws.over[it.track]===it.render){delete ws.over[it.track];await restart();}
+      drawLadder();reportFocus(`ear-queue verdict ${b.dataset.v} on ${it.id}`);
+    }));
+    list.appendChild(row);
+  }
+}
+document.getElementById("ladHead").addEventListener("click",()=>{
+  const l=document.getElementById("ladList");
+  const open=l.style.display!=="none";
+  l.style.display=open?"none":"flex";
+  document.getElementById("ladCaret").textContent=open?"\u25B8":"\u25BE";
+});
+
+boot();
+</script>

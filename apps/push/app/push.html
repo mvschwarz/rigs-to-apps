@@ -1,0 +1,313 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noons — Virtual Push</title>
+<style>
+  /* LinkPix-dark reskin — kit-v2 (CSS-only; markup + JS byte-identical to kit.html).
+     dev-driver3 ruling: role HUES stay DATA color (active pads exempt from INVERT);
+     lock-sage #7ea36f = locked/approved data only; coral = human-must-act;
+     good/amber => neutral ladder. The original var NAMES are redefined to LinkPix
+     values so the inline style="" attrs (which reference them) re-tone without any
+     markup edit; the hardcoded verdict-anchor hex is overridden via scoped !important. */
+  :root {
+    --bg:#121214; --panel:rgba(255,255,255,.07); --edge:rgba(255,255,255,.16);
+    --ink:rgba(255,255,255,.95); --dim:rgba(255,255,255,.52);
+    --amber:rgba(255,255,255,.52); --good:rgba(255,255,255,.68); --bad:#ff6b5a;
+    --fg:rgba(255,255,255,.95); --body:rgba(255,255,255,.68); --faint:rgba(255,255,255,.38);
+    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.16); --raised:rgba(255,255,255,.12);
+    --coral:#ff6b5a; --indigo:#8b93ff; --sage:#7ea36f;
+    --sans:Helvetica,"Helvetica Neue",Arial,sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:13px/1.5 var(--sans); }
+  header { display:flex; align-items:center; gap:1rem; padding:.8rem 1.4rem; border-bottom:1px solid var(--line); }
+  header h1 { margin:0; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:var(--fg); }
+  header .meta { color:var(--dim); font-size:12px; }
+  #status { font-size:12px; color:var(--dim); margin-left:auto; }
+  #status.err { color:var(--coral); } #status.ok { color:var(--body); }
+  #stopBtn { background:var(--panel); color:var(--body); border:1px solid var(--line2); border-radius:2px; font:inherit; padding:.4rem 1.1rem; cursor:pointer; }
+
+  #surface { display:flex; gap:1rem; padding:1.2rem 1.4rem; align-items:flex-start; }
+  #scenes { display:flex; flex-direction:column; gap:.55rem; }
+  #scenes .scenehead { font-size:10px; color:var(--dim); letter-spacing:.15em; text-transform:uppercase; padding:.2rem 0 .35rem; }
+  .scene { width:140px; min-height:64px; background:var(--panel); border:1px solid var(--line2); border-radius:2px; color:var(--body); font:inherit; font-size:11px; cursor:pointer; padding:.3rem .45rem; text-align:left; }
+  .scene:hover { background:rgba(255,255,255,.10); }
+  #grid { display:flex; gap:.55rem; flex:1; overflow-x:auto; }
+  .col { display:flex; flex-direction:column; gap:.55rem; min-width:150px; flex:1; }
+  .colhead { font-size:10px; letter-spacing:.15em; text-transform:uppercase; padding:.2rem 0 .35rem; }
+  .pad { position:relative; height:64px; background:var(--panel); border:1px solid var(--line2); border-radius:2px; color:var(--fg); font:inherit; font-size:11px; cursor:pointer; padding:.35rem .5rem; text-align:left; overflow:hidden; }
+  .pad small { display:block; color:var(--dim); font-size:9.5px; }
+  .pad:hover { border-color:rgba(255,255,255,.35); }
+  .pad.loading { border-style:dashed; opacity:.7; }
+  /* role-hued active pad: hue + border are JS-set inline (DATA color) and the dark
+     text is kept for contrast on the hue — EXEMPT from active=INVERT per ruling */
+  .pad.active { color:#14100a; font-weight:700; }
+  .pad.active small { color:#14100acc; }
+  .pad .tp { position:absolute; top:.25rem; right:.4rem; font-size:9px; color:var(--dim); }
+  .pad.active .tp { color:#14100a; }
+  footer { padding:.7rem 1.4rem; color:var(--dim); font-size:11px; border-top:1px solid var(--line); }
+  #inspector button { font:inherit; font-size:10.5px; padding:.1rem .45rem; cursor:pointer; background:var(--panel); color:var(--fg); border:1px solid var(--line2); border-radius:2px; }
+  #inspector b { color:var(--fg); }
+  /* 2px radius on inline-styled chrome without touching attributes */
+  #palSel, #saveSceneBtn, .anch { border-radius:2px; }
+  /* verdict anchors: override the hardcoded inline hex via scoped !important (NO attribute edit).
+     locked = lock-sage (approved data) · almost = raised-neutral · clash = coral (needs human) */
+  .anch[data-v="locked"] { color:var(--sage) !important; border-color:var(--sage) !important; }
+  .anch[data-v="almost"] { color:var(--body) !important; border-color:var(--line2) !important; }
+  .anch[data-v="clash"]  { color:var(--coral) !important; border-color:var(--coral) !important; }
+</style>
+<header>
+  <select id="palSel" title="switch palette (each keeps its own tempo contract)" style="background:var(--panel);color:var(--amber);border:1px solid var(--edge);font:inherit;font-size:11px;letter-spacing:.1em;padding:.35rem .4rem;cursor:pointer"></select>
+  <h1>Virtual Push</h1>
+  <span class="meta" id="kitmeta"></span>
+  <span id="status">loading kit…</span>
+  <button id="saveSceneBtn" style="background:var(--panel);color:var(--good);border:1px solid var(--good);font:inherit;padding:.4rem 1rem;cursor:pointer">★ save combo as scene</button>
+  <span id="anchorBar" style="display:flex;gap:.35rem;align-items:center">
+    <span style="font-size:10px;color:var(--dim);letter-spacing:.12em">VERDICT:</span>
+    <button class="anch" data-v="locked" style="background:var(--panel);color:var(--good);border:1px solid var(--good);font:inherit;padding:.4rem .7rem;cursor:pointer" title="what's playing feels locked">🔒 locked</button>
+    <button class="anch" data-v="almost" style="background:var(--panel);color:#d9a441;border:1px solid #d9a441;font:inherit;padding:.4rem .7rem;cursor:pointer" title="close but not locked">〰 almost</button>
+    <button class="anch" data-v="clash" style="background:var(--panel);color:#d96a5a;border:1px solid #d96a5a;font:inherit;padding:.4rem .7rem;cursor:pointer" title="doesn't work together">✕ clash</button>
+  </span>
+  <button id="stopBtn">⏹ Stop</button>
+</header>
+<div id="inspector" style="display:flex;gap:1.2rem;align-items:center;padding:.5rem 1.4rem;border-bottom:1px solid var(--edge);font-size:12px;color:var(--dim);min-height:2.4rem;flex-wrap:wrap">
+  select a pad (last tapped) to dial it in…
+</div>
+<div id="surface">
+  <div id="scenes"><div class="scenehead">scenes</div></div>
+  <div id="grid"></div>
+</div>
+<footer>pad = toggle (one per column, Live-style exclusive) · scene = fire a known-good combo · everything restarts bar-locked in sync · this grid mirrors what the rails will build on the real Push</footer>
+<script>
+const HUES = { drums:"#d9a441", bass:"#7fbf7f", vocal:"#7ea6d9", synth:"#b48ead", guitar:"#c98d5f", wash:"#6ec6c6", other:"#98a0b0" };
+let KIT=null, PROJ=null, SEL=null;   // SEL = last-tapped pad (dial-in target)
+let actx=null, sources=[], gains=[], active={};   // role -> pad object
+const bufCache=new Map();
+const $=(s)=>document.querySelector(s);
+const status=(m,c="")=>{const e=$("#status");e.textContent=m;e.className=c;};
+const spb=()=>60/KIT.tempo;
+const padOf=(track)=>{for(const c of KIT.columns){const p=c.pads.find((x)=>x.track===track);if(p)return{...p,role:c.role};}return null;};
+const saveKit=async()=>{await fetch("/api/kitmeta",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(KIT)});};
+
+// ---------- the dial-in kit, session-view edition ----------
+function inspect(){
+  const box=$("#inspector");
+  if(!SEL){box.textContent="select a pad (last tapped) to dial it in…";return;}
+  const p=padOf(SEL);
+  const phase=p.phaseBeats??0;
+  const pitch=PROJ.tracks[p.track]?.clips[0]?.pitchSemitones??0;
+  const density=PROJ.tracks[p.track]?.clips[0]?.meta?.density??null;
+  box.innerHTML=`<b style="color:${HUES[p.role]}">${p.name}</b>
+    <span>mark <button data-m="good" title="this one is good">👍</button><button data-m="fix" title="flag for the kit doctor">🔧</button><button data-m="" title="clear mark">·</button>
+    ${p.mark==="good"?'<b style="color:var(--good)">good</b>':p.mark==="fix"?'<b style="color:var(--amber)">needs fixing</b>':""}
+    ${p.gridCheck?`<b style="color:${p.gridCheck==="needs-manual"?"var(--bad)":"var(--good)"}">grid:${p.gridCheck}</b>`:""}</span>
+    <span>nudge <button data-n="-1">−1</button><button data-n="-0.5">−½</button><button data-n="-f">−10ms</button><button data-n="+f">+10ms</button><button data-n="0.5">+½</button><button data-n="1">+1</button>
+    <b>${phase?`${phase>0?"+":""}${(+phase.toFixed(3))}b`:"on-grid"}</b>
+    <button data-n="0" title="reset phase">reset</button></span>
+    <span>pitch <button data-p="-1">−1</button><b>${pitch>0?"+":""}${pitch} st</b><button data-p="+1">+1</button>${pitch?`<button data-p="reset" title="back to original pitch">reset</button>`:""}</span>
+    ${density?`<span>warp <button id="densflip">${density} → ${density==="linear"?"beat-pinned":"linear"}</button></span>`:""}
+    <span style="font-size:10.5px">nudges are instant · pitch/warp re-render (~2s)</span>`;
+  box.querySelectorAll("[data-m]").forEach((b)=>b.addEventListener("click",()=>{
+    for(const c of KIT.columns){const x=c.pads.find((y)=>y.track===SEL);if(x){if(b.dataset.m)x.mark=b.dataset.m;else delete x.mark;}}
+    saveKit();drawPadChips();inspect();
+    status(b.dataset.m==="fix"?"flagged - run kit-doctor to repair marked pads":"mark saved","ok");
+  }));
+  box.querySelectorAll("[data-n]").forEach((b)=>b.addEventListener("click",()=>{
+    const v=b.dataset.n;
+    const fine=0.01/spb();
+    const cur=p.phaseBeats??0;
+    const next=v==="0"?0:+(cur+(v==="-f"?-fine:v==="+f"?fine:Number(v))).toFixed(4);
+    for(const c of KIT.columns){const x=c.pads.find((y)=>y.track===SEL);if(x)x.phaseBeats=next;}
+    saveKit();
+    if(Object.values(active).some((a)=>a.track===SEL))restart();
+    inspect();
+  }));
+  box.querySelectorAll("[data-p]").forEach((b)=>b.addEventListener("click",async()=>{
+    const proj=await (await fetch("/api/project")).json();
+    const clip=proj.tracks[p.track].clips[0];
+    clip.pitchSemitones=b.dataset.p==="reset"?0:(clip.pitchSemitones??0)+Number(b.dataset.p);
+    if(!clip.pitchSemitones)delete clip.pitchSemitones;
+    const r=await fetch("/api/save",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(proj)});
+    if(!(await r.json()).ok)return status("pitch save failed","err");
+    PROJ=proj;bufCache.delete(p.track);
+    status("re-rendering pitch…");
+    if(Object.values(active).some((a)=>a.track===SEL)){await buffer(p.track);restart();}
+    inspect();
+  }));
+  box.querySelector("#densflip")?.addEventListener("click",async()=>{
+    const flip=density==="linear"?"beat":"linear";
+    status(`re-anchoring ${flip}…`);
+    const r=await fetch("/api/reanchor",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({trackIndex:p.track,clipIndex:0,density:flip})});
+    const b2=await r.json();
+    if(!b2.ok)return status(b2.errors.join("; "),"err");
+    PROJ=await (await fetch("/api/project")).json();
+    bufCache.delete(p.track);
+    if(Object.values(active).some((a)=>a.track===SEL)){await buffer(p.track);restart();}
+    status(`re-anchored ${flip} (${b2.pins} pins)`,"ok");
+    inspect();
+  });
+}
+$("#saveSceneBtn").addEventListener("click",()=>{
+  const pads=Object.values(active).map((p)=>p.track);
+  if(pads.length<2)return status("activate at least 2 pads first","err");
+  const nm=prompt("scene name",Object.values(active).map((p)=>p.name.split(/[-–]/)[0].trim()).join(" × ").slice(0,50));
+  if(!nm)return;
+  KIT.scenes.push({name:nm,pads,curated:true});
+  saveKit();
+  drawScenes();
+  status(`scene "${nm}" saved - it will build into the Live set`,"ok");
+});
+
+async function boot(){
+  // palette selector: switching hops to that palette's server, same surface
+  try{
+    const pd=await (await fetch("/api/palettes")).json();
+    const sel=$("#palSel");
+    for(const p of pd.palettes){
+      const o=document.createElement("option");
+      o.value=p.port;o.textContent=p.label||p.name;
+      if(p.name===pd.current)o.selected=true;
+      sel.appendChild(o);
+    }
+    sel.onchange=()=>{location.href=`http://127.0.0.1:${sel.value}/kit.html`;};
+    if(!pd.palettes.length)sel.style.display="none";
+  }catch{$("#palSel").style.display="none";}
+  KIT=await (await fetch("/api/kitmeta")).json();
+  PROJ=await (await fetch("/api/project")).json();
+  $("#kitmeta").textContent=`${KIT.name} · ${KIT.tempo} BPM · ${KIT.columns.reduce((a,c)=>a+c.pads.length,0)} pads`;
+  const grid=$("#grid");
+  for(const col of KIT.columns){
+    const div=document.createElement("div");
+    div.className="col";
+    div.innerHTML=`<div class="colhead" style="color:${HUES[col.role]}">${col.role}</div>`;
+    for(const pad of col.pads){
+      const b=document.createElement("button");
+      b.className="pad";
+      b.dataset.role=col.role;
+      b.dataset.track=pad.track;
+      b.innerHTML=`${pad.name}<small>${pad.fromProject??""}${pad.srcMuted?" · was muted":""}</small><span class="tp"></span>`;
+      b.addEventListener("click",()=>{SEL=pad.track;inspect();togglePad(col.role,pad,b);});
+      div.appendChild(b);
+    }
+    grid.appendChild(div);
+  }
+  drawScenes();
+  drawPadChips();
+  status("ready - tap pads","ok");
+}
+
+// pad corner chips: transpose + founder mark + doctor verdict
+function drawPadChips(){
+  for(const col of KIT.columns)for(const p of col.pads){
+    const el=padEl(p.track); if(!el)continue;
+    const bits=[];
+    if(p.transpose)bits.push(`${p.transpose>0?"+":""}${p.transpose}st`);
+    if(p.mark==="good")bits.push("👍");
+    if(p.mark==="fix")bits.push("🔧");
+    if(p.gridCheck==="fixed")bits.push("✓grid");
+    if(p.gridCheck==="needs-manual")bits.push("✗grid");
+    el.querySelector(".tp").textContent=bits.join(" ");
+  }
+}
+
+function drawScenes(){
+  const sc=$("#scenes");
+  sc.innerHTML='<div class="scenehead">scenes</div>';
+  KIT.scenes.forEach((s)=>{
+    const b=document.createElement("button");
+    b.className="scene";
+    b.textContent=`${s.curated?"◆":"▸"} ${s.name}`;
+    if(s.story)b.title=s.story;   // the WHY, on hover
+    if(s.curated)b.style.borderColor="var(--amber)",b.style.color="var(--amber)";
+    b.addEventListener("click",()=>fireScene(s));
+    sc.appendChild(b);
+  });
+}
+
+async function buffer(track){
+  if(bufCache.has(track)){const b=bufCache.get(track);bufCache.delete(track);bufCache.set(track,b);return b;} // LRU touch
+  const r=await fetch(`/api/clipwav?t=${track}&c=0`);
+  if(!r.ok) throw new Error(`pad render failed (${r.status})`);
+  const buf=await actx.decodeAudioData(await r.arrayBuffer());
+  bufCache.set(track,buf);
+  // LRU cap: hundreds of pads must not hold hundreds of decoded buffers
+  while(bufCache.size>32){const oldest=bufCache.keys().next().value;if(Object.values(active).some((a)=>a.track===oldest))break;bufCache.delete(oldest);}
+  return buf;
+}
+
+function padEl(track){ return [...document.querySelectorAll(".pad")].find((p)=>p.dataset.track===String(track)); }
+
+async function togglePad(role,pad,el){
+  lastScene=null;   // manual edit -> the playing set is no longer the fired scene
+  actx=actx||new AudioContext();
+  if(actx.state==="suspended") await actx.resume();
+  // find this pad under ANY key - scene fires store pads as "role#track",
+  // manual taps as "role"; a toggle must see both or scene pads can't be
+  // unselected (founder-caught: clicking just restarted it)
+  const mine=Object.keys(active).filter((k)=>active[k].track===pad.track);
+  if(mine.length){ mine.forEach((k)=>delete active[k]); return restart(); }
+  // Live-style exclusivity within the role (clears scene-keyed siblings too)
+  Object.keys(active).filter((k)=>k===role||k.startsWith(role+"#")).forEach((k)=>delete active[k]);
+  active[role]={...pad,el};
+  el.classList.add("loading");
+  try{ await buffer(pad.track); } catch(e){ status(e.message,"err"); delete active[role]; }
+  el.classList.remove("loading");
+  restart();
+}
+
+let lastScene=null;   // set on scene fire, cleared on manual pad toggle
+document.querySelectorAll(".anch").forEach((b)=>b.onclick=async()=>{
+  const pads=Object.values(active);
+  if(pads.length<2){ status("verdict needs 2+ pads playing","err"); return; }
+  const r=await fetch("/api/anchor",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({pads,verdict:b.dataset.v,scene:lastScene})});
+  const d=await r.json();
+  status(d.ok?`anchor #${d.count} banked: ${b.dataset.v} (${pads.map((p)=>p.name.split(/[-–]/)[0].trim()).join(" × ").slice(0,60)})`:"anchor failed","ok");
+});
+
+function fireScene(s){
+  lastScene=s.name;
+  actx=actx||new AudioContext();
+  active={};
+  for(const t of s.pads){
+    for(const col of KIT.columns){
+      const pad=col.pads.find((p)=>p.track===t);
+      if(pad) active[col.role+"#"+t]={...pad};   // scenes may stack same-role pads
+    }
+  }
+  status(`scene: ${s.name} (loading…)`);
+  Promise.all(Object.values(active).map((p)=>buffer(p.track).catch(()=>null))).then(restart);
+}
+
+async function restart(){
+  for(const s of sources){ try{s.stop();}catch{} }
+  sources=[]; gains=[];
+  document.querySelectorAll(".pad.active").forEach((p)=>{p.classList.remove("active");p.style.background="";p.style.borderColor="";});
+  const pads=Object.values(active);
+  if(!pads.length){ status("stopped",""); return; }
+  const t0=actx.currentTime+0.08;
+  for(const p of pads){
+    const buf=bufCache.get(p.track);
+    if(!buf) continue;
+    const src=actx.createBufferSource();
+    src.buffer=buf; src.loop=true; src.loopStart=0;
+    src.loopEnd=buf.duration;
+    // phase nudge (the dial-in): rotate the loop's start point vs the bar clock
+    const phase=padOf(p.track)?.phaseBeats??0;
+    const off=((phase*spb())%buf.duration+buf.duration)%buf.duration;
+    const g=actx.createGain();
+    const trackGain=PROJ.tracks[p.track]?.gainDb??0;
+    g.gain.value=Math.pow(10,trackGain/20);
+    src.connect(g); g.connect(actx.destination);
+    src.start(t0,off);
+    sources.push(src); gains.push(g);
+    const el=p.el ?? padEl(p.track);
+    if(el){ el.classList.add("active"); el.style.background=HUES[p.role]; el.style.borderColor=HUES[p.role]; }
+  }
+  status(`${pads.length} pads looping @ ${KIT.tempo} BPM`,"ok");
+}
+
+$("#stopBtn").addEventListener("click",()=>{ active={}; restart(); });
+window.addEventListener("keydown",(e)=>{ if(e.code==="Space"){ e.preventDefault(); active={}; restart(); } });
+boot();
+</script>

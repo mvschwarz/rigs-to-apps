@@ -1,0 +1,36 @@
+{
+  "manifest_version": 1,
+  "id": "push",
+  "name": "PUSH",
+  "summary": "A playable virtual Push that drives a real Ableton rig through an agent — 272 pads of your own library, tap a combo, lock the scene.",
+  "category": "create",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/push-linkpix.png", "alt": "A dark Virtual Push pad grid (registry-v1, 118 BPM, 272 pads): a Scenes column and role columns — Drums, Bass, Vocal, Synth, Guitar, Other, Bed — each pad a clip from a real music library, with a verdict bar reading locked / almost / clash and a save-combo-as-scene control" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/push",
+    "surface": {
+      "entry": "app/push.html",
+      "path": "/push.html",
+      "glyph": "⊞",
+      "hint": "Tap pads to dial a combo, save it as a scene, and let the agent drive Ableton to match"
+    },
+    "verify": [
+      "The box's shared runtime serves this pad-grid surface with your library mapped across the 272 pads and your saved scenes, laid out by role (drums, bass, vocal, synth, guitar, other, bed)",
+      "Tapping pads dials a combo and the verdict bar reads locked / almost / clash; saving a combo as a scene drives a REAL Ableton Live set through the agent — the Ableton backend runs on your own machine and is an external prerequisite, NOT shipped in this package",
+      "Compare the canonical installed source at ~/studio/apps/push against the box's served surface: repair (copy the canonical source in) ONLY if the box surface is missing, provably broken, or provably older; if the box surface is newer (forward drift) leave it untouched and report; if age or health is ambiguous, leave it untouched and report to the box lead agent — take no destructive action"
+    ]
+  },
+  "verbs": [
+    { "method": "GET",  "path": "/api/project",   "purpose": "Load the pad-grid project — pads, scenes, and the role layout" },
+    { "method": "GET",  "path": "/api/palettes",  "purpose": "List the available palettes (your libraries)" },
+    { "method": "GET",  "path": "/api/kitmeta",   "purpose": "Read the kit metadata — the pad-to-clip mapping" },
+    { "method": "GET",  "path": "/api/clipwav",   "purpose": "Fetch a pad's clip waveform for preview" },
+    { "method": "POST", "path": "/api/save",      "purpose": "Save a tapped combo as a named scene" },
+    { "method": "POST", "path": "/api/anchor",    "purpose": "Anchor a scene to the live Ableton set through the agent" },
+    { "method": "POST", "path": "/api/reanchor",  "purpose": "Re-anchor — update a scene's mapping to the live set" }
+  ]
+}

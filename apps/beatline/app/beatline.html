@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>beatline — music-video choreography</title>
+<style>
+  :root { --bg:#100e17; --panel:#181523; --ink:#d9d6cc; --dim:#7a7590; --purple:#8b5cf6; --purple2:#6d28d9; --red:#e5484d; --yellow:#f5d90a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 "JetBrains Mono", ui-monospace, monospace; }
+  header { display:flex; align-items:baseline; gap:16px; padding:14px 20px 6px; }
+  header h1 { font-size:16px; margin:0; letter-spacing:2px; }
+  header .meta { color:var(--dim); font-size:12px; }
+  header .right { margin-left:auto; display:flex; gap:8px; }
+  button { background:var(--panel); color:var(--ink); border:1px solid #2c2840; padding:7px 14px; font:inherit; cursor:pointer; border-radius:4px; }
+  button:hover { border-color:var(--purple); }
+  button.primary { background:var(--purple2); border-color:var(--purple2); }
+  #timeline { display:block; width:100%; cursor:crosshair; }
+  .lanes { padding:0 20px; }
+  .legend { display:flex; gap:18px; padding:4px 20px 2px; color:var(--dim); font-size:11px; letter-spacing:1px; }
+  .legend b { font-weight:400; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+  #status { padding:6px 20px 14px; color:var(--dim); font-size:12px; min-height:20px; }
+  #status .ok { color:#7bd88f; } #status .err { color:var(--red); }
+  .hint { color:var(--dim); font-size:11px; padding:0 20px 8px; letter-spacing:0.5px; }
+  #stage { display:flex; justify-content:center; background:#000; }
+  #stage video { max-height:46vh; width:auto; max-width:100%; }
+  #stagebar { display:flex; gap:14px; align-items:center; padding:6px 20px; color:var(--dim); font-size:12px; }
+  #stagebar .mode { color:var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <h1>BEATLINE</h1>
+  <span class="meta" id="trackmeta">loading…</span>
+  <div class="right">
+    <span id="readout" style="align-self:center;color:var(--dim);font-size:12px;min-width:170px;text-align:right;">0.00s · beat 8.0</span>
+    <button id="play">▶ play</button>
+    <button id="stop">⏹ stop</button>
+    <button class="primary" id="compile">compile ✓</button>
+    <button class="primary" id="render">render ⟳</button>
+  </div>
+</header>
+<div id="stage"><video id="video" muted playsinline></video></div>
+<div id="stagebar">viewing: <span class="mode" id="mode">latest render</span> · click a SECTION block to preview that system's bed · click here to <a href="#" id="backToReel" style="color:var(--purple)">return to the render</a></div>
+<div class="legend">
+  <b><span class="dot" style="background:var(--purple)"></span>pulse (locked, +<span id="poff"></span>)</b>
+  <b><span class="dot" style="background:#fff"></span>flash</b>
+  <b><span class="dot" style="background:var(--yellow)"></span>punch</b>
+  <b><span class="dot" style="background:var(--red)"></span>cut cadence</b>
+  <b>waveform = drum stem (kick dark / snare light)</b>
+</div>
+<div class="lanes"><canvas id="timeline"></canvas></div>
+<div class="hint">click FLASH lane to toggle a flash on the nearest pulse · click PUNCH lane to toggle a punch · click waveform to seek · every gesture is a rails patch with your provenance</div>
+<div id="status"></div>
+<script>
+const $ = (s) => document.querySelector(s);
+let B = null, ENV = null, audio = null, playheadT = 0, raf = null;
+
+const cv = $("#timeline"), ctx = cv.getContext("2d");
+const LANES = { ruler: 26, sections: 44, flash: 30, punch: 30, wave: 150, pad: 8 };
+const H = LANES.ruler + LANES.sections + LANES.flash + LANES.punch + LANES.wave + LANES.pad * 2;
+
+const spb = () => 60 / B.track.tempo;
+const dur = () => (B.track.endBeat - B.track.startBeat) * spb();
+const X = (t) => (t / dur()) * cv.width;   // reel sec -> px
+const T = (x) => (x / cv.width) * dur();   // px -> reel sec
+const beatToReel = (beat) => (beat - B.track.startBeat) * spb();
+
+function draw() {
+  const W = cv.width = cv.clientWidth * devicePixelRatio;
+  cv.height = H * devicePixelRatio;
+  cv.style.height = H + "px";
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  const w = cv.clientWidth;
+  ctx.clearRect(0, 0, w, H);
+  const xs = (t) => (t / dur()) * w;
+  let y = LANES.pad;
+
+  // ruler: bars + pulse ticks
+  ctx.fillStyle = "#7a7590"; ctx.font = "10px monospace";
+  for (let b = Math.ceil(B.track.startBeat); b < B.track.endBeat; b++) {
+    const tPulse = beatToReel(b + B.track.pulseOffset);
+    if (tPulse < 0 || tPulse > dur()) continue;
+    const x = xs(tPulse);
+    const isBar = (b - B.track.startBeat) % 4 === 0;
+    ctx.strokeStyle = isBar ? "rgba(139,92,246,0.9)" : "rgba(139,92,246,0.35)";
+    ctx.beginPath(); ctx.moveTo(x, y + (isBar ? 2 : 10)); ctx.lineTo(x, y + LANES.ruler - 2); ctx.stroke();
+    if (isBar) ctx.fillText(String(b), x + 3, y + 12);
+  }
+  y += LANES.ruler;
+
+  // sections
+  const sections = [...B.sections].sort((a, c) => a.atBeat - c.atBeat);
+  sections.forEach((s, i) => {
+    const t0 = Math.max(0, beatToReel(s.atBeat));
+    const t1 = i + 1 < sections.length ? beatToReel(sections[i + 1].atBeat) : dur();
+    const sys = B.systems[Array.isArray(s.bed) ? s.bed[0] : s.bed] || {};
+    ctx.fillStyle = sys.hue || "#2c2840";
+    ctx.fillRect(xs(t0) + 1, y + 2, xs(t1) - xs(t0) - 2, LANES.sections - 6);
+    ctx.fillStyle = "#d9d6cc"; ctx.font = "11px monospace";
+    ctx.fillText(`${s.name} · ${Array.isArray(s.bed) ? s.bed.join("/") : s.bed} · /${s.cutEveryBeats}`, xs(t0) + 6, y + 18);
+    // cut cadence ticks
+    ctx.strokeStyle = "rgba(229,72,77,0.9)";
+    for (let bb = s.atBeat; bb < (i + 1 < sections.length ? sections[i + 1].atBeat : B.track.endBeat); bb += s.cutEveryBeats) {
+      const x = xs(Math.max(0, beatToReel(bb)));
+      ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y + LANES.sections - 4); ctx.stroke();
+    }
+  });
+  y += LANES.sections;
+
+  // flash lane
+  ctx.fillStyle = "#141120"; ctx.fillRect(0, y, w, LANES.flash - 2);
+  ctx.fillStyle = "#7a7590"; ctx.fillText("FLASH", 6, y + 19);
+  for (const f of B.events.flashes) {
+    const x = xs(beatToReel(f.atBeat));
+    ctx.fillStyle = f.color === "black" ? "#555" : "#fff";
+    ctx.fillRect(x - 2, y + 4, 5, LANES.flash - 10);
+  }
+  y += LANES.flash;
+
+  // punch lane
+  ctx.fillStyle = "#141120"; ctx.fillRect(0, y, w, LANES.punch - 2);
+  ctx.fillStyle = "#7a7590"; ctx.fillText("PUNCH", 6, y + 19);
+  ctx.fillStyle = "#f5d90a";
+  for (const p of B.events.punches) {
+    const x = xs(beatToReel(p.atBeat));
+    ctx.beginPath(); ctx.arc(x, y + LANES.punch / 2 - 1, 5, 0, 7); ctx.fill();
+  }
+  y += LANES.punch;
+
+  // drum waveform from envelope (kick dark purple, snare light) + pulse ticks
+  const n = ENV.frames, mid = y + LANES.wave / 2;
+  for (let i = 0; i < w; i++) {
+    const f = Math.min(n - 1, Math.floor((i / w) * n));
+    const lo = ENV.low[f], mi = ENV.mid[f];
+    ctx.fillStyle = "rgba(109,40,217,0.75)";
+    ctx.fillRect(i, mid - lo * (LANES.wave / 2 - 4), 1, lo * (LANES.wave - 8) || 1);
+    ctx.fillStyle = "rgba(217,214,204,0.55)";
+    ctx.fillRect(i, mid - mi * (LANES.wave / 2 - 14), 1, mi * (LANES.wave - 28) || 1);
+  }
+  ctx.strokeStyle = "rgba(139,92,246,0.5)";
+  for (const t of ENV.beats) { const x = xs(t); ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x, y + 12); ctx.stroke(); }
+
+  // playhead
+  const px = xs(playheadT);
+  ctx.strokeStyle = "#22d3ee"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke(); ctx.lineWidth = 1;
+}
+
+function laneAt(yc) {
+  let y = LANES.pad;
+  if (yc < (y += LANES.ruler)) return "ruler";
+  if (yc < (y += LANES.sections)) return "sections";
+  if (yc < (y += LANES.flash)) return "flash";
+  if (yc < (y += LANES.punch)) return "punch";
+  return "wave";
+}
+const nearestPulse = (t) => {
+  const beat = t / spb() + B.track.startBeat;
+  const k = Math.round(beat - B.track.pulseOffset) + B.track.pulseOffset;
+  return Math.min(B.track.endBeat - 0.5, Math.max(B.track.startBeat, k));
+};
+
+// drag-scrub on waveform/ruler lanes
+let scrubbing = false;
+const evT = (e) => {
+  const r = cv.getBoundingClientRect();
+  return T((e.clientX - r.left) * (cv.width / devicePixelRatio) / r.width);
+};
+cv.addEventListener("mousedown", (e) => {
+  const r = cv.getBoundingClientRect();
+  const lane = laneAt(e.clientY - r.top);
+  if (lane === "wave" || lane === "ruler") { scrubbing = true; seek(evT(e)); }
+});
+window.addEventListener("mousemove", (e) => { if (scrubbing) seek(evT(e)); });
+window.addEventListener("mouseup", () => (scrubbing = false));
+
+cv.addEventListener("click", async (e) => {
+  const r = cv.getBoundingClientRect();
+  const t = T((e.clientX - r.left) * (cv.width / devicePixelRatio) / r.width);
+  const lane = laneAt(e.clientY - r.top);
+  if (lane === "wave" || lane === "ruler") return; // handled by scrub
+  if (lane === "sections") { // preview that system's bed (bed time == reel time)
+    const beat = t / spb() + B.track.startBeat;
+    const sorted = [...B.sections].sort((a, c) => a.atBeat - c.atBeat);
+    const s = [...sorted].reverse().find((x) => x.atBeat <= beat) || sorted[0];
+    const bed = Array.isArray(s.bed) ? s.bed[0] : s.bed;
+    setVideo("/" + B.systems[bed].bed, `bed: ${B.systems[bed].label}`);
+    seek(t);
+    return;
+  }
+  if (lane === "flash" || lane === "punch") {
+    const atBeat = nearestPulse(t);
+    await patch([{ op: lane === "flash" ? "toggle_flash" : "toggle_punch", atBeat }], `toggle ${lane} @ beat ${atBeat}`);
+  }
+});
+
+const video = $("#video");
+function setVideo(src, label) {
+  video.src = src + "?t=" + Date.now();
+  $("#mode").textContent = label;
+  video.currentTime = playheadT;
+}
+$("#backToReel").onclick = (e) => { e.preventDefault(); setVideo("/preview.mp4", "latest render"); };
+
+async function patch(ops, reason) {
+  const res = await fetch("/api/patch", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ops, reason, patch_id: "ui-" + Date.now() }) });
+  const j = await res.json();
+  if (j.ok) { B = j.beatline; status(`<span class="ok">✓</span> ${reason} — in history`); draw(); }
+  else status(`<span class="err">refused:</span> ${j.error}`);
+}
+const status = (h) => $("#status").innerHTML = h;
+
+function seek(t) {
+  playheadT = Math.max(0, Math.min(dur(), t));
+  if (audio) audio.currentTime = playheadT + offset();
+  video.currentTime = playheadT;
+  readout();
+  draw();
+}
+function readout() {
+  const beat = playheadT / spb() + B.track.startBeat;
+  $("#readout").textContent = `${playheadT.toFixed(2)}s · beat ${beat.toFixed(1)}`;
+}
+let playing = false;
+function setPlaying(on) {
+  playing = on;
+  $("#play").textContent = on ? "⏸ pause" : "▶ play";
+}
+const offset = () => (B.track.startBeat * spb()); // track sec of reel 0 (constructed grid)
+
+$("#play").onclick = () => {
+  if (playing) { // toggle: pause
+    if (audio) audio.pause();
+    video.pause(); cancelAnimationFrame(raf); setPlaying(false);
+    return;
+  }
+  if (!audio) { audio = new Audio("/track.wav"); }
+  audio.currentTime = playheadT + offset();
+  video.currentTime = playheadT;
+  audio.play(); video.play(); setPlaying(true);
+  cancelAnimationFrame(raf);
+  const tick = () => {
+    playheadT = audio.currentTime - offset();
+    if (Math.abs(video.currentTime - playheadT) > 0.08) video.currentTime = playheadT; // drift guard
+    if (playheadT >= dur()) { audio.pause(); video.pause(); playheadT = 0; setPlaying(false); readout(); draw(); return; }
+    readout(); draw(); raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+};
+$("#stop").onclick = () => { // stop-to-start
+  if (audio) audio.pause();
+  video.pause(); cancelAnimationFrame(raf); setPlaying(false); seek(0);
+};
+// keyboard transport: space = play/pause · ←/→ = step one pulse beat
+// (shift = 4) · home = start
+window.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.code === "Space") { e.preventDefault(); $("#play").click(); }
+  else if (e.code === "ArrowLeft" || e.code === "ArrowRight") {
+    e.preventDefault();
+    const step = spb() * (e.shiftKey ? 4 : 1) * (e.code === "ArrowLeft" ? -1 : 1);
+    seek(playheadT + step);
+  } else if (e.code === "Home") { e.preventDefault(); seek(0); }
+});
+$("#render").onclick = async () => {
+  status("rendering… (assemble + fx, ~30-60s)");
+  const j = await (await fetch("/api/render", { method: "POST" })).json();
+  if (j.ok) { setVideo("/preview.mp4", "latest render: " + j.render); status(`<span class="ok">✓ rendered</span> ${j.render}`); }
+  else status(`<span class="err">${j.error}</span>`);
+};
+$("#compile").onclick = async () => {
+  status("compiling…");
+  const j = await (await fetch("/api/compile", { method: "POST" })).json();
+  status(j.ok ? `<span class="ok">✓ compiled</span> ${j.log.split("\\n")[0]}` : `<span class="err">${j.error}</span>`);
+};
+
+(async function init() {
+  B = await (await fetch("/api/beatline")).json();
+  ENV = await (await fetch("/api/envelope")).json();
+  $("#trackmeta").textContent = `${B.name} · ${B.track.tempo} BPM · beats ${B.track.startBeat}–${B.track.endBeat} · pulse +${B.track.pulseOffset} (${B.track.calibration.method}: "${B.track.calibration.verdict}")`;
+  $("#poff").textContent = B.track.pulseOffset;
+  setVideo("/preview.mp4", "latest render");
+  draw();
+  window.addEventListener("resize", draw);
+})();
+</script>
+</body>
+</html>
