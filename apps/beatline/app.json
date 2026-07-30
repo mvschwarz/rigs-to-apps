@@ -7,7 +7,7 @@
   "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
   "media": {
     "screenshots": [
-      { "src": "assets/beatline-linkpix.png", "alt": "The Beatline beat-choreography timeline (110 BPM, beats 8-64): section blocks — build, drop-hit, drop-run, verse, bridge, climax, tunnel — over a drum-stem waveform, with a FLASH lane and a PUNCH lane and a live render preview above; every gesture is a rails patch with your provenance, compiled and rendered to a cut" }
+      { "src": "assets/beatline-linkpix.png", "alt": "The Beatline beat-choreography timeline (110 BPM, beats 8-64): section blocks — build, drop-hit, drop-run, verse, bridge, climax, tunnel — over a purple drum-stem waveform, with a FLASH lane and a PUNCH lane; above, the live render preview shows a populated SIGNAL TOXICITY LEVEL motion-graphics frame (three subject bar-meters with elapsed-time and purity readouts). Every gesture is a rails patch with your provenance, compiled and rendered to a cut" }
     ]
   },
   "install": {
