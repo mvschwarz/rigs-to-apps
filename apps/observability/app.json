@@ -1,0 +1,33 @@
+{
+  "manifest_version": 1,
+  "id": "observability",
+  "name": "Observability",
+  "summary": "Boot a bounded, agent-managed Grafana + Prometheus + node-exporter stack on your box — an observer seat deploys it, watches it, and explains in plain English how the box is doing, honest about every unknown and failure.",
+  "category": "system",
+  "maker": { "name": "Mike Schwarz", "url": "https://github.com/mvschwarz" },
+  "media": {
+    "screenshots": [
+      { "src": "assets/observability-dashboard.png", "alt": "A dark Grafana dashboard: System CPU-busy, Memory used (12.2%) and Disk used (5.41%) gauges and a Networking receive/transmit time series — this captured system and network data is node-exporter reading Docker's Linux VM layer on this Mac, not the macOS host; a YC-visitors panel showing 0 local, with YC visitors on the demo VPS; and a Provider auth / rate-limit panel reading UNKNOWN — the stack honest about an unavailable source instead of a fabricated zero" }
+    ]
+  },
+  "install": {
+    "destination": "~/studio/apps/observability",
+    "surface": {
+      "entry": "app/observability.html",
+      "path": "/observability.html",
+      "glyph": "▥",
+      "hint": "Deploy the bounded metrics stack in your disposable guest, then ask the observer seat how the box is doing"
+    },
+    "verify": [
+      "The bounded stack boots in the disposable guest (node obs.mjs deploy — docker compose: Grafana + Prometheus + node-exporter, 127.0.0.1-only, digest-pinned) and Grafana serves the one dark box dashboard",
+      "The read-only adapter (box-metrics.mjs) projects the box's visitor + provider JSONL into an owned Prometheus textfile (box_visitor_* / box_provider_*) without modifying the sources, and reports a missing or unavailable source as UNKNOWN (box_*_source_available 0) — never a fabricated healthy zero",
+      "Compare the canonical installed source at ~/studio/apps/observability against the box's deployed stack: repair (copy the canonical source in) ONLY if the box stack is missing, provably broken, or provably older than the canonical source; if the box stack is newer (forward drift) leave it untouched and report; if relative age or health is ambiguous, leave it untouched and report to the box lead agent — take no destructive action"
+    ]
+  },
+  "verbs": [
+    { "method": "GET", "path": "/api/v1/query", "purpose": "Prometheus instant query of the box_* and system/network metrics (what the observer seat reads)" },
+    { "method": "GET", "path": "/api/v1/query_range", "purpose": "Prometheus range query behind the dashboard's time-series panels" },
+    { "method": "GET", "path": "/-/healthy", "purpose": "Prometheus liveness — is the metrics stack up" },
+    { "method": "GET", "path": "/metrics", "purpose": "node-exporter host metrics (CPU, memory, disk, network) from the guest /proc, /sys, and rootfs" }
+  ]
+}
