@@ -1,0 +1,758 @@
+{
+  "snapshot_version": 1,
+  "id": "product-factory",
+  "version": "0.1.5",
+  "content_id": "4d2a2c3b806bc21348b3688ed94899b97e88f57ca169c5252f5928e6abcfe381",
+  "title": "Product factory",
+  "summary": "Three rigs that turn a short request into a small working app: product management scopes it, build implements and checks it, and dogfood uses the release and reports what it finds.",
+  "lineage": null,
+  "author": {
+    "name": "OpenRig contributors",
+    "url": "https://openrig.dev"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "path": "factories/product-factory/",
+    "ref": null
+  },
+  "archive": {
+    "asset": "product-factory-0.1.5.tar.gz",
+    "tag": "product-factory-v0.1.5",
+    "sha256": "d4c49ba28c1983dfcdfa64a87bb91771e28c4ca98369248cbc6276458b8ad224",
+    "bytes": 95670,
+    "url": "https://github.com/mvschwarz/rigs-to-apps/releases/download/product-factory-v0.1.5/product-factory-0.1.5.tar.gz"
+  },
+  "built_by": "the rigs-to-builder packaging environment (native bundles stamp sourceHost \"rigs-to-builder\")",
+  "openrig": {
+    "min": "0.6.1",
+    "tested": null,
+    "parser": "0.6.1"
+  },
+  "parsed_by": {
+    "openrig": "0.6.1",
+    "parsers": "RigSpecCodec + RigSpecSchema + AgentSpec"
+  },
+  "models_test_label": "TEST — cheap smoke-test models; the recommended configuration is the default",
+  "rigs": [
+    {
+      "id": "product-pm",
+      "name": "product-pm",
+      "summary": "Product management for the product factory: one PM lead turns a short request into a one-page SPEC with numbered acceptance criteria, hands it to the build rig, receives the dogfood findings, decides, and writes the final report. Works with the product-build and product-dogfood rigs. Recommended models.",
+      "source_dir": "source/product-pm",
+      "spec": "source/product-pm/rig.yaml",
+      "test_spec": "source/product-pm/rig.test-models.yaml",
+      "culture": "source/product-pm/CULTURE.md",
+      "startup": [
+        "source/product-pm/AGENTS.md",
+        "source/product-pm/FACTORY-GUIDE.md"
+      ],
+      "bundle": {
+        "path": "bundles/product-pm.rigbundle",
+        "sha256": "9a1998e5a6feeb18f9f773d6421f7c0e952fb6e9a73497578b5bdf2ea1dac98a",
+        "bytes": 7188
+      },
+      "test_bundle": {
+        "path": "bundles/product-pm.test-models.rigbundle",
+        "sha256": "cd3083336f80b9f73686adabb69a4cda12579bd336afceee78188dc6c3d3619e",
+        "bytes": 7220
+      },
+      "topology": {
+        "pods": [
+          {
+            "id": "pm",
+            "label": "Product Management",
+            "members": [
+              {
+                "id": "lead",
+                "label": "PM lead — owns the request, the SPEC, the decision and the final report",
+                "runtime": "claude-code",
+                "model": {
+                  "recommended": "claude-opus-5-5",
+                  "test": "claude-sonnet-5"
+                },
+                "agent": "source/product-pm/agents/pm"
+              }
+            ]
+          }
+        ],
+        "edges": []
+      },
+      "agents": [
+        {
+          "dir": "source/product-pm/agents/pm",
+          "name": "product-factory-pm",
+          "version": "1.0",
+          "description": null,
+          "runtime": "claude-code",
+          "skills": [
+            {
+              "id": "requirements-writer",
+              "path": "source/product-pm/agents/pm/skills/requirements-writer",
+              "files": [
+                {
+                  "path": "source/product-pm/agents/pm/skills/requirements-writer/SKILL.md",
+                  "bytes": 4328
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/product-pm/agents/pm/guidance/role.md"
+          ],
+          "startup": [
+            "source/product-pm/agents/pm/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/product-pm/agents/pm/agent.yaml",
+              "bytes": 581
+            },
+            {
+              "path": "source/product-pm/agents/pm/guidance/role.md",
+              "bytes": 2103
+            },
+            {
+              "path": "source/product-pm/agents/pm/skills/requirements-writer/SKILL.md",
+              "bytes": 4328
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product-build",
+      "name": "product-build",
+      "summary": "The build rig of the product factory: an implementer builds the app and its tests from the SPEC, an independent QA seat on the other runtime checks it against every acceptance criterion, and the implementer ships the release to the dogfood rig. Works with the product-pm and product-dogfood rigs. Recommended models.",
+      "source_dir": "source/product-build",
+      "spec": "source/product-build/rig.yaml",
+      "test_spec": "source/product-build/rig.test-models.yaml",
+      "culture": "source/product-build/CULTURE.md",
+      "startup": [
+        "source/product-build/AGENTS.md",
+        "source/product-build/FACTORY-GUIDE.md"
+      ],
+      "bundle": {
+        "path": "bundles/product-build.rigbundle",
+        "sha256": "9335b7ea1261ca0e85933a6034636e2079cf8f57d8bdb292418233b2fe09f4f0",
+        "bytes": 17940
+      },
+      "test_bundle": {
+        "path": "bundles/product-build.test-models.rigbundle",
+        "sha256": "628641489586655a75c07fb3626f7fdd5be77d486a67bc121bb9085ece2080b9",
+        "bytes": 17971
+      },
+      "topology": {
+        "pods": [
+          {
+            "id": "dev",
+            "label": "Build",
+            "members": [
+              {
+                "id": "impl",
+                "label": "Implementer — builds the app, its tests and the shipped release",
+                "runtime": "claude-code",
+                "model": {
+                  "recommended": "claude-opus-5-5",
+                  "test": "claude-sonnet-5"
+                },
+                "agent": "source/product-build/agents/implementer"
+              },
+              {
+                "id": "qa",
+                "label": "QA — checks the app against the SPEC, independently of the builder",
+                "runtime": "codex",
+                "model": {
+                  "recommended": "gpt-6-sol",
+                  "test": "gpt-6-luna"
+                },
+                "agent": "source/product-build/agents/qa"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "delegates_to",
+            "from": "dev.impl",
+            "to": "dev.qa"
+          },
+          {
+            "kind": "can_observe",
+            "from": "dev.qa",
+            "to": "dev.impl"
+          }
+        ]
+      },
+      "agents": [
+        {
+          "dir": "source/product-build/agents/implementer",
+          "name": "product-factory-implementer",
+          "version": "1.0",
+          "description": null,
+          "runtime": "claude-code",
+          "skills": [
+            {
+              "id": "test-driven-development",
+              "path": "source/product-build/agents/implementer/skills/test-driven-development",
+              "files": [
+                {
+                  "path": "source/product-build/agents/implementer/skills/test-driven-development/SKILL.md",
+                  "bytes": 12399
+                },
+                {
+                  "path": "source/product-build/agents/implementer/skills/test-driven-development/testing-anti-patterns.md",
+                  "bytes": 8251
+                }
+              ]
+            },
+            {
+              "id": "verification-before-completion",
+              "path": "source/product-build/agents/implementer/skills/verification-before-completion",
+              "files": [
+                {
+                  "path": "source/product-build/agents/implementer/skills/verification-before-completion/SKILL.md",
+                  "bytes": 7349
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/product-build/agents/implementer/guidance/role.md"
+          ],
+          "startup": [
+            "source/product-build/agents/implementer/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/product-build/agents/implementer/agent.yaml",
+              "bytes": 717
+            },
+            {
+              "path": "source/product-build/agents/implementer/guidance/role.md",
+              "bytes": 1927
+            },
+            {
+              "path": "source/product-build/agents/implementer/skills/test-driven-development/SKILL.md",
+              "bytes": 12399
+            },
+            {
+              "path": "source/product-build/agents/implementer/skills/test-driven-development/testing-anti-patterns.md",
+              "bytes": 8251
+            },
+            {
+              "path": "source/product-build/agents/implementer/skills/verification-before-completion/SKILL.md",
+              "bytes": 7349
+            }
+          ]
+        },
+        {
+          "dir": "source/product-build/agents/qa",
+          "name": "product-factory-qa",
+          "version": "1.0",
+          "description": null,
+          "runtime": "codex",
+          "skills": [
+            {
+              "id": "acceptance-check",
+              "path": "source/product-build/agents/qa/skills/acceptance-check",
+              "files": [
+                {
+                  "path": "source/product-build/agents/qa/skills/acceptance-check/SKILL.md",
+                  "bytes": 2289
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/product-build/agents/qa/guidance/role.md"
+          ],
+          "startup": [
+            "source/product-build/agents/qa/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/product-build/agents/qa/agent.yaml",
+              "bytes": 561
+            },
+            {
+              "path": "source/product-build/agents/qa/guidance/role.md",
+              "bytes": 1599
+            },
+            {
+              "path": "source/product-build/agents/qa/skills/acceptance-check/SKILL.md",
+              "bytes": 2289
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product-dogfood",
+      "name": "product-dogfood",
+      "summary": "The dogfood rig of the product factory: one tester uses the shipped release the way a real person would, without reading its source, and sends its findings to the PM lead. Works with the product-pm and product-build rigs. Recommended models.",
+      "source_dir": "source/product-dogfood",
+      "spec": "source/product-dogfood/rig.yaml",
+      "test_spec": "source/product-dogfood/rig.test-models.yaml",
+      "culture": "source/product-dogfood/CULTURE.md",
+      "startup": [
+        "source/product-dogfood/AGENTS.md",
+        "source/product-dogfood/FACTORY-GUIDE.md"
+      ],
+      "bundle": {
+        "path": "bundles/product-dogfood.rigbundle",
+        "sha256": "b6f51338e22f393f5e3e198e30d29aaf378004918e1a3e1dbab665c9727f8372",
+        "bytes": 6339
+      },
+      "test_bundle": {
+        "path": "bundles/product-dogfood.test-models.rigbundle",
+        "sha256": "f6e9a6f1a919e7c57416147cade3a33b3d7d514034884339cf9fc30dbd48e6e7",
+        "bytes": 6369
+      },
+      "topology": {
+        "pods": [
+          {
+            "id": "dogfood",
+            "label": "Dogfood",
+            "members": [
+              {
+                "id": "tester",
+                "label": "Dogfood tester — uses the shipped release and reports findings",
+                "runtime": "codex",
+                "model": {
+                  "recommended": "gpt-6-sol",
+                  "test": "gpt-6-luna"
+                },
+                "agent": "source/product-dogfood/agents/dogfood"
+              }
+            ]
+          }
+        ],
+        "edges": []
+      },
+      "agents": [
+        {
+          "dir": "source/product-dogfood/agents/dogfood",
+          "name": "product-factory-dogfood",
+          "version": "1.0",
+          "description": null,
+          "runtime": "codex",
+          "skills": [
+            {
+              "id": "dogfood-cli",
+              "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli",
+              "files": [
+                {
+                  "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli/SKILL.md",
+                  "bytes": 2760
+                },
+                {
+                  "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli/templates/findings-template.md",
+                  "bytes": 661
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/product-dogfood/agents/dogfood/guidance/role.md"
+          ],
+          "startup": [
+            "source/product-dogfood/agents/dogfood/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/product-dogfood/agents/dogfood/agent.yaml",
+              "bytes": 563
+            },
+            {
+              "path": "source/product-dogfood/agents/dogfood/guidance/role.md",
+              "bytes": 1330
+            },
+            {
+              "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli/SKILL.md",
+              "bytes": 2760
+            },
+            {
+              "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli/templates/findings-template.md",
+              "bytes": 661
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context_packs": [
+    {
+      "name": "product-factory",
+      "path": "context/product-factory",
+      "files": [
+        "conventions.md"
+      ]
+    }
+  ],
+  "starter": [
+    {
+      "from": "starter/.codex/config.toml",
+      "to": ".codex/config.toml"
+    },
+    {
+      "from": "starter/.codex/rules/openrig.rules",
+      "to": ".codex/rules/openrig.rules"
+    },
+    {
+      "from": "starter/requests/handoff-check.md",
+      "to": "requests/handoff-check.md"
+    },
+    {
+      "from": "starter/requests/task-board.md",
+      "to": "requests/task-board.md"
+    }
+  ],
+  "prerequisites": [
+    {
+      "name": "Node.js",
+      "check": [
+        "node",
+        "--version"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "min": "22.0.0",
+      "why": "runs the launcher and the apps the factory builds"
+    },
+    {
+      "name": "tmux",
+      "check": [
+        "tmux",
+        "-V"
+      ],
+      "why": "OpenRig runs each seat in a tmux session"
+    },
+    {
+      "name": "Claude Code",
+      "check": [
+        "claude",
+        "--version"
+      ],
+      "why": "runtime of the PM lead and the implementer; your login, never packaged"
+    },
+    {
+      "name": "Codex",
+      "check": [
+        "codex",
+        "--version"
+      ],
+      "version_pattern": "codex-cli (\\d+\\.\\d+\\.\\d+)",
+      "min": "0.159.0",
+      "why": "runtime of QA and the dogfood tester; your login, never packaged"
+    }
+  ],
+  "permissions": [
+    {
+      "runtime": "codex",
+      "files": [
+        ".codex/config.toml",
+        ".codex/rules/openrig.rules"
+      ],
+      "effect": "Commands that start with `rig` run outside the Codex sandbox without asking, so QA and the dogfood tester can hand work on. Every other command stays in the workspace-write sandbox with no network. Without these files the Codex seats cannot reach the OpenRig daemon.",
+      "tested": null
+    }
+  ],
+  "first_job": "rig send pm-lead@product-pm \"New request: requests/task-board.md. Scope it and run it through the factory.\"",
+  "expected_output": [
+    "product/SPEC.md (numbered acceptance criteria)",
+    "app/ with its tests",
+    "qa/CHECK.md",
+    "release/<version>/",
+    "dogfood/FINDINGS.md",
+    "product/DECISION.md and REPORT.md"
+  ],
+  "verified": {
+    "verdict": "SHIP",
+    "qa": "independent QA (non-author builder seat)",
+    "date": "2026-09-29",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0",
+      "claude-code": "not recorded"
+    },
+    "models": "test",
+    "path": "additive"
+  },
+  "files": [
+    {
+      "path": "LICENSES/ATTRIBUTION.md",
+      "bytes": 1457,
+      "sha256": "108bdc5ae7c7b4240a5d867506443fc459ae410a6ef190a5ad149341f2ceb8d4"
+    },
+    {
+      "path": "LICENSES/Apache-2.0-openrig.txt",
+      "bytes": 10763,
+      "sha256": "c92a33920bf0cd3aa07ca2c479932ec900931ca1449948a4dc01d3bf979f45e3"
+    },
+    {
+      "path": "LICENSES/MIT-superpowers.txt",
+      "bytes": 1070,
+      "sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400"
+    },
+    {
+      "path": "SETUP.md",
+      "bytes": 10062,
+      "sha256": "54d00af29a20bc9b7f359f0f25f3b6172ac40121464d2e803f0936a83487c5ee"
+    },
+    {
+      "path": "TESTING.md",
+      "bytes": 1890,
+      "sha256": "534175e172def26c3a2d8e246682f41c1a276e6e303e4216ad94683000b94a66"
+    },
+    {
+      "path": "bundles/product-build.rigbundle",
+      "bytes": 17940,
+      "sha256": "9335b7ea1261ca0e85933a6034636e2079cf8f57d8bdb292418233b2fe09f4f0"
+    },
+    {
+      "path": "bundles/product-build.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "fd1b6116a10f8db5045a172594b9d80f5c073b2da03ddbb55607832a306c6063"
+    },
+    {
+      "path": "bundles/product-build.test-models.rigbundle",
+      "bytes": 17971,
+      "sha256": "628641489586655a75c07fb3626f7fdd5be77d486a67bc121bb9085ece2080b9"
+    },
+    {
+      "path": "bundles/product-build.test-models.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "66937f423e23e6317b362e7ce0be7a5990dd3c974c68bbd5672b5389f3b144ad"
+    },
+    {
+      "path": "bundles/product-dogfood.rigbundle",
+      "bytes": 6339,
+      "sha256": "b6f51338e22f393f5e3e198e30d29aaf378004918e1a3e1dbab665c9727f8372"
+    },
+    {
+      "path": "bundles/product-dogfood.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "93d264ebd471bd18094050c13a224c41ebe8768513f65f4391a0372408e2807f"
+    },
+    {
+      "path": "bundles/product-dogfood.test-models.rigbundle",
+      "bytes": 6369,
+      "sha256": "f6e9a6f1a919e7c57416147cade3a33b3d7d514034884339cf9fc30dbd48e6e7"
+    },
+    {
+      "path": "bundles/product-dogfood.test-models.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "640014fa2c64780438ecdf06e403697e1f9c64ef40ba9515646c12cb43aeec81"
+    },
+    {
+      "path": "bundles/product-pm.rigbundle",
+      "bytes": 7188,
+      "sha256": "9a1998e5a6feeb18f9f773d6421f7c0e952fb6e9a73497578b5bdf2ea1dac98a"
+    },
+    {
+      "path": "bundles/product-pm.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "4937150233b5a04b0c34f504d79c71dad1d632d9562c7e62eebbc0752864b717"
+    },
+    {
+      "path": "bundles/product-pm.test-models.rigbundle",
+      "bytes": 7220,
+      "sha256": "cd3083336f80b9f73686adabb69a4cda12579bd336afceee78188dc6c3d3619e"
+    },
+    {
+      "path": "bundles/product-pm.test-models.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "367814ea64007d5e2702ddc980ec8765c0b4ac45823ffd01c98924d44bea2555"
+    },
+    {
+      "path": "context/product-factory/conventions.md",
+      "bytes": 1223,
+      "sha256": "7162576cf869d79bbbfd780166c824fb2d9d7ded50aecf517f7e4829821d04e7"
+    },
+    {
+      "path": "context/product-factory/manifest.yaml",
+      "bytes": 277,
+      "sha256": "9651911f80a8bc4283e76c0bd271a90514c23936e614b8752d6526185472eaa0"
+    },
+    {
+      "path": "launch.mjs",
+      "bytes": 17032,
+      "sha256": "56461952c7cbdd6f52aa0d6f3a6fd75f8994e9339ba004402b6777ca0c1dda00"
+    },
+    {
+      "path": "source/product-build/AGENTS.md",
+      "bytes": 3014,
+      "sha256": "0707f1ca33d242f4f373887ff792d98c47484cdcc44f6981bbe8812f0b1323b6"
+    },
+    {
+      "path": "source/product-build/CULTURE.md",
+      "bytes": 816,
+      "sha256": "22b9871d25773c4072218dbd7493358ae8469d592913afc38694ed03cd38b39f"
+    },
+    {
+      "path": "source/product-build/FACTORY-GUIDE.md",
+      "bytes": 3488,
+      "sha256": "ef78e66b694bf98b89fe795c1ae52dd6c652d052549b01d882c0a05c470631a8"
+    },
+    {
+      "path": "source/product-build/agents/implementer/agent.yaml",
+      "bytes": 717,
+      "sha256": "fda8f402198abe06eb9966b93df995112b4842d97aae58a27a3c561e5c5f5fc4"
+    },
+    {
+      "path": "source/product-build/agents/implementer/guidance/role.md",
+      "bytes": 1927,
+      "sha256": "392a79ec896d43cf9637e53500d442cb581ce26b9ab9a40e1c9b137a5862e2ac"
+    },
+    {
+      "path": "source/product-build/agents/implementer/skills/test-driven-development/SKILL.md",
+      "bytes": 12399,
+      "sha256": "51f65d2bc71dd6fc84640bf113acf287f4e003ef325ed91cb112fce59149a298"
+    },
+    {
+      "path": "source/product-build/agents/implementer/skills/test-driven-development/testing-anti-patterns.md",
+      "bytes": 8251,
+      "sha256": "bde453bc258f06543987477c837939afaa774ea2acbd9f308d702fc452bc4283"
+    },
+    {
+      "path": "source/product-build/agents/implementer/skills/verification-before-completion/SKILL.md",
+      "bytes": 7349,
+      "sha256": "0b8cea0bb82a8ab0f015afaf84c87796e2c94eee3a83d4fa3d4461d0917950bd"
+    },
+    {
+      "path": "source/product-build/agents/qa/agent.yaml",
+      "bytes": 561,
+      "sha256": "4732f892b6a5c791278cff29c9c25f798cac76b06321df16da4a29bc6f8fe705"
+    },
+    {
+      "path": "source/product-build/agents/qa/guidance/role.md",
+      "bytes": 1599,
+      "sha256": "b79dc5a557bf95bad622a41b1dad91aa8890064f214e9f8cdc6226d96818d029"
+    },
+    {
+      "path": "source/product-build/agents/qa/skills/acceptance-check/SKILL.md",
+      "bytes": 2289,
+      "sha256": "1a3f4fc2547f7a9416e08e46fded951b67acb105e0ea7f8f5fcc7bce4246d5e5"
+    },
+    {
+      "path": "source/product-build/rig.test-models.yaml",
+      "bytes": 1515,
+      "sha256": "0932406bfe16e41ca43713a7b72956c36eb4f4de93c867b5cd4670556386240d"
+    },
+    {
+      "path": "source/product-build/rig.yaml",
+      "bytes": 1377,
+      "sha256": "4ee58ac13a996d1f19133f8a2776bad1431f2eecfef335666281c9b1c590adc9"
+    },
+    {
+      "path": "source/product-dogfood/AGENTS.md",
+      "bytes": 3014,
+      "sha256": "0707f1ca33d242f4f373887ff792d98c47484cdcc44f6981bbe8812f0b1323b6"
+    },
+    {
+      "path": "source/product-dogfood/CULTURE.md",
+      "bytes": 816,
+      "sha256": "22b9871d25773c4072218dbd7493358ae8469d592913afc38694ed03cd38b39f"
+    },
+    {
+      "path": "source/product-dogfood/FACTORY-GUIDE.md",
+      "bytes": 3488,
+      "sha256": "ef78e66b694bf98b89fe795c1ae52dd6c652d052549b01d882c0a05c470631a8"
+    },
+    {
+      "path": "source/product-dogfood/agents/dogfood/agent.yaml",
+      "bytes": 563,
+      "sha256": "fe63636544925a112ec6bd7f41062abd9b504c87b1757cf8f68c35bab7e00525"
+    },
+    {
+      "path": "source/product-dogfood/agents/dogfood/guidance/role.md",
+      "bytes": 1330,
+      "sha256": "b52d71e894221f4fd7b3a7e82eb018b99d144998f5877aa0b5d23c4e0d655632"
+    },
+    {
+      "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli/SKILL.md",
+      "bytes": 2760,
+      "sha256": "b8ac88e9c447d73e41bd3abce9ac602e57f269307c55c695a279b356616dd0d7"
+    },
+    {
+      "path": "source/product-dogfood/agents/dogfood/skills/dogfood-cli/templates/findings-template.md",
+      "bytes": 661,
+      "sha256": "49fe4d865416f8cafbf5876fc4ef58d3470cc42cceed275fe07ed791aa784ba7"
+    },
+    {
+      "path": "source/product-dogfood/rig.test-models.yaml",
+      "bytes": 1064,
+      "sha256": "5ecf5e698fce924133cce9ad02eef4f9d0d9503e9a01d90b848207bdabdc9731"
+    },
+    {
+      "path": "source/product-dogfood/rig.yaml",
+      "bytes": 926,
+      "sha256": "974b96fdbf6a3faad153425c35c94fbc7b47dd9dfa0cb2341b5804f7355d861d"
+    },
+    {
+      "path": "source/product-pm/AGENTS.md",
+      "bytes": 3014,
+      "sha256": "0707f1ca33d242f4f373887ff792d98c47484cdcc44f6981bbe8812f0b1323b6"
+    },
+    {
+      "path": "source/product-pm/CULTURE.md",
+      "bytes": 816,
+      "sha256": "22b9871d25773c4072218dbd7493358ae8469d592913afc38694ed03cd38b39f"
+    },
+    {
+      "path": "source/product-pm/FACTORY-GUIDE.md",
+      "bytes": 3488,
+      "sha256": "ef78e66b694bf98b89fe795c1ae52dd6c652d052549b01d882c0a05c470631a8"
+    },
+    {
+      "path": "source/product-pm/agents/pm/agent.yaml",
+      "bytes": 581,
+      "sha256": "c2a59a86a01f5b226ab17f34a4ac920ba0a709f6c7731ddecafa6dad8f5dcb7a"
+    },
+    {
+      "path": "source/product-pm/agents/pm/guidance/role.md",
+      "bytes": 2103,
+      "sha256": "ea2b8df7582b5445efbbc2019e8cca4d9091aee27857bf0c2c791935d658d482"
+    },
+    {
+      "path": "source/product-pm/agents/pm/skills/requirements-writer/SKILL.md",
+      "bytes": 4328,
+      "sha256": "04cfb8853553f1538fd202e9804e14e6b259f3a4c12b5f255c30169cf66ed0af"
+    },
+    {
+      "path": "source/product-pm/rig.test-models.yaml",
+      "bytes": 1143,
+      "sha256": "9dfdbf8e22000fad5cd8acb798c14ca6a46691cc3c2435bb2390143c7c7158b0"
+    },
+    {
+      "path": "source/product-pm/rig.yaml",
+      "bytes": 1006,
+      "sha256": "ac2518ef93261781a592662777b9a8d3599c2a49d2d9d4b51a99fb59666da2dc"
+    },
+    {
+      "path": "starter/.codex/config.toml",
+      "bytes": 108,
+      "sha256": "e0a26d7e2fa742cc879159174a59058c5db4200824dc588db7bf503898a5ccf3"
+    },
+    {
+      "path": "starter/.codex/rules/openrig.rules",
+      "bytes": 315,
+      "sha256": "5f6025f3614085bfa7c95a61f7627379b149e0e3e7013c077d8fec1480e19154"
+    },
+    {
+      "path": "starter/requests/handoff-check.md",
+      "bytes": 965,
+      "sha256": "40b59817d6d5f6f1018a0f134a61df9372126cebae8d2bda23a6cf6b28bd741a"
+    },
+    {
+      "path": "starter/requests/task-board.md",
+      "bytes": 446,
+      "sha256": "c657111b5c73ac8bd9fde514efb2bcf3a91b34776de3557d75b58b6e64919e15"
+    }
+  ],
+  "setup_prompt": "Set up Product factory 0.1.5, an OpenRig factory from rigs.to.\n\n1. Download the archive and check its hash before unpacking. The sha256 must be exactly d4c49ba28c1983dfcdfa64a87bb91771e28c4ca98369248cbc6276458b8ad224:\n   curl -fLO https://github.com/mvschwarz/rigs-to-apps/releases/download/product-factory-v0.1.5/product-factory-0.1.5.tar.gz\n   echo \"d4c49ba28c1983dfcdfa64a87bb91771e28c4ca98369248cbc6276458b8ad224  product-factory-0.1.5.tar.gz\" | shasum -a 256 -c\n2. Unpack it somewhere stable and read SETUP.md inside before running anything:\n   mkdir -p ~/rig-factories && tar -xzf product-factory-0.1.5.tar.gz -C ~/rig-factories\n   cd ~/rig-factories/product-factory-0.1.5\n3. Follow SETUP.md with the OpenRig I already run (leave my other rigs and its kernel alone): run\n   node launch.mjs --project <dir> --plan-only, explain to me every permission change it prints, and launch only\n   after I agree. Never pipe anything into a shell."
+}

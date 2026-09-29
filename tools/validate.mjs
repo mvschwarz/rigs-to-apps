@@ -320,12 +320,133 @@ function validateRigDescriptor(descriptorPath, { requireSnapshot = false } = {})
   return d.id;
 }
 
-// Which kind a registry entry is, by its fixed filename. Only these two.
+// --- factory listing validation -----------------------------------------
+//
+// A factory listing is a SMALL descriptor at factories/<id>/listing.json naming
+// ONE released archive by tag, asset name and sha256. Everything shown about the
+// factory is derived from that exact archive by tools/import-factory.mjs into
+// snapshot.json. source.ref stays null until the Release Manager records the
+// source commit; the tested archive is never repacked to carry it.
+
+const FACTORY_KNOWN = {
+  root: ["descriptor_version", "kind", "id", "title", "summary", "tags", "author", "license", "source", "release", "media"],
+  author: ["name", "url"],
+  source: ["repo", "path", "ref"],
+  release: ["tag", "asset", "sha256"],
+  media: ["showcase"],
+  showcase: ["src", "poster", "caption", "version"],
+};
+const MAX_SHOWCASE_BYTES = 8 * 1024 * 1024;
+const MAX_POSTER_BYTES = 1024 * 1024;
+const SHA256 = /^[0-9a-f]{64}$/;
+const SEMVER = /^\d+\.\d+\.\d+$/;
+
+function validateFactoryListing(listingPath, { requireSnapshot = false } = {}) {
+  let stat;
+  try { stat = fs.statSync(listingPath); } catch { fail(`cannot read listing: ${listingPath}`); }
+  if (stat.size > MAX_DESCRIPTOR_BYTES) fail(`listing too large (${stat.size} > ${MAX_DESCRIPTOR_BYTES} bytes)`);
+  let d;
+  try { d = JSON.parse(fs.readFileSync(listingPath, "utf8")); } catch (e) { fail(`invalid JSON: ${String(e.message)}`); }
+  guardProto(d);
+  if (!isObj(d)) fail("listing must be a JSON object");
+  const dirReal = fs.realpathSync(path.dirname(path.resolve(listingPath)));
+  if (!isStr(d.id) || !kebab(d.id)) fail("id must be lowercase-kebab");
+  if (d.id !== path.basename(dirReal)) fail(`id must equal the factory directory name ('${path.basename(dirReal)}')`);
+  unknownScan(d, FACTORY_KNOWN.root);
+  for (const k of ["author", "source", "release"]) { if (!isObj(d[k])) fail(`${k} must be an object`); unknownScan(d[k], FACTORY_KNOWN[k]); }
+  if (d.descriptor_version !== 1) fail(`unknown descriptor_version ${d.descriptor_version}`);
+  if (d.kind !== "factory") fail("kind must be \"factory\"");
+  if (!isStr(d.title) || d.title.trim() === "" || d.title.length > 80) fail("title must be a non-empty string of at most 80 chars");
+  if (!isStr(d.summary) || d.summary.trim() === "" || d.summary.length > 240) fail("summary must be a non-empty string of at most 240 chars");
+  if (!Array.isArray(d.tags) || d.tags.length > MAX_TAGS) fail(`tags must be an array of at most ${MAX_TAGS}`);
+  for (const t of d.tags) if (!isStr(t) || !kebab(t)) fail("each tag must be lowercase-kebab");
+  if (new Set(d.tags).size !== d.tags.length) fail("duplicate tag");
+  if (!isStr(d.author.name) || d.author.name.trim() === "") fail("author requires name + url");
+  if (!isStr(d.author.url) || !d.author.url.startsWith("https://")) fail("author.url must be an https URL");
+  if (!isStr(d.license) || !LICENSE.test(d.license)) fail("license must be an SPDX identifier (or NOASSERTION)");
+  if (!isStr(d.source.repo) || !GITHUB_REPO.test(d.source.repo)) fail("source.repo must be a public https://github.com/<owner>/<repo> URL");
+  if (d.source.path !== `factories/${d.id}/`) fail(`source.path must be "factories/${d.id}/"`);
+  if (d.source.ref !== null && !(isStr(d.source.ref) && FULL_SHA.test(d.source.ref))) fail("source.ref must be null (until publication) or a full 40-character commit SHA");
+  const m = isStr(d.release.tag) ? d.release.tag.match(/^(.+)-v(\d+\.\d+\.\d+)$/) : null;
+  if (!m || m[1] !== d.id || !SEMVER.test(m[2])) fail(`release.tag must be "${d.id}-v<major.minor.patch>"`);
+  if (d.release.asset !== `${d.id}-${m[2]}.tar.gz`) fail(`release.asset must be "${d.id}-${m[2]}.tar.gz"`);
+  if (!isStr(d.release.sha256) || !SHA256.test(d.release.sha256)) fail("release.sha256 must be a 64-character lowercase hex sha256");
+  // Optional showcase: output the factory's OWN agents made in a verified run, stored beside the listing.
+  if ("media" in d) {
+    if (!isObj(d.media)) fail("media must be an object");
+    unknownScan(d.media, FACTORY_KNOWN.media);
+    const sc = d.media.showcase;
+    if (sc !== undefined) {
+      if (!isObj(sc)) fail("media.showcase must be an object");
+      unknownScan(sc, FACTORY_KNOWN.showcase);
+      if (!isStr(sc.src) || !/\.mp4$/i.test(sc.src)) fail("media.showcase.src must be an .mp4 file beside the listing");
+      if (!isStr(sc.poster) || !/\.(png|jpe?g|webp)$/i.test(sc.poster)) fail("media.showcase.poster must be a png/jpg/webp image beside the listing");
+      checkRelFileInside("media.showcase.src", sc.src, dirReal);
+      checkRelFileInside("media.showcase.poster", sc.poster, dirReal);
+      if (fs.statSync(path.resolve(dirReal, sc.src)).size > MAX_SHOWCASE_BYTES) fail(`media.showcase.src is larger than ${MAX_SHOWCASE_BYTES} bytes`);
+      if (fs.statSync(path.resolve(dirReal, sc.poster)).size > MAX_POSTER_BYTES) fail(`media.showcase.poster is larger than ${MAX_POSTER_BYTES} bytes`);
+      if (!isStr(sc.caption) || sc.caption.trim() === "" || sc.caption.length > 240) fail("media.showcase.caption must be a non-empty string of at most 240 chars");
+      if (!isStr(sc.version) || !SEMVER.test(sc.version)) fail("media.showcase.version must name the factory version whose agents made it");
+    }
+  }
+  if (requireSnapshot) {
+    const snap = path.join(dirReal, "snapshot.json");
+    if (!fs.existsSync(snap)) fail(`no snapshot.json for '${d.id}' — run tools/import-factory.mjs`);
+    let s;
+    try { s = JSON.parse(fs.readFileSync(snap, "utf8")); } catch (e) { fail(`snapshot.json for '${d.id}' is invalid JSON: ${String(e.message)}`); }
+    guardProto(s);
+    if (!isObj(s) || s.id !== d.id) fail(`snapshot.json id does not match listing '${d.id}'`);
+    if (s.version !== m[2]) fail(`snapshot.json is version ${s.version}, but the listing's release is ${m[2]}`);
+    if (!isObj(s.archive) || s.archive.sha256 !== d.release.sha256 || s.archive.asset !== d.release.asset || s.archive.tag !== d.release.tag)
+      fail(`snapshot.json for '${d.id}' was imported from a different archive than the listing names — re-run tools/import-factory.mjs`);
+  }
+  return d.id;
+}
+
+// verified-factories.json (registry root, MAINTAINER-owned, written only after an
+// independent QA SHIP): one entry per SHIPPED archive, bound to its exact bytes.
+// A factory page shows "QA verified" only when an entry's id, version AND sha256
+// all equal its listing's release — a new archive loses the stamp until re-verified.
+const VERIFIED_FACTORY_KEYS = ["id", "version", "sha256", "verdict", "qa", "date", "openrig", "runtimes", "models", "path"];
+function validateVerifiedFactories(root) {
+  const p = path.join(root, "verified-factories.json");
+  if (!fs.existsSync(p)) return 0;
+  let list;
+  try { list = JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { fail(`verified-factories.json is invalid JSON: ${String(e.message)}`); }
+  guardProto(list);
+  if (!Array.isArray(list)) fail("verified-factories.json must be a list");
+  const seen = new Set();
+  for (const v of list) {
+    if (!isObj(v)) fail("verified-factories.json entries must be objects");
+    unknownScan(v, VERIFIED_FACTORY_KEYS);
+    for (const k of VERIFIED_FACTORY_KEYS) if (!(k in v)) fail(`verified-factories.json entry is missing "${k}"`);
+    if (!isStr(v.id) || !kebab(v.id)) fail("verified-factories.json id must be lowercase-kebab");
+    if (!isStr(v.version) || !SEMVER.test(v.version)) fail(`verified-factories.json ${v.id}: version must be major.minor.patch`);
+    if (!isStr(v.sha256) || !SHA256.test(v.sha256)) fail(`verified-factories.json ${v.id}: sha256 must be the archive's 64-hex sha256`);
+    if (v.verdict !== "SHIP") fail(`verified-factories.json ${v.id}: verdict must be "SHIP" (only shipped archives are recorded)`);
+    if (!isStr(v.qa) || v.qa.trim() === "") fail(`verified-factories.json ${v.id}: qa must say what kind of independent pass ran`);
+    // This record is PUBLIC (registry + site): it describes the kind of pass, never a seat identity.
+    if (/@|-impl\b|-qa\b|\bimpl\b/.test(v.qa)) fail(`verified-factories.json ${v.id}: qa must not name a seat or rig (it is published); describe the pass, e.g. "independent QA (non-author builder seat)"`);
+    if (!isStr(v.date) || !/^\d{4}-\d{2}-\d{2}$/.test(v.date)) fail(`verified-factories.json ${v.id}: date must be YYYY-MM-DD`);
+    if (!isStr(v.openrig) || !SEMVER.test(v.openrig)) fail(`verified-factories.json ${v.id}: openrig must be the tested OpenRig version`);
+    if (!isObj(v.runtimes)) fail(`verified-factories.json ${v.id}: runtimes must be an object of runtime -> version`);
+    if (!["test", "recommended"].includes(v.models)) fail(`verified-factories.json ${v.id}: models must be "test" or "recommended" (the profile actually run)`);
+    if (v.path !== "additive") fail(`verified-factories.json ${v.id}: path must be "additive" (the user default: an existing OpenRig with its kernel)`);
+    const key = `${v.id}@${v.sha256}`;
+    if (seen.has(key)) fail(`verified-factories.json lists ${v.id} ${v.sha256} twice`);
+    seen.add(key);
+  }
+  return list.length;
+}
+
+// Which kind a registry entry is, by its fixed filename.
 function kindOf(entry) {
-  const base = entry.split(/[\\/]/).pop();
+  const parts = entry.split(/[\\/]/);
+  const base = parts.pop();
   if (base === "app.json") return "app";
   if (base === "rig.json") return "rig-bundle";
-  fail(`registry entry must name an app.json or rig.json: ${entry}`);
+  if (base === "listing.json" && parts.includes("factories")) return "factory";
+  fail(`registry entry must name an app.json, a rig.json or a factories/<id>/listing.json: ${entry}`);
 }
 
 // --- registry validation -------------------------------------------------
@@ -360,9 +481,10 @@ function validateRegistry(registryPath) {
     // project can be both a Studio app and a rig): their pages live at
     // apps/<id>/ and rigs/<id>/, and the site links the pair.
     const kind = kindOf(entry);
-    const id = kind === "rig-bundle" ? validateRigDescriptor(mp, { requireSnapshot: true }) : validateManifest(mp);
+    const id = kind === "rig-bundle" ? validateRigDescriptor(mp, { requireSnapshot: true })
+      : kind === "factory" ? validateFactoryListing(mp, { requireSnapshot: true }) : validateManifest(mp);
     const key = `${kind}:${id}`;
-    if (seenIds.has(key)) fail(`duplicate ${kind === "app" ? "app" : "rig"} id '${id}'`);
+    if (seenIds.has(key)) fail(`duplicate ${kind === "app" ? "app" : kind === "factory" ? "factory" : "rig"} id '${id}'`);
     seenIds.add(key);
     // One rig, one listing: the same repo + spec under a second id is a
     // duplicate identity even though the ids differ. (A new pin of the same
@@ -374,6 +496,7 @@ function validateRegistry(registryPath) {
       seenSources.set(sKey, id);
     }
   }
+  validateVerifiedFactories(REGISTRY_ROOT);
   const n = list.length;
   return `registry (${n} manifest${n === 1 ? "" : "s"})`;
 }
@@ -388,8 +511,9 @@ function main() {
     return `OK ${validateRegistry(p)}`;
   }
   const p = args[0];
-  if (!p) fail("usage: validate.mjs <app.json|rig.json> | --registry <list.json>");
-  return `OK ${kindOf(p) === "rig-bundle" ? validateRigDescriptor(p) : validateManifest(p)}`;
+  if (!p) fail("usage: validate.mjs <app.json|rig.json|factories/<id>/listing.json> | --registry <list.json>");
+  const k = kindOf(p);
+  return `OK ${k === "rig-bundle" ? validateRigDescriptor(p) : k === "factory" ? validateFactoryListing(p) : validateManifest(p)}`;
 }
 
 try {

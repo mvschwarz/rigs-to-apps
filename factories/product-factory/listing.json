@@ -1,0 +1,29 @@
+{
+  "descriptor_version": 1,
+  "kind": "factory",
+  "id": "product-factory",
+  "title": "Product factory",
+  "summary": "Three rigs turn a short request into a small working app: product management scopes it, build implements and checks it, and dogfood uses the release and reports back.",
+  "tags": [
+    "product",
+    "build",
+    "dogfood",
+    "claude-code",
+    "codex"
+  ],
+  "author": {
+    "name": "OpenRig contributors",
+    "url": "https://openrig.dev"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "path": "factories/product-factory/",
+    "ref": null
+  },
+  "release": {
+    "tag": "product-factory-v0.1.5",
+    "asset": "product-factory-0.1.5.tar.gz",
+    "sha256": "d4c49ba28c1983dfcdfa64a87bb91771e28c4ca98369248cbc6276458b8ad224"
+  }
+}

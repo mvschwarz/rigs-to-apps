@@ -1,0 +1,17 @@
+[
+  {
+    "id": "product-factory",
+    "version": "0.1.5",
+    "sha256": "d4c49ba28c1983dfcdfa64a87bb91771e28c4ca98369248cbc6276458b8ad224",
+    "verdict": "SHIP",
+    "qa": "independent QA (non-author builder seat)",
+    "date": "2026-09-29",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0",
+      "claude-code": "not recorded"
+    },
+    "models": "test",
+    "path": "additive"
+  }
+]
