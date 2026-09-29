@@ -16,7 +16,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { importBundle, loadOpenRigParser, LIMITS } from "./import-bundle.mjs";
+import { importBundle, loadOpenRigParser, LIMITS, PARSER_CLI_VERSION } from "./import-bundle.mjs";
 
 const REF = "a".repeat(40);
 const PRIVATE = "private-host-7f3a";
@@ -75,7 +75,7 @@ const failingFetch = () => { throw new Error("fetch failed for https://github.co
 
 // TEST DOUBLE for OpenRig's parsers — see header.
 const parser = {
-  version: "0.5.14",
+  version: PARSER_CLI_VERSION,
   rig: {
     parse: (y) => JSON.parse(y),
     validate: (r) => (Array.isArray(r?.pods) ? { valid: true, errors: [] } : { valid: false, errors: ["pods: required"] }),
@@ -99,7 +99,7 @@ test("valid import: topology, agents and imports, files and risks come from the 
   await run(reg, authorRepo());
   const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
   assert.equal(s.source.ref, REF);
-  assert.equal(s.parsed_by.openrig, "0.5.14");
+  assert.equal(s.parsed_by.openrig, PARSER_CLI_VERSION);
   assert.deepEqual(s.topology.pods[0].members.map((m) => `${m.id}:${m.runtime}:${m.agent}`),
     ["lead:claude-code:rigs/tiny/agents/lead", "helper:codex:rigs/tiny/agents/helper"]);
   assert.deepEqual(s.topology.edges, [{ kind: "delegates_to", from: "core.lead", to: "core.helper" }]);
@@ -290,6 +290,15 @@ test("the CLI runs when invoked through a symlinked path (macOS /tmp -> /private
   }
 });
 
-test("the real parser loader fails loudly on a version it is not pinned to", async () => {
-  await assert.rejects(loadOpenRigParser({ expected: "0.0.0-never" }), /OpenRig parser (version mismatch|unavailable)/);
+test("the parser loader fails loudly on a version it is not pinned to, or when not installed", async () => {
+  await assert.rejects(loadOpenRigParser({ expected: "0.0.0-never" }), /OpenRig parser (version mismatch|unavailable).*npm ci --prefix tools/);
+  await assert.rejects(loadOpenRigParser({ toolsDir: tmp("rigsto-empty-tools-") }), /not installed for the registry tools.*npm ci --prefix tools/);
+});
+
+test("the parser pin is ONE fact: PARSER_CLI_VERSION equals tools/package.json, and loads from the tool-local install", async () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "package.json"), "utf8"));
+  assert.equal(pkg.dependencies["@openrig/cli"], PARSER_CLI_VERSION, "tools/package.json and PARSER_CLI_VERSION disagree");
+  const p = await loadOpenRigParser();
+  assert.equal(p.version, PARSER_CLI_VERSION);
+  assert.equal(p.rig.validate(p.rig.parse('version: "0.2"\nname: t\npods:\n  - id: a\n    label: A\n    members:\n      - id: m\n        agent_ref: "local:x"\n        runtime: codex\n        profile: default\n        cwd: "."\n    edges: []\nedges: []\n')).valid, true);
 });

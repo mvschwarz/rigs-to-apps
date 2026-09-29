@@ -63,9 +63,12 @@ The full field reference is [`SCHEMA.md`](../SCHEMA.md); `tools/validate.mjs` is
 
 ## 3. Preview it before you submit
 
-From a checkout of this registry, with `git` and OpenRig installed:
+You need **Node >= 22** and **git**. The preview tool brings its own OpenRig parser (pinned in
+`tools/package.json`), so **no OpenRig install is needed to preview**, and the version you run makes no
+difference. From a checkout of this registry:
 
 ```bash
+npm ci --prefix tools        # once: installs the pinned parser; runs no install scripts
 node tools/preview-listing.mjs bundles/<id>/rig.json
 ```
 

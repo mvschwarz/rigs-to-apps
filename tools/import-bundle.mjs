@@ -14,14 +14,18 @@
 // (bounded) and parsed by OpenRig's OWN parsers. No `rig bundle create` runs, so
 // no host/session provenance is ever stamped, and no daemon is needed.
 //
-// THE PARSERS ARE AN INTERNAL, VERSION-COUPLED PATH, NOT A PUBLIC EXPORT.
+// THE PARSERS ARE A PINNED, TOOL-LOCAL DEPENDENCY — NOT THE HOST'S INSTALL.
 // OpenRig ships no verb that emits a parsed RigSpec (`rig bundle inspect --json`
 // names the spec file only), so this imports RigSpecCodec/RigSpecSchema and the
-// AgentSpec parser from daemon/dist/domain/ of the ACTIVE install and FAILS
-// LOUDLY if they are missing or not the version pinned below. Bumping
-// PARSER_CLI_VERSION is deliberate: re-import every listing and diff the
-// snapshots. The supported replacement (a parsed-spec field on inspect, or an
-// exported parser) is a named core gap for Build.
+// AgentSpec parser from daemon/dist/domain/ of the @openrig/cli package pinned
+// in tools/package.json (installed with `npm ci --prefix tools`, scripts off,
+// lockfile committed). The parser version is a fact of THIS REPO, so an author
+// on any OpenRig — or none — previews with exactly the parser registration
+// uses. It still imports package-internal modules: it FAILS LOUDLY if they are
+// missing or not the pinned version. Bumping PARSER_CLI_VERSION (with
+// tools/package.json) is deliberate: re-import every listing and diff. The
+// supported replacement (a parsed-spec field on inspect, or an exported
+// parser) is a named core gap for Build.
 //
 // Deterministic: no timestamps, sorted collections, fixed key order — two
 // imports at one pin with one parser version are byte-identical.
@@ -38,7 +42,7 @@ class Fail extends Error {}
 const fail = (msg) => { throw new Fail(msg); };
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const PARSER_CLI_VERSION = "0.5.14";
+export const PARSER_CLI_VERSION = "0.6.1"; // must equal tools/package.json
 const SNAPSHOT_VERSION = 1;
 
 // The install PROCEDURE's exercised version — the clone/checkout/init/up
@@ -109,42 +113,30 @@ export function gitFetchSource({ repo, ref, dest, mirror = null }) {
   if (got !== ref) fail(`fetch resolved ${got || "nothing"}, not the pinned ${ref}`);
 }
 
-export function runRig(args) {
-  const r = spawnSync("rig", args, { encoding: "utf8", timeout: 30000 });
-  return { status: r.error ? -1 : r.status, stdout: r.stdout || "", stderr: r.stderr || String(r.error || "") };
-}
-
-// The ACTIVE OpenRig install: ~/.openrig/bin/rig is a shim that execs
-// <cli>/dist/bin-wrapper.js. Resolve it, confirm the pinned version, and load its
-// parsers. Any mismatch is a loud failure — never a fallback.
-export async function loadOpenRigParser({ rig = runRig, expected = PARSER_CLI_VERSION } = {}) {
-  const which = spawnSync("sh", ["-c", "command -v rig"], { encoding: "utf8" }).stdout.trim();
-  if (!which) fail("OpenRig parser unavailable: no `rig` on PATH");
-  let shim;
-  try { shim = fs.readFileSync(fs.realpathSync(which), "utf8"); } catch { fail(`OpenRig parser unavailable: cannot read ${which}`); }
-  const m = shim.match(/"([^"]*\/@openrig\/cli\/dist\/bin-wrapper\.js)"/);
-  if (!m) fail(`OpenRig parser unavailable: ${which} does not exec an @openrig/cli bin-wrapper`);
-  const cliRoot = path.dirname(path.dirname(m[1]));
-  const domain = path.join(cliRoot, "daemon", "dist", "domain");
+// The PINNED parser: @openrig/cli from tools/node_modules (never the host's
+// `rig`). Resolve it, confirm the pinned version, load its parser modules. Any
+// mismatch or absence is a loud failure — never a fallback.
+export async function loadOpenRigParser({ expected = PARSER_CLI_VERSION, toolsDir = HERE } = {}) {
+  const cliRoot = path.join(toolsDir, "node_modules", "@openrig", "cli");
+  const install = "run `npm ci --prefix tools` (Node >= 22)";
   let pkgVersion;
   try { pkgVersion = JSON.parse(fs.readFileSync(path.join(cliRoot, "package.json"), "utf8")).version; }
-  catch { fail(`OpenRig parser unavailable: no package.json at ${cliRoot}`); }
-  const running = (rig(["--version"]).stdout.trim().split(/\s+/)[0]) || null;
-  if (pkgVersion !== expected || running !== expected) {
-    fail(`OpenRig parser version mismatch: this importer is pinned to ${expected}, the active install is ` +
-      `${pkgVersion} and \`rig --version\` reports ${running}. Re-pin PARSER_CLI_VERSION deliberately and re-import every listing.`);
+  catch { fail(`OpenRig parser unavailable: @openrig/cli is not installed for the registry tools — ${install}`); }
+  if (pkgVersion !== expected) {
+    fail(`OpenRig parser version mismatch: the tools are pinned to @openrig/cli ${expected}, tools/node_modules has ${pkgVersion} — ${install}`);
   }
+  const domain = path.join(cliRoot, "daemon", "dist", "domain");
   let codec, schema, agent;
   try {
     codec = await import(pathToFileURL(path.join(domain, "rigspec-codec.js")).href);
     schema = await import(pathToFileURL(path.join(domain, "rigspec-schema.js")).href);
     agent = await import(pathToFileURL(path.join(domain, "agent-manifest.js")).href);
-  } catch (e) { fail(`OpenRig parser unavailable at ${domain}: ${String(e && e.message || e)}`); }
+  } catch (e) { fail(`OpenRig ${pkgVersion} parser modules are not where the tools expect (daemon/dist/domain/): ${String(e && e.message || e)}`); }
   if (typeof codec.RigSpecCodec?.parse !== "function" || typeof schema.RigSpecSchema?.validate !== "function" ||
       typeof schema.RigSpecSchema?.normalize !== "function" || !(schema.VALID_EDGE_KINDS instanceof Set) ||
       typeof agent.parseAgentSpec !== "function" || typeof agent.validateAgentSpec !== "function" ||
       typeof agent.normalizeAgentSpec !== "function") {
-    fail(`OpenRig parser at ${domain} no longer exports RigSpecCodec/RigSpecSchema/VALID_EDGE_KINDS/parse+validate+normalizeAgentSpec`);
+    fail(`OpenRig ${pkgVersion} no longer exports RigSpecCodec/RigSpecSchema/VALID_EDGE_KINDS/parse+validate+normalizeAgentSpec`);
   }
   return {
     version: expected,
@@ -285,7 +277,6 @@ export async function importBundle({
   cacheDir,
   fetchSource = gitFetchSource,
   parser,
-  rig = runRig,
   validate = validateWithRegistryValidator,
   leakTerms = defaultLeakTerms(),
   registryRoot,
@@ -301,7 +292,7 @@ export async function importBundle({
   fs.mkdirSync(cache, { recursive: true });
   const cacheReal = fs.realpathSync(cache);
 
-  if (!parser) parser = await loadOpenRigParser({ rig });
+  if (!parser) parser = await loadOpenRigParser();
 
   // 1. the author's source, at exactly the pin
   const src = path.join(cacheReal, "src", `${d.id}-${d.source.ref}`);

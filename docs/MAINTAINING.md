@@ -57,10 +57,19 @@ the preview never shows it.
 
 ## Parser version
 
-The importer reads `rig.yaml` and every AgentSpec with **OpenRig's own parsers**, loaded from the active install.
-OpenRig ships no public parsed-spec output yet, so this is a version-coupled internal path. The importer refuses to
-run unless the active install is exactly `PARSER_CLI_VERSION` (in `tools/import-bundle.mjs`). To move it: upgrade,
-bump the constant, re-import **every** listing, and review the snapshot diffs before committing.
+The importer reads `rig.yaml` and every AgentSpec with **OpenRig's own parsers**, imported from the
+`@openrig/cli` package **pinned in `tools/package.json`**. Install it with `npm ci --prefix tools` (Node >= 22;
+`tools/.npmrc` disables install scripts, so nothing in the dependency tree runs). The parser version is a fact of
+this repository, never of the host: authors and maintainers on any OpenRig version (or none) import identically.
+
+The modules are package internals (`daemon/dist/domain/`). OpenRig publishes no parsed-spec output yet, so the
+importer refuses to run unless the installed package is exactly `PARSER_CLI_VERSION` and still exports what it
+reads. To move the pin:
+1. Change `tools/package.json` and `PARSER_CLI_VERSION` together (a test asserts they agree).
+2. Run `npm install --prefix tools` and commit the lockfile.
+3. Re-import **every** listing.
+4. Review the snapshot diffs before committing: expect only the `parsed_by.openrig` stamp to change unless the
+   parser's output did.
 
 ## Pins that are committed but not yet pushed
 

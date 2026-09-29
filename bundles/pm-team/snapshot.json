@@ -24,7 +24,7 @@
     "bundle": null
   },
   "parsed_by": {
-    "openrig": "0.5.14",
+    "openrig": "0.6.1",
     "parsers": "RigSpecCodec + RigSpecSchema + AgentSpec (parseAgentSpec)",
     "note": "Read from OpenRig's internal, version-coupled modules — not a public OpenRig export."
   },

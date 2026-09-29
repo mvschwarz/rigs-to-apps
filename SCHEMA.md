@@ -128,10 +128,10 @@ and so no host/session provenance is ever read or stamped. A final scan refuses 
 this host, home directory, session or the import cache. Any failure prints `FAIL: <reason>` and leaves the
 previous `snapshot.json` byte-for-byte intact. Two imports at one pin are byte-identical.
 
-**Version coupling.** OpenRig exposes no public parsed-spec output, so the importer loads the parsers from the
-active install's `daemon/dist/domain/` and fails loudly unless it is exactly `PARSER_CLI_VERSION`. Bumping it
-is deliberate: re-import every listing and diff. A supported export (or a parsed spec on
-`rig bundle inspect --json`) would retire this.
+**Parser pin.** OpenRig exposes no public parsed-spec output, so the importer imports OpenRig's parser modules
+from the `@openrig/cli` version pinned in `tools/package.json` (`npm ci --prefix tools`; scripts disabled), never
+from the host's install, and fails loudly unless it is exactly `PARSER_CLI_VERSION`. See `docs/MAINTAINING.md` to
+move it. A supported export (or a parsed spec on `rig bundle inspect --json`) would retire this.
 
 `node --test tools/import-bundle.test.mjs` covers valid import, determinism, invalid descriptors, unsafe paths
 (`..`, absolute, symlink escape, oversized, escaping `agent_ref`), failed fetch and parser rejection (both

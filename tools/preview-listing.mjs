@@ -6,10 +6,10 @@
 //
 // It runs the SAME validator and the SAME importer registration uses, against a
 // throwaway copy of your listing: nothing in this checkout is written, and no
-// preview can pass here that registration would refuse. Needs git and an
-// OpenRig install of the version the importer is pinned to (it reads rig.yaml
-// with OpenRig's own parser). Prints `FAIL: <reason>` and exits 1 on anything
-// registration would refuse.
+// preview can pass here that registration would refuse. Needs Node >= 22 and
+// git, plus `npm ci --prefix tools` once: the tools bring their own pinned
+// OpenRig parser, so no OpenRig install is needed. Prints `FAIL: <reason>` and
+// exits 1 on anything registration would refuse.
 
 import fs from "node:fs";
 import os from "node:os";
