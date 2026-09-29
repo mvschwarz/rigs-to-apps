@@ -1,0 +1,37 @@
+{
+  "descriptor_version": 1,
+  "kind": "factory",
+  "id": "video-factory",
+  "title": "Video factory",
+  "summary": "Four agents make a short film on a CPU: a director plans, a Blender artist renders a scene headless, a Hyperframes compositor exports the film, and a viewer judges it.",
+  "tags": [
+    "video",
+    "blender",
+    "hyperframes",
+    "claude-code",
+    "codex"
+  ],
+  "author": {
+    "name": "OpenRig contributors",
+    "url": "https://openrig.dev"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "path": "factories/video-factory/",
+    "ref": null
+  },
+  "release": {
+    "tag": "video-factory-v0.1.5",
+    "asset": "video-factory-0.1.5.tar.gz",
+    "sha256": "ff1f89eab9bc62c0a555c57a47dfcb546d2575bc32dd00eba1844f9d4b43795f"
+  },
+  "media": {
+    "showcase": {
+      "src": "showcase.mp4",
+      "poster": "showcase.png",
+      "caption": "A 6-second film this factory's own agents made from the starter brief, on the test models: a Blender still of a wireframe icosphere with a slow push-in and a title. The object itself does not move.",
+      "version": "0.1.5"
+    }
+  }
+}

@@ -1,0 +1,1375 @@
+{
+  "snapshot_version": 1,
+  "id": "video-factory",
+  "version": "0.1.5",
+  "content_id": "1d4ba5623866fe108156f5689eb1e0fe9a4cd07a45bb8146a3964a570527e8af",
+  "title": "Video factory",
+  "summary": "Four agents make a short film: a director plans, a Blender artist builds and renders the scene headless, a Hyperframes compositor composes and exports it, and a viewer judges the exported film. CPU-only; no paid media services.",
+  "lineage": "Redesigned from OpenRig's earlier Blender and Hyperframes studio rigs (openrig-studio lineage); not an export of any live rig.",
+  "author": {
+    "name": "OpenRig contributors",
+    "url": "https://openrig.dev"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "path": "factories/video-factory/",
+    "ref": null
+  },
+  "archive": {
+    "asset": "video-factory-0.1.5.tar.gz",
+    "tag": "video-factory-v0.1.5",
+    "sha256": "ff1f89eab9bc62c0a555c57a47dfcb546d2575bc32dd00eba1844f9d4b43795f",
+    "bytes": 416835,
+    "url": "https://github.com/mvschwarz/rigs-to-apps/releases/download/video-factory-v0.1.5/video-factory-0.1.5.tar.gz"
+  },
+  "built_by": "the rigs-to-builder packaging environment (native bundles stamp sourceHost \"rigs-to-builder\")",
+  "openrig": {
+    "min": "0.6.1",
+    "tested": null,
+    "parser": "0.6.1"
+  },
+  "parsed_by": {
+    "openrig": "0.6.1",
+    "parsers": "RigSpecCodec + RigSpecSchema + AgentSpec"
+  },
+  "models_test_label": "TEST — cheap smoke-test models; the recommended configuration is the default",
+  "rigs": [
+    {
+      "id": "video-factory",
+      "name": "video-factory",
+      "summary": "A small video factory: a director turns a brief into a shot plan, a Blender artist builds and renders the scene headless, a Hyperframes compositor puts it into an HTML/CSS/GSAP composition and exports the film, and a viewer judges the exported film against the plan. CPU-only; no paid media generation. Recommended models.",
+      "source_dir": "source/video-factory",
+      "spec": "source/video-factory/rig.yaml",
+      "test_spec": "source/video-factory/rig.test-models.yaml",
+      "culture": "source/video-factory/CULTURE.md",
+      "startup": [
+        "source/video-factory/AGENTS.md",
+        "source/video-factory/PRODUCTION-GUIDE.md"
+      ],
+      "bundle": {
+        "path": "bundles/video-factory.rigbundle",
+        "sha256": "fa3be0b4cbbbb4c6c6977b68d2daeb14c83e4cdccdad76919198639b252802c9",
+        "bytes": 128539
+      },
+      "test_bundle": {
+        "path": "bundles/video-factory.test-models.rigbundle",
+        "sha256": "9b5027d38015b5f94fe861207f9f75bcb8ee0959f63b9e120beaacc3c2f71adb",
+        "bytes": 128573
+      },
+      "topology": {
+        "pods": [
+          {
+            "id": "studio",
+            "label": "Studio",
+            "members": [
+              {
+                "id": "director",
+                "label": "Director — holds the brief, the plan and the final report",
+                "runtime": "claude-code",
+                "model": {
+                  "recommended": "claude-opus-5-5",
+                  "test": "claude-sonnet-5"
+                },
+                "agent": "source/video-factory/agents/director"
+              },
+              {
+                "id": "blender",
+                "label": "Blender artist — builds and renders the scene",
+                "runtime": "codex",
+                "model": {
+                  "recommended": "gpt-6-sol",
+                  "test": "gpt-6-luna"
+                },
+                "agent": "source/video-factory/agents/blender"
+              },
+              {
+                "id": "compositor",
+                "label": "Hyperframes compositor — owns the timeline and the exported film",
+                "runtime": "codex",
+                "model": {
+                  "recommended": "gpt-6-sol",
+                  "test": "gpt-6-luna"
+                },
+                "agent": "source/video-factory/agents/compositor"
+              },
+              {
+                "id": "viewer",
+                "label": "Viewer — watches the exported film and judges it against the plan",
+                "runtime": "claude-code",
+                "model": {
+                  "recommended": "claude-opus-5-5",
+                  "test": "claude-sonnet-5"
+                },
+                "agent": "source/video-factory/agents/viewer"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "collaborates_with",
+            "from": "studio.director",
+            "to": "studio.blender"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "studio.director",
+            "to": "studio.compositor"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "studio.blender",
+            "to": "studio.compositor"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "studio.compositor",
+            "to": "studio.viewer"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "studio.viewer",
+            "to": "studio.director"
+          }
+        ]
+      },
+      "agents": [
+        {
+          "dir": "source/video-factory/agents/blender",
+          "name": "video-factory-blender",
+          "version": "1.0",
+          "description": null,
+          "runtime": "codex",
+          "skills": [
+            {
+              "id": "blender-headless",
+              "path": "source/video-factory/agents/blender/skills/blender-headless",
+              "files": [
+                {
+                  "path": "source/video-factory/agents/blender/skills/blender-headless/SKILL.md",
+                  "bytes": 2918
+                },
+                {
+                  "path": "source/video-factory/agents/blender/skills/blender-headless/scripts/still_scene.py",
+                  "bytes": 4498
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/video-factory/agents/blender/guidance/role.md"
+          ],
+          "startup": [
+            "source/video-factory/agents/blender/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/video-factory/agents/blender/agent.yaml",
+              "bytes": 543
+            },
+            {
+              "path": "source/video-factory/agents/blender/guidance/role.md",
+              "bytes": 968
+            },
+            {
+              "path": "source/video-factory/agents/blender/skills/blender-headless/SKILL.md",
+              "bytes": 2918
+            },
+            {
+              "path": "source/video-factory/agents/blender/skills/blender-headless/scripts/still_scene.py",
+              "bytes": 4498
+            }
+          ]
+        },
+        {
+          "dir": "source/video-factory/agents/compositor",
+          "name": "video-factory-compositor",
+          "version": "1.0",
+          "description": null,
+          "runtime": "codex",
+          "skills": [
+            {
+              "id": "gsap",
+              "path": "source/video-factory/agents/compositor/skills/gsap",
+              "files": [
+                {
+                  "path": "source/video-factory/agents/compositor/skills/gsap/LICENSE",
+                  "bytes": 10763
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/gsap/SKILL.md",
+                  "bytes": 7776
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/gsap/references/effects.md",
+                  "bytes": 8761
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/gsap/scripts/extract-audio-data.py",
+                  "bytes": 6463
+                }
+              ]
+            },
+            {
+              "id": "hyperframes",
+              "path": "source/video-factory/agents/compositor/skills/hyperframes",
+              "files": [
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/LICENSE",
+                  "bytes": 10763
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/SKILL.md",
+                  "bytes": 30613
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/data-in-motion.md",
+                  "bytes": 1296
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/house-style.md",
+                  "bytes": 5055
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/bold-energetic.md",
+                  "bytes": 417
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/clean-corporate.md",
+                  "bytes": 410
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/dark-premium.md",
+                  "bytes": 389
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/jewel-rich.md",
+                  "bytes": 394
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/monochrome.md",
+                  "bytes": 454
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/nature-earth.md",
+                  "bytes": 399
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/neon-electric.md",
+                  "bytes": 380
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/pastel-soft.md",
+                  "bytes": 392
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/warm-editorial.md",
+                  "bytes": 411
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/patterns.md",
+                  "bytes": 5539
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/audio-reactive.md",
+                  "bytes": 3064
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/beat-direction.md",
+                  "bytes": 6139
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/captions.md",
+                  "bytes": 5515
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/css-patterns.md",
+                  "bytes": 8312
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/design-picker.md",
+                  "bytes": 12209
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/dynamic-techniques.md",
+                  "bytes": 6886
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/motion-principles.md",
+                  "bytes": 8790
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/narration.md",
+                  "bytes": 3482
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/prompt-expansion.md",
+                  "bytes": 5554
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/techniques.md",
+                  "bytes": 11127
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transcript-guide.md",
+                  "bytes": 5864
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/catalog.md",
+                  "bytes": 6290
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-3d.md",
+                  "bytes": 421
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-blur.md",
+                  "bytes": 1787
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-cover.md",
+                  "bytes": 1448
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-destruction.md",
+                  "bytes": 4484
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-dissolve.md",
+                  "bytes": 2462
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-distortion.md",
+                  "bytes": 1803
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-grid.md",
+                  "bytes": 370
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-light.md",
+                  "bytes": 2376
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-mechanical.md",
+                  "bytes": 1613
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-other.md",
+                  "bytes": 838
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-push.md",
+                  "bytes": 1195
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-radial.md",
+                  "bytes": 1060
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-scale.md",
+                  "bytes": 715
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions.md",
+                  "bytes": 11709
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/typography.md",
+                  "bytes": 9326
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/references/video-composition.md",
+                  "bytes": 3663
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/animation-map.mjs",
+                  "bytes": 19405
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/contrast-report.mjs",
+                  "bytes": 12574
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/package-loader.mjs",
+                  "bytes": 8328
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/templates/design-picker.html",
+                  "bytes": 44098
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes/visual-styles.md",
+                  "bytes": 11765
+                }
+              ]
+            },
+            {
+              "id": "hyperframes-cli",
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-cli",
+              "files": [
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes-cli/LICENSE",
+                  "bytes": 10763
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes-cli/SKILL.md",
+                  "bytes": 8949
+                }
+              ]
+            },
+            {
+              "id": "hyperframes-compositing",
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing",
+              "files": [
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/SKILL.md",
+                  "bytes": 3457
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/references/production-practice.md",
+                  "bytes": 2243
+                },
+                {
+                  "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/templates/title-over-still/index.html",
+                  "bytes": 3104
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/video-factory/agents/compositor/guidance/role.md"
+          ],
+          "startup": [
+            "source/video-factory/agents/compositor/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/video-factory/agents/compositor/agent.yaml",
+              "bytes": 775
+            },
+            {
+              "path": "source/video-factory/agents/compositor/guidance/role.md",
+              "bytes": 1483
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/UPSTREAM-ATTRIBUTION.md",
+              "bytes": 692
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/gsap/LICENSE",
+              "bytes": 10763
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/gsap/SKILL.md",
+              "bytes": 7776
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/gsap/references/effects.md",
+              "bytes": 8761
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/gsap/scripts/extract-audio-data.py",
+              "bytes": 6463
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/LICENSE",
+              "bytes": 10763
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/SKILL.md",
+              "bytes": 30613
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/data-in-motion.md",
+              "bytes": 1296
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/house-style.md",
+              "bytes": 5055
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/bold-energetic.md",
+              "bytes": 417
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/clean-corporate.md",
+              "bytes": 410
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/dark-premium.md",
+              "bytes": 389
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/jewel-rich.md",
+              "bytes": 394
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/monochrome.md",
+              "bytes": 454
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/nature-earth.md",
+              "bytes": 399
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/neon-electric.md",
+              "bytes": 380
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/pastel-soft.md",
+              "bytes": 392
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/warm-editorial.md",
+              "bytes": 411
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/patterns.md",
+              "bytes": 5539
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/audio-reactive.md",
+              "bytes": 3064
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/beat-direction.md",
+              "bytes": 6139
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/captions.md",
+              "bytes": 5515
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/css-patterns.md",
+              "bytes": 8312
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/design-picker.md",
+              "bytes": 12209
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/dynamic-techniques.md",
+              "bytes": 6886
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/motion-principles.md",
+              "bytes": 8790
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/narration.md",
+              "bytes": 3482
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/prompt-expansion.md",
+              "bytes": 5554
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/techniques.md",
+              "bytes": 11127
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transcript-guide.md",
+              "bytes": 5864
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/catalog.md",
+              "bytes": 6290
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-3d.md",
+              "bytes": 421
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-blur.md",
+              "bytes": 1787
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-cover.md",
+              "bytes": 1448
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-destruction.md",
+              "bytes": 4484
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-dissolve.md",
+              "bytes": 2462
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-distortion.md",
+              "bytes": 1803
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-grid.md",
+              "bytes": 370
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-light.md",
+              "bytes": 2376
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-mechanical.md",
+              "bytes": 1613
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-other.md",
+              "bytes": 838
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-push.md",
+              "bytes": 1195
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-radial.md",
+              "bytes": 1060
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-scale.md",
+              "bytes": 715
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions.md",
+              "bytes": 11709
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/typography.md",
+              "bytes": 9326
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/references/video-composition.md",
+              "bytes": 3663
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/animation-map.mjs",
+              "bytes": 19405
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/contrast-report.mjs",
+              "bytes": 12574
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/package-loader.mjs",
+              "bytes": 8328
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/templates/design-picker.html",
+              "bytes": 44098
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes/visual-styles.md",
+              "bytes": 11765
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-cli/LICENSE",
+              "bytes": 10763
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-cli/SKILL.md",
+              "bytes": 8949
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/SKILL.md",
+              "bytes": 3457
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/references/production-practice.md",
+              "bytes": 2243
+            },
+            {
+              "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/templates/title-over-still/index.html",
+              "bytes": 3104
+            }
+          ]
+        },
+        {
+          "dir": "source/video-factory/agents/director",
+          "name": "video-factory-director",
+          "version": "1.0",
+          "description": null,
+          "runtime": "claude-code",
+          "skills": [],
+          "guidance": [
+            "source/video-factory/agents/director/guidance/role.md"
+          ],
+          "startup": [
+            "source/video-factory/agents/director/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/video-factory/agents/director/agent.yaml",
+              "bytes": 486
+            },
+            {
+              "path": "source/video-factory/agents/director/guidance/role.md",
+              "bytes": 1758
+            }
+          ]
+        },
+        {
+          "dir": "source/video-factory/agents/viewer",
+          "name": "video-factory-viewer",
+          "version": "1.0",
+          "description": null,
+          "runtime": "claude-code",
+          "skills": [
+            {
+              "id": "film-review",
+              "path": "source/video-factory/agents/viewer/skills/film-review",
+              "files": [
+                {
+                  "path": "source/video-factory/agents/viewer/skills/film-review/SKILL.md",
+                  "bytes": 2423
+                },
+                {
+                  "path": "source/video-factory/agents/viewer/skills/film-review/scripts/review.sh",
+                  "bytes": 1005
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/video-factory/agents/viewer/guidance/role.md"
+          ],
+          "startup": [
+            "source/video-factory/agents/viewer/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/video-factory/agents/viewer/agent.yaml",
+              "bytes": 553
+            },
+            {
+              "path": "source/video-factory/agents/viewer/guidance/role.md",
+              "bytes": 1050
+            },
+            {
+              "path": "source/video-factory/agents/viewer/skills/film-review/SKILL.md",
+              "bytes": 2423
+            },
+            {
+              "path": "source/video-factory/agents/viewer/skills/film-review/scripts/review.sh",
+              "bytes": 1005
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context_packs": [
+    {
+      "name": "video-factory-craft",
+      "path": "context/video-factory-craft",
+      "files": [
+        "look.md",
+        "shot-library.md"
+      ]
+    }
+  ],
+  "starter": [
+    {
+      "from": "starter/.claude/settings.json",
+      "to": ".claude/settings.json"
+    },
+    {
+      "from": "starter/.codex/config.toml",
+      "to": ".codex/config.toml"
+    },
+    {
+      "from": "starter/.codex/rules/video-factory.rules",
+      "to": ".codex/rules/video-factory.rules"
+    },
+    {
+      "from": "starter/BRIEF.md",
+      "to": "BRIEF.md"
+    },
+    {
+      "from": "starter/tools/check-delivery.mjs",
+      "to": "tools/check-delivery.mjs"
+    }
+  ],
+  "prerequisites": [
+    {
+      "name": "Node.js",
+      "check": [
+        "node",
+        "--version"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "min": "22.0.0",
+      "why": "runs the launcher and npx for the pinned Hyperframes CLI"
+    },
+    {
+      "name": "Blender",
+      "check": [
+        "blender",
+        "--version"
+      ],
+      "version_pattern": "Blender (\\d+\\.\\d+\\.\\d+)",
+      "min": "5.1.0",
+      "why": "the Blender artist renders the scene headless (Cycles, CPU); must be on PATH as `blender`"
+    },
+    {
+      "name": "ffprobe (FFmpeg)",
+      "check": [
+        "ffprobe",
+        "-version"
+      ],
+      "version_pattern": "ffprobe version n?(\\d+\\.\\d+(?:\\.\\d+)?)",
+      "min": "6.0",
+      "why": "encodes and inspects the film"
+    },
+    {
+      "name": "Chrome or Chromium",
+      "check": [
+        "sh",
+        "-c",
+        "command -v google-chrome || command -v chromium || command -v chromium-browser"
+      ],
+      "why": "Hyperframes renders the HTML composition in a headless browser"
+    },
+    {
+      "name": "Network access to npm",
+      "check": [
+        "npm",
+        "view",
+        "hyperframes@0.6.20",
+        "version"
+      ],
+      "why": "fetches the pinned Hyperframes CLI (and, at render time, the pinned GSAP script from jsDelivr)"
+    },
+    {
+      "name": "Claude Code",
+      "check": [
+        "claude",
+        "--version"
+      ],
+      "why": "runtime for the director and viewer; your login, never packaged"
+    },
+    {
+      "name": "Codex",
+      "check": [
+        "codex",
+        "--version"
+      ],
+      "version_pattern": "codex-cli (\\d+\\.\\d+\\.\\d+)",
+      "min": "0.159.0",
+      "why": "runtime for the Blender artist and compositor; your login, never packaged"
+    }
+  ],
+  "permissions": [
+    {
+      "runtime": "codex",
+      "files": [
+        ".codex/config.toml",
+        ".codex/rules/video-factory.rules"
+      ],
+      "effect": "Keeps the Codex sandbox ON (no general network). A Codex seat can write in the project and the system's temporary folders. OpenRig also lists one more folder in the seat's sandbox policy, <OpenRig shared-docs root>/rigs/<rig>/state/<pod>, but does not create it and this factory does not use it; writes there fail unless something else has created it. Exactly two commands run outside the sandbox without a prompt, and only as STANDALONE commands, one per call: `rig …` and `npx --yes hyperframes@0.6.20 …`. A chained or cd-prefixed line runs inside the sandbox and fails. Blender, ffmpeg and ffprobe stay inside the sandbox. Codex loads these only for a trusted project; launching with OpenRig registers that trust.",
+      "tested": "video-factory 0.1.3 and 0.1.4 package proofs from the download (OpenRig 0.6.1, Codex 0.159, 2026-09-29): standalone rig queue calls handed work on, blender rendered inside the sandbox, standalone npx --yes hyperframes@0.6.20 ran under the rule; chained rig/npx lines were measured to fail. Evidence: video/evidence/03-package-proof-0.1.3/ and 04-package-proof-0.1.4/"
+    },
+    {
+      "runtime": "claude-code",
+      "files": [
+        ".claude/settings.json"
+      ],
+      "effect": "Pre-approves only `rig`, `ffprobe`, `ffmpeg`, `mkdir`, `ls`, and two exact commands: `bash .claude/skills/film-review/scripts/review.sh` (the viewer's review) and `node tools/check-delivery.mjs` (the delivery gate: it hashes the film, stamps the viewer's verdict and checks it; plain Node, it reads the project and writes only review/VERDICT.md). No general shell; anything else asks as usual.",
+      "tested": null
+    }
+  ],
+  "first_job": "rig send studio-director@video-factory \"Read BRIEF.md and run the production as PRODUCTION-GUIDE.md describes.\"",
+  "expected_output": [
+    "out/final.mp4 (playable H.264)",
+    "scene/scene.py",
+    "scene/scene.blend",
+    "scene/render.png",
+    "comp/index.html",
+    "review/VERDICT.md",
+    "REPORT.md",
+    "PLAN.md whose first line cites 'Recipe: S… (video-factory-craft/shot-library.md)'"
+  ],
+  "verified": {
+    "verdict": "SHIP",
+    "qa": "independent QA (non-author builder seat)",
+    "date": "2026-09-29",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0",
+      "claude-code": "2.1.220"
+    },
+    "models": "test",
+    "path": "additive"
+  },
+  "files": [
+    {
+      "path": "LICENSES/Apache-2.0.txt",
+      "bytes": 10771,
+      "sha256": "7b421fa3c301cd5b61569bae52f05648e0d784c02bfbe1bbcd86a7327be340c9"
+    },
+    {
+      "path": "LICENSES/README.md",
+      "bytes": 745,
+      "sha256": "d1005d666469006909647660b1687c3b8cd8c8a4b75a667b60aaad764f14b31d"
+    },
+    {
+      "path": "SETUP.md",
+      "bytes": 9857,
+      "sha256": "487e91e05505e3a60271760bd6dfb7b5c72c5c39027e25bcd01a7bea0d3983c3"
+    },
+    {
+      "path": "TESTING.md",
+      "bytes": 1890,
+      "sha256": "534175e172def26c3a2d8e246682f41c1a276e6e303e4216ad94683000b94a66"
+    },
+    {
+      "path": "bundles/video-factory.rigbundle",
+      "bytes": 128539,
+      "sha256": "fa3be0b4cbbbb4c6c6977b68d2daeb14c83e4cdccdad76919198639b252802c9"
+    },
+    {
+      "path": "bundles/video-factory.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "a848a734ffc19d0f8742af8ad81e854531fe2743fcc966530581774ba86e1eee"
+    },
+    {
+      "path": "bundles/video-factory.test-models.rigbundle",
+      "bytes": 128573,
+      "sha256": "9b5027d38015b5f94fe861207f9f75bcb8ee0959f63b9e120beaacc3c2f71adb"
+    },
+    {
+      "path": "bundles/video-factory.test-models.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "4f1da5c88101d09d859c0532cd2373550ef3abc41d561ca51fef505fc53c035b"
+    },
+    {
+      "path": "context/video-factory-craft/look.md",
+      "bytes": 1357,
+      "sha256": "46c74dd63f5b4f7eeb9fc9f86a2654134df6fcecb61048cebd24e77be4569421"
+    },
+    {
+      "path": "context/video-factory-craft/manifest.yaml",
+      "bytes": 1413,
+      "sha256": "ea5c26375ffa8df1097e5420d0e01cce6d8f6366dccec01fff080bf23a3abb00"
+    },
+    {
+      "path": "context/video-factory-craft/shot-library.md",
+      "bytes": 1708,
+      "sha256": "dd800cabf7940192352778d2de935cecaa786577c4bfbe340f53277b594d5f92"
+    },
+    {
+      "path": "launch.mjs",
+      "bytes": 17032,
+      "sha256": "56461952c7cbdd6f52aa0d6f3a6fd75f8994e9339ba004402b6777ca0c1dda00"
+    },
+    {
+      "path": "source/video-factory/AGENTS.md",
+      "bytes": 1822,
+      "sha256": "e32dc15cf0e8a2783f34cfe84212eda471f8582224e32585af5bd06e6e4cd19b"
+    },
+    {
+      "path": "source/video-factory/CULTURE.md",
+      "bytes": 1167,
+      "sha256": "758e6f470ff743412e3704d5ce9656adbe790fd7a48859d08a5c7136a6042ec6"
+    },
+    {
+      "path": "source/video-factory/PERMISSIONS.md",
+      "bytes": 2917,
+      "sha256": "f1f07aaf80fc7a121c2f01d2fc83f73655b472444a3af0f85f39565630f83d4f"
+    },
+    {
+      "path": "source/video-factory/PRODUCTION-GUIDE.md",
+      "bytes": 3665,
+      "sha256": "33551016644f22722cc7bdde7162a6dda13a06684a12df599e2bc717373d3abf"
+    },
+    {
+      "path": "source/video-factory/README.md",
+      "bytes": 1315,
+      "sha256": "f797af844d8a0b6a6b4b94fe92371a178805269fec60ffab8eb53d04f796e1de"
+    },
+    {
+      "path": "source/video-factory/agents/blender/agent.yaml",
+      "bytes": 543,
+      "sha256": "64bf03962058642896c2dcb5c8f2b7aaf2327903e7ee5be502479f42a229f0a7"
+    },
+    {
+      "path": "source/video-factory/agents/blender/guidance/role.md",
+      "bytes": 968,
+      "sha256": "372b6a4915b887e7fbd0a87c36165f3dacd7cf1e5fda0eb574fe12189c6e9d65"
+    },
+    {
+      "path": "source/video-factory/agents/blender/skills/blender-headless/SKILL.md",
+      "bytes": 2918,
+      "sha256": "3b186418aae029b8838c2c240e14f9bd05590810f4a7cf3070bb5ddbcfda1ea1"
+    },
+    {
+      "path": "source/video-factory/agents/blender/skills/blender-headless/scripts/still_scene.py",
+      "bytes": 4498,
+      "sha256": "cc60e02a9a22fbcf379aba35857f2e9a0a1b4c975e17d046086c530955a3d1f0"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/agent.yaml",
+      "bytes": 775,
+      "sha256": "efd90f132416113176d98629acd72ded3bbe8b973b53b3ae90df4646bada4489"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/guidance/role.md",
+      "bytes": 1483,
+      "sha256": "bf47ed702d4a1e16d3143774c3f25ed90203ff6d72cfcae96f2c473d5f0119aa"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/UPSTREAM-ATTRIBUTION.md",
+      "bytes": 692,
+      "sha256": "4c7676723cf8fa16470523bcff59b7ed011ec215b2c91f1f347bcc57c3d8e1e7"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/gsap/LICENSE",
+      "bytes": 10763,
+      "sha256": "4259155fb06f127687ee7b0a8a3682d45132db0f2da26cbc0b7a2d1e796436b8"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/gsap/SKILL.md",
+      "bytes": 7776,
+      "sha256": "d65cfadd0040f3b72377b43e5ccc088925a1397f19fcd258abcf4ed72100aa16"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/gsap/references/effects.md",
+      "bytes": 8761,
+      "sha256": "e4a3e157c746963d341d7fb9a5a721ff5952b51a52a1d79843a749a8de8b6693"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/gsap/scripts/extract-audio-data.py",
+      "bytes": 6463,
+      "sha256": "7709b60d42730fc93a348c205ab565158d240b70051d109fcc844b215d56fa4f"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes-cli/LICENSE",
+      "bytes": 10763,
+      "sha256": "4259155fb06f127687ee7b0a8a3682d45132db0f2da26cbc0b7a2d1e796436b8"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes-cli/SKILL.md",
+      "bytes": 8949,
+      "sha256": "a7b870543b0b86f71cd2a0c57de80ba5bd3d40616f92a3f9d6b230180780f4d9"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/SKILL.md",
+      "bytes": 3457,
+      "sha256": "6dfc8cc31b21ff97c69d8998da2d832defb302e9d0551a6f722c8846321505ca"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/references/production-practice.md",
+      "bytes": 2243,
+      "sha256": "8e7dbec170a0a7060f804a599560e43999c84e07f133dabe74dc07e773d9ff12"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes-compositing/templates/title-over-still/index.html",
+      "bytes": 3104,
+      "sha256": "db8f37aaa63db34f517291bc19a2baab8e54e15d40b507e40e3db4599e8120c6"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/LICENSE",
+      "bytes": 10763,
+      "sha256": "4259155fb06f127687ee7b0a8a3682d45132db0f2da26cbc0b7a2d1e796436b8"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/SKILL.md",
+      "bytes": 30613,
+      "sha256": "ad0a8b975461e97aee976596519e127b91093f0e48d4464d92b7cfa2ef2dfbd7"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/data-in-motion.md",
+      "bytes": 1296,
+      "sha256": "22084b4460a8f815d923b972a908f937c1e573bbbc7a865f6f2979ec2ae7ff15"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/house-style.md",
+      "bytes": 5055,
+      "sha256": "4f8bcf7572391c3468bf1115719f7e4399e736b963cc993d6117ccd1dda419b0"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/bold-energetic.md",
+      "bytes": 417,
+      "sha256": "17bc6b7889302151b4e5c84c0c6a33df676647078011d9decb2b68810e3baa7f"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/clean-corporate.md",
+      "bytes": 410,
+      "sha256": "d0c8c86838abb77985609629afe600d0ca365eccd835820f309959e8a85cba9d"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/dark-premium.md",
+      "bytes": 389,
+      "sha256": "abfecbf7e8dca3b674376590a0467aac3e13b2135022ae4ec519c4b27c2303b1"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/jewel-rich.md",
+      "bytes": 394,
+      "sha256": "17c8f7506469f66bca4e27ef78c19f0bcbf250f88fe840e3043816b7041c4fc5"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/monochrome.md",
+      "bytes": 454,
+      "sha256": "fe8586f6d70707098859063bdef34d68084f02cf7d5aaa436d4c9915a7ae3748"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/nature-earth.md",
+      "bytes": 399,
+      "sha256": "9710549b17487787fef3c7cb459cfd6e4ac28c1593bf471fcf55a3b4e546beed"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/neon-electric.md",
+      "bytes": 380,
+      "sha256": "35225bf8d2cd37223e88e0bc59b0a96bc8adeda7225389b3df97b675cfd33dfb"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/pastel-soft.md",
+      "bytes": 392,
+      "sha256": "ed4e25bb5f4953c002e55a53320249621437e03b5a11d43e3c1bd32c869b6d95"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/palettes/warm-editorial.md",
+      "bytes": 411,
+      "sha256": "c467ee3cc0bbf4b2bedccc8106e18293b8a06dbac8f092b10300492da0e0559a"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/patterns.md",
+      "bytes": 5539,
+      "sha256": "6872af2ed72083340fc25f23f08b7fabfcd9fd99c1e1b5aa84027779210fcba5"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/audio-reactive.md",
+      "bytes": 3064,
+      "sha256": "f0d83c24fa40d42a74f972ccf3b5254d7706cb063d16b8b41f87dc668a418f49"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/beat-direction.md",
+      "bytes": 6139,
+      "sha256": "37f97aa78048870efc7657332245ec6d356c2952d63dbdfde31fd5ab4bbb7d4b"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/captions.md",
+      "bytes": 5515,
+      "sha256": "9e35e0d8618e392906a0c542571af9f070350a17007c8449c69ff31384f3b195"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/css-patterns.md",
+      "bytes": 8312,
+      "sha256": "39c4af128cdd3ed9d1be652a88c3e4d01cb0daf744dfde3db7197014cd1a38d8"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/design-picker.md",
+      "bytes": 12209,
+      "sha256": "e529493473443dc729d9b79b8d8ba31d38482f3b5e300df7f577b997d65375a2"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/dynamic-techniques.md",
+      "bytes": 6886,
+      "sha256": "f48f666acb270daf2ac57fede5efc96ff3f168fa4f41db611de0310452e6d7e3"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/motion-principles.md",
+      "bytes": 8790,
+      "sha256": "77acbf89feff48a43cf6b1b2baf0224a81308ac1ae0785112b9bad0b1d7dd874"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/narration.md",
+      "bytes": 3482,
+      "sha256": "6002bb2a2270149a8955068d5952fc57cd22594649f576b3e8c38057846610b6"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/prompt-expansion.md",
+      "bytes": 5554,
+      "sha256": "5245c3240fa2eea8c333a385951d7399988397457ff5bdd9e9c0ca2bb755defe"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/techniques.md",
+      "bytes": 11127,
+      "sha256": "8485b1d29efda243ac197feb5f60f77b38cc75e4a19dbd56b7b4bf172587e261"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transcript-guide.md",
+      "bytes": 5864,
+      "sha256": "7f0176536bc5620962efd48d5643ab556b50590b9730ffe0fd6234bfb24ea566"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions.md",
+      "bytes": 11709,
+      "sha256": "302fab350697e210a763ba7e3b2acbde9aadac37bd49cb9814a12e60983294ce"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/catalog.md",
+      "bytes": 6290,
+      "sha256": "557b5b30be7b68f95d8481209b1a2f0a0e1df23f65de9b08f86697d0e6159a54"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-3d.md",
+      "bytes": 421,
+      "sha256": "e1c3888dd0a2d4b36d25200c1e5ef9038649ae63953865e4b2c4c40fb028d7dd"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-blur.md",
+      "bytes": 1787,
+      "sha256": "fd3eef889a517e1dd985ca816f36f1abfb43420a4b664d4fcc453554cdf561f9"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-cover.md",
+      "bytes": 1448,
+      "sha256": "ba4e5926791c9e6a0a069e20afc91324acb018903f43b4b3f2866d9654f5b7eb"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-destruction.md",
+      "bytes": 4484,
+      "sha256": "7cce7bbd9ebc64176c9ff4fe40ec97273c9c171524d89f853c0651e713949361"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-dissolve.md",
+      "bytes": 2462,
+      "sha256": "47c11ca0a715675c2788aa4a162a652b5dc5f1773b058ea93e9907af56a4eb7c"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-distortion.md",
+      "bytes": 1803,
+      "sha256": "7140650692926959bd5459ca5c478a9b4f137cc76fb92b9138e3b0d353677c06"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-grid.md",
+      "bytes": 370,
+      "sha256": "c62b17058aa7ba42d34df29436b6b4233e47ff2b72f2c7ce0963c75bdec45144"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-light.md",
+      "bytes": 2376,
+      "sha256": "53f0422d3f6dd2584a30501f84e4f09c9b515f605d51ed264a2061567dda15db"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-mechanical.md",
+      "bytes": 1613,
+      "sha256": "4fed48fa659a4b215a996beeea619d244e6c893700178b1f969c17f2ee0a8612"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-other.md",
+      "bytes": 838,
+      "sha256": "2156e4fcc3b42cba9e0d9e268944269057fb48ff15fc1983e3ff9386fa2a8cf8"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-push.md",
+      "bytes": 1195,
+      "sha256": "d526a9612483472de4d865ae27061c98842a5155973dd0cec37fac4998dc1b97"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-radial.md",
+      "bytes": 1060,
+      "sha256": "5d8f20de439e3f2c8d45df11c8acbe31dc1b9342e2d54bbe66b451cf81ca0a1b"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/transitions/css-scale.md",
+      "bytes": 715,
+      "sha256": "3c0cb33d6c844a7265379225f3241d8964afcc908ee757a1ebfb1700a5320ea7"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/typography.md",
+      "bytes": 9326,
+      "sha256": "d0ef1c5666a5b7a5f2af0c5701d17e63017eafc07499830c6616ccdcb21befc8"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/references/video-composition.md",
+      "bytes": 3663,
+      "sha256": "656b681a9fcf7905159d5462a4e04a9e66522857ecd8d7ef6c9fb4b769e627c6"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/animation-map.mjs",
+      "bytes": 19405,
+      "sha256": "eacb3cc40fbabadd66b673d145f2423996abdfc398c62275cbadf677065bb215"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/contrast-report.mjs",
+      "bytes": 12574,
+      "sha256": "81c656a9acd23b239eb0b9c8a1da654a37282a06e28d2ed4987b436bf3d4ee20"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/scripts/package-loader.mjs",
+      "bytes": 8328,
+      "sha256": "278067c09711a20c014f5e8d2e5a358c42a5d49b054503516a693a37b9829ad6"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/templates/design-picker.html",
+      "bytes": 44098,
+      "sha256": "c417139fef8e21b34d56a85cedda8b9597c9574e0727ce603a4743c4ee592c1a"
+    },
+    {
+      "path": "source/video-factory/agents/compositor/skills/hyperframes/visual-styles.md",
+      "bytes": 11765,
+      "sha256": "2f2e185a6e3480ab9187071c5cda22295088f6f2a727ec373c13823c23b14859"
+    },
+    {
+      "path": "source/video-factory/agents/director/agent.yaml",
+      "bytes": 486,
+      "sha256": "59226d580bc60087c0a82ba356efd27ad04b81f7f5976f325eed8ea7be0806a8"
+    },
+    {
+      "path": "source/video-factory/agents/director/guidance/role.md",
+      "bytes": 1758,
+      "sha256": "e56d57fa031cbaf09bed3faa929b8da920d19cbc59224af8e0576be953692bc9"
+    },
+    {
+      "path": "source/video-factory/agents/viewer/agent.yaml",
+      "bytes": 553,
+      "sha256": "d7e05682653dbad9cb85a7fb01f338757ad86208d66f5b9c7fb809e59374f6e8"
+    },
+    {
+      "path": "source/video-factory/agents/viewer/guidance/role.md",
+      "bytes": 1050,
+      "sha256": "827674fdaeea31a8fbf97495fbae81042baae9bb17a917bb7cad3c6b608ece1b"
+    },
+    {
+      "path": "source/video-factory/agents/viewer/skills/film-review/SKILL.md",
+      "bytes": 2423,
+      "sha256": "a5d2d12c411c089fecabd36d2ea30c7b8590341d45738f45247edeba837adb7e"
+    },
+    {
+      "path": "source/video-factory/agents/viewer/skills/film-review/scripts/review.sh",
+      "bytes": 1005,
+      "sha256": "83e684ba075cc87c339ddb22430848638186f49a90ec777b8b3ba947ba6167a6"
+    },
+    {
+      "path": "source/video-factory/rig.test-models.yaml",
+      "bytes": 2364,
+      "sha256": "63567ab4d70b120e013a63d1032d03f08e2afed703cb46adf59ee77e90d2c84e"
+    },
+    {
+      "path": "source/video-factory/rig.yaml",
+      "bytes": 2225,
+      "sha256": "5caf98321202b33740c88a7bc316cf5aa351d261ca8ba094d01c658ac33893f0"
+    },
+    {
+      "path": "starter/.claude/settings.json",
+      "bytes": 274,
+      "sha256": "467396d52f8fc93cad5baa30bf223dc1d5e36c6354c5b0311292462bb1ecfdf3"
+    },
+    {
+      "path": "starter/.codex/config.toml",
+      "bytes": 510,
+      "sha256": "01877ef66e49345a105d16b53af005954835f3ce179a3f4bb3af0d35f07947e2"
+    },
+    {
+      "path": "starter/.codex/rules/video-factory.rules",
+      "bytes": 960,
+      "sha256": "4f4b968499f6dc0863d3a23c477298517a9db45adb71c2b4782ee67ce76b81f2"
+    },
+    {
+      "path": "starter/BRIEF.md",
+      "bytes": 676,
+      "sha256": "dd2d75b38aaa445be6ba0d5505e96ded9b69fe3b5719ab122106ca4c53ae8406"
+    },
+    {
+      "path": "starter/tools/check-delivery.mjs",
+      "bytes": 3512,
+      "sha256": "d5a4fb02cb9b87f839435f6b6662b0c6164460e8d58b30a7a880fd6ebcd2c01d"
+    }
+  ],
+  "setup_prompt": "Set up Video factory 0.1.5, an OpenRig factory from rigs.to.\n\n1. Download the archive and check its hash before unpacking. The sha256 must be exactly ff1f89eab9bc62c0a555c57a47dfcb546d2575bc32dd00eba1844f9d4b43795f:\n   curl -fLO https://github.com/mvschwarz/rigs-to-apps/releases/download/video-factory-v0.1.5/video-factory-0.1.5.tar.gz\n   echo \"ff1f89eab9bc62c0a555c57a47dfcb546d2575bc32dd00eba1844f9d4b43795f  video-factory-0.1.5.tar.gz\" | shasum -a 256 -c\n2. Unpack it somewhere stable and read SETUP.md inside before running anything:\n   mkdir -p ~/rig-factories && tar -xzf video-factory-0.1.5.tar.gz -C ~/rig-factories\n   cd ~/rig-factories/video-factory-0.1.5\n3. Follow SETUP.md with the OpenRig I already run (leave my other rigs and its kernel alone): run\n   node launch.mjs --project <dir> --plan-only, explain to me every permission change it prints, and launch only\n   after I agree. Never pipe anything into a shell."
+}

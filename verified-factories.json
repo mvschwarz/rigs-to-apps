@@ -13,5 +13,20 @@
     },
     "models": "test",
     "path": "additive"
+  },
+  {
+    "id": "video-factory",
+    "version": "0.1.5",
+    "sha256": "ff1f89eab9bc62c0a555c57a47dfcb546d2575bc32dd00eba1844f9d4b43795f",
+    "verdict": "SHIP",
+    "qa": "independent QA (non-author builder seat)",
+    "date": "2026-09-29",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0",
+      "claude-code": "2.1.220"
+    },
+    "models": "test",
+    "path": "additive"
   }
 ]
