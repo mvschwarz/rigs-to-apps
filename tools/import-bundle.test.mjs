@@ -118,6 +118,10 @@ test("valid import: topology, agents and imports, files and risks come from the 
   assert.match(s.install.codex_coordination.text, /pattern = \["rig"\]/);
   assert.match(s.install.codex_coordination.effect, /not a network rule/);
   assert.deepEqual(s.install.restart.steps.map((x) => x.command), ["rig down tiny --snapshot", "rig up tiny --existing --yes"]);
+  assert.equal(s.install.restart.label, "Restart the rig (keeps its agents, files and workspace)");
+  assert.ok(!/configuration change/i.test(JSON.stringify(s.install)), "restart is still described as applying a config change");
+  assert.match(s.install.update, /can't update a running rig to a newer source commit in place/);
+  assert.ok(!/--delete|rig import|workspace-only/.test(JSON.stringify(s.install)), "a workaround recipe crept into the update text");
   assert.match(s.risks[0].detail, /gpt-6-astra/);
   assert.equal(s.install.status, "parsed, not launch-tested");
   assert.equal(s.install.launch_tested, null);

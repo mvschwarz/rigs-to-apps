@@ -500,17 +500,19 @@ export async function importBundle({
         { label: "Preview — runs the version preflight and writes a record; launches nothing", command: `rig up "$PWD/${dir}/${bundle.path}" --cwd "$PWD/my-project" --plan` },
         { label: "Apply and launch — starts the rig's agents in my-project", command: `rig up "$PWD/${dir}/${bundle.path}" --cwd "$PWD/my-project" --yes` },
       ] : null,
-      // Tested (OpenRig 0.6.1): restarting the SAME rig preserves its seats.
-      // Moving a launched rig to a NEW source commit is still being tested.
+      // Tested (OpenRig 0.6.1) as RESTART / RECOVERY of the same rig — it keeps
+      // the rig's agents, files and workspace. NOT a way to apply a config
+      // change or move to a newer source commit.
       restart: {
         tested_on: TESTED_PROCEDURE.openrig,
-        note: "Apply a configuration change by restarting the same rig; its seats are preserved.",
+        label: "Restart the rig (keeps its agents, files and workspace)",
         steps: [
           { label: "Stop the rig and keep a snapshot", command: `rig down ${spec.name} --snapshot` },
           { label: "Start it again from that snapshot", command: `rig up ${spec.name} --existing --yes` },
         ],
       },
-      update: "Updating a launched rig to a new source commit is being tested.",
+      // Stated plainly; no workaround recipe is published.
+      update: "OpenRig 0.6.1 can't update a running rig to a newer source commit in place. Re-running rig up refuses a name collision while the rig runs, and after a plain down it creates a duplicate rig.",
       codex_coordination: codexAtFloor.length ? CODEX_RULE : null,
     },
   };

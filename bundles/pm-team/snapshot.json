@@ -582,7 +582,7 @@
     "bundle_steps": null,
     "restart": {
       "tested_on": "0.6.1",
-      "note": "Apply a configuration change by restarting the same rig; its seats are preserved.",
+      "label": "Restart the rig (keeps its agents, files and workspace)",
       "steps": [
         {
           "label": "Stop the rig and keep a snapshot",
@@ -594,7 +594,7 @@
         }
       ]
     },
-    "update": "Updating a launched rig to a new source commit is being tested.",
+    "update": "OpenRig 0.6.1 can't update a running rig to a newer source commit in place. Re-running rig up refuses a name collision while the rig runs, and after a plain down it creates a duplicate rig.",
     "codex_coordination": {
       "tested_on": {
         "openrig": "0.6.1",
