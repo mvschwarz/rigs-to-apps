@@ -112,6 +112,7 @@ test("valid import: topology, agents and imports, files and risks come from the 
   assert.match(s.risks[0].detail, /gpt-6-astra/);
   assert.equal(s.install.status, "parsed, not launch-tested");
   assert.equal(s.install.launch_tested, null);
+  assert.equal(s.install.bundle_steps, null, "route B shown for a listing with no bundle");
   assert.deepEqual(s.requirements.models, [{ member: "core.helper", runtime: "codex", model: "gpt-6-astra" }]);
   assert.equal(s.requirements.openrig.min, "0.6.1");
   assert.ok(s.install.steps.some((st) => /--plan$/.test(st.command)) && s.install.steps.some((st) => /--yes$/.test(st.command)));
@@ -205,6 +206,7 @@ test("an optional prebuilt .rigbundle is recorded (hashed, linked), never opened
   const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
   assert.equal(s.source.bundle.path, "dist/tiny.rigbundle");
   assert.match(s.source.bundle.sha256, /^[0-9a-f]{64}$/);
+  assert.match(s.install.bundle_steps.at(-1).command, /rig up "\$PWD\/tiny\/dist\/tiny\.rigbundle" --cwd .* --yes$/);
   await assert.rejects(run(registry({ source: { bundle: "dist/missing.rigbundle" } }), authorRepo()), /source.bundle not found/);
 });
 

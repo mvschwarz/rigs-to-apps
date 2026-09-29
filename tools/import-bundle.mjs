@@ -67,15 +67,22 @@ const toPosix = (p) => p.split(path.sep).join("/");
 // Fetch exactly one commit. git runs nothing from the fetched repo: hooks point
 // at /dev/null, submodules are never initialised, LFS smudge is skipped and
 // credential prompts are disabled.
-export function gitFetchSource({ repo, ref, dest }) {
+//
+// `mirror` (CLI --mirror <local repo>) fetches the SAME commit from a local
+// clone instead of GitHub — for a pin that is committed but not yet pushed. A
+// commit id is content-addressed, so the files (and the snapshot) are
+// identical; the snapshot still records the public repo URL, and the pin is
+// re-verified after checkout either way.
+export function gitFetchSource({ repo, ref, dest, mirror = null }) {
   const env = { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_LFS_SKIP_SMUDGE: "1", GIT_CONFIG_NOSYSTEM: "1" };
-  const git = (args, cwd) => spawnSync("git", ["-c", "core.hooksPath=/dev/null", "-c", "protocol.file.allow=never", ...args],
+  const from = mirror ? path.resolve(mirror) : repo;
+  const git = (args, cwd) => spawnSync("git", ["-c", "core.hooksPath=/dev/null", "-c", `protocol.file.allow=${mirror ? "always" : "never"}`, ...args],
     { cwd, env, encoding: "utf8", timeout: LIMITS.fetchTimeoutMs });
   const head = fs.existsSync(path.join(dest, ".git")) ? git(["rev-parse", "HEAD"], dest) : null;
   if (head && head.status === 0 && head.stdout.trim() === ref) return; // cached at the exact pin
   fs.rmSync(dest, { recursive: true, force: true });
   fs.mkdirSync(dest, { recursive: true });
-  for (const args of [["init", "-q"], ["fetch", "-q", "--depth", "1", "--no-tags", repo, ref], ["checkout", "-q", "--detach", "FETCH_HEAD"]]) {
+  for (const args of [["init", "-q"], ["fetch", "-q", "--depth", "1", "--no-tags", from, ref], ["checkout", "-q", "--detach", "FETCH_HEAD"]]) {
     const r = git(args, dest);
     if (r.error || r.status !== 0) {
       fail(`fetch failed for ${repo} at ${ref}: ${(r.stderr || String(r.error || "")).trim().split("\n").pop() || `git ${args[0]} exited ${r.status}`}`);
@@ -445,13 +452,21 @@ export async function importBundle({
       steps: [
         { label: "Get the source", command: `git clone ${d.source.repo} ${dir}` },
         { label: "Pin the exact reviewed revision", command: `git -C ${dir} checkout ${d.source.ref}` },
-        { label: "Make a stable project directory for the rig", command: "mkdir -p my-project && git -C my-project init" },
+        { label: "Make a stable project directory for the rig", command: "mkdir -p my-project" },
         { label: "Preview — runs the version preflight and writes a record; launches nothing", command: `rig up ${specAbs} --cwd "$PWD/my-project" --plan` },
         { label: "Apply and launch — starts the rig's agents in my-project", command: `rig up ${specAbs} --cwd "$PWD/my-project" --yes` },
       ],
-      cautions: [
-        "Before launching again after `rig down <rig>`, remove it with `rig down <rig> --delete`, or you get a second rig with the same name.",
-      ],
+      // ROUTE B, only when the author ships a prebuilt bundle at the same pin.
+      // Exercised on OpenRig 0.6.1. rigs.to links the AUTHOR's file; it never
+      // publishes a .rigbundle of its own.
+      bundle_steps: bundle ? [
+        { label: "Get the source at the pinned revision (it carries the author's prebuilt bundle)", command: `git clone ${d.source.repo} ${dir} && git -C ${dir} checkout ${d.source.ref}` },
+        { label: "Make a stable project directory for the rig", command: "mkdir -p my-project" },
+        { label: "Preview — runs the version preflight and writes a record; launches nothing", command: `rig up "$PWD/${dir}/${bundle.path}" --cwd "$PWD/my-project" --plan` },
+        { label: "Apply and launch — starts the rig's agents in my-project", command: `rig up "$PWD/${dir}/${bundle.path}" --cwd "$PWD/my-project" --yes` },
+      ] : null,
+      // No update recipe is published until one that preserves state is proven.
+      update: "being tested",
     },
   };
 
@@ -481,9 +496,11 @@ async function main() {
   const args = process.argv.slice(2);
   const i = args.indexOf("--cache");
   const cacheDir = i >= 0 ? args[i + 1] : process.env.IMPORT_CACHE;
-  const descriptorPath = args.find((a, j) => !a.startsWith("--") && args[j - 1] !== "--cache");
-  if (!descriptorPath) fail("usage: import-bundle.mjs <bundles/<id>/rig.json> --cache <dir>");
-  const r = await importBundle({ descriptorPath, cacheDir });
+  const mi = args.indexOf("--mirror");
+  const mirror = mi >= 0 ? args[mi + 1] : null;
+  const descriptorPath = args.find((a, j) => !a.startsWith("--") && args[j - 1] !== "--cache" && args[j - 1] !== "--mirror");
+  if (!descriptorPath) fail("usage: import-bundle.mjs <bundles/<id>/rig.json> --cache <dir> [--mirror <local clone>]");
+  const r = await importBundle({ descriptorPath, cacheDir, fetchSource: (o) => gitFetchSource({ ...o, mirror }) });
   return `OK ${r.id} ${r.ref}`;
 }
 

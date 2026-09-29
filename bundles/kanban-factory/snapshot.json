@@ -1,0 +1,200 @@
+{
+  "snapshot_version": 1,
+  "id": "kanban-factory",
+  "title": "Kanban factory",
+  "summary": "Agents run your existing tools: an orchestrator files a ticket on a self-hosted Kanboard and a board driver works it through the columns to Done, over the board's JSON-RPC API.",
+  "tags": [
+    "kanban",
+    "managed-service",
+    "docker"
+  ],
+  "author": {
+    "name": "OpenRig",
+    "url": "https://github.com/mvschwarz/rigs-to-apps"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "ref": "60e95884a639d6619021a7e304ca76f81b9fa80f",
+    "spec": "apps/kanban-factory/rig.yaml",
+    "spec_dir": "apps/kanban-factory",
+    "blob_base": "https://github.com/mvschwarz/rigs-to-apps/blob/60e95884a639d6619021a7e304ca76f81b9fa80f/",
+    "tree_url": "https://github.com/mvschwarz/rigs-to-apps/tree/60e95884a639d6619021a7e304ca76f81b9fa80f",
+    "bundle": null
+  },
+  "parsed_by": {
+    "openrig": "0.5.14",
+    "parsers": "RigSpecCodec + RigSpecSchema + AgentSpec (parseAgentSpec)",
+    "note": "Read from OpenRig's internal, version-coupled modules — not a public OpenRig export."
+  },
+  "topology": {
+    "pods": [
+      {
+        "id": "board",
+        "label": "Board",
+        "members": [
+          {
+            "id": "orchestrator",
+            "label": "Orchestrator",
+            "runtime": "claude-code",
+            "model": null,
+            "agent": "apps/kanban-factory/agents/orchestrator",
+            "agent_ref": "local:agents/orchestrator",
+            "cwd": "."
+          },
+          {
+            "id": "driver",
+            "label": "Board driver",
+            "runtime": "claude-code",
+            "model": null,
+            "agent": "apps/kanban-factory/agents/board-driver",
+            "agent_ref": "local:agents/board-driver",
+            "cwd": "."
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "delegates_to",
+        "from": "board.orchestrator",
+        "to": "board.driver"
+      }
+    ]
+  },
+  "agents": [
+    {
+      "path": "apps/kanban-factory/agents/board-driver",
+      "name": "board-driver",
+      "version": "1.0",
+      "runtime": "claude-code",
+      "model": null,
+      "imports": [],
+      "plugins": [],
+      "skills": []
+    },
+    {
+      "path": "apps/kanban-factory/agents/orchestrator",
+      "name": "orchestrator",
+      "version": "1.0",
+      "runtime": "claude-code",
+      "model": null,
+      "imports": [],
+      "plugins": [],
+      "skills": []
+    }
+  ],
+  "requirements": {
+    "openrig": {
+      "min": "0.6.1",
+      "daemon": "running"
+    },
+    "runtimes": [
+      "claude-code"
+    ],
+    "models": [],
+    "plugins": []
+  },
+  "risks": [
+    {
+      "id": "services",
+      "label": "Starts a managed service",
+      "detail": "This rig declares a services block (for example Docker Compose) that boots before any seat."
+    },
+    {
+      "id": "no-author-auth",
+      "label": "Not an author signature",
+      "detail": "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them."
+    }
+  ],
+  "files": {
+    "count": 11,
+    "bytes": 18670,
+    "entries": [
+      {
+        "path": "apps/kanban-factory/.gitignore",
+        "bytes": 207,
+        "sha256": "1952098946aa2f299f2b75730057e6889f3d5b50bcb77b4f5c07cf9256d007d5"
+      },
+      {
+        "path": "apps/kanban-factory/README.md",
+        "bytes": 2703,
+        "sha256": "fa2884d61e2b6522803b1f00cfbe87b6d49d5a3cdcbed2dd7915c0bdf577bdf1"
+      },
+      {
+        "path": "apps/kanban-factory/RUNBOOK.md",
+        "bytes": 1622,
+        "sha256": "774b9d57e09e4c2fb157eb3f9e87b044a77e4cd842ada4d21480d333541b0ffe"
+      },
+      {
+        "path": "apps/kanban-factory/agents/board-driver/agent.yaml",
+        "bytes": 510,
+        "sha256": "44c1c6e4bd4a30d3873cf63a1c9befd7d5cd7f8f1815693e64abd28f111ddaa5"
+      },
+      {
+        "path": "apps/kanban-factory/agents/board-driver/guidance/role.md",
+        "bytes": 1965,
+        "sha256": "5f263dd8d254f38dd073b2780e125f06d9c2c4bcf1b87ee5db1575df1f7004f1"
+      },
+      {
+        "path": "apps/kanban-factory/agents/orchestrator/agent.yaml",
+        "bytes": 488,
+        "sha256": "7131213a5d08d3d57d8125885843ee96e71006eeef18c2d3eca1c6389497e117"
+      },
+      {
+        "path": "apps/kanban-factory/agents/orchestrator/guidance/role.md",
+        "bytes": 903,
+        "sha256": "8659ce9a190cd3963f152b547316b93a476f57513432dd7d5e823c2621e045b2"
+      },
+      {
+        "path": "apps/kanban-factory/app.json",
+        "bytes": 2421,
+        "sha256": "acdca58a8bdb96fef87c7bc29a3a67ba92a31c294eddc92b92fbaf5adf4b0c24"
+      },
+      {
+        "path": "apps/kanban-factory/docker-compose.yaml",
+        "bytes": 922,
+        "sha256": "025d581926894c285265df0d965bff09aab924817739c1bf8fc24292746afc65"
+      },
+      {
+        "path": "apps/kanban-factory/kanban.html",
+        "bytes": 5302,
+        "sha256": "f54949b78a84e4cb5d8aef6b3f9e22ef03a451c822fb00f6c326640ec2ca51c1"
+      },
+      {
+        "path": "apps/kanban-factory/rig.yaml",
+        "bytes": 1627,
+        "sha256": "d26cb1a3d10b9ff49093791f8de5453f357d842004d1bb63a4d056425989ad8e"
+      }
+    ]
+  },
+  "install": {
+    "launch_tested": null,
+    "status": "parsed, not launch-tested",
+    "procedure_note": "This procedure was exercised end to end on OpenRig 0.6.1 with the first-project rig on a clean VPS instance.",
+    "steps": [
+      {
+        "label": "Get the source",
+        "command": "git clone https://github.com/mvschwarz/rigs-to-apps rigs-to-apps"
+      },
+      {
+        "label": "Pin the exact reviewed revision",
+        "command": "git -C rigs-to-apps checkout 60e95884a639d6619021a7e304ca76f81b9fa80f"
+      },
+      {
+        "label": "Make a stable project directory for the rig",
+        "command": "mkdir -p my-project"
+      },
+      {
+        "label": "Preview — runs the version preflight and writes a record; launches nothing",
+        "command": "rig up \"$PWD/rigs-to-apps/apps/kanban-factory/rig.yaml\" --cwd \"$PWD/my-project\" --plan"
+      },
+      {
+        "label": "Apply and launch — starts the rig's agents in my-project",
+        "command": "rig up \"$PWD/rigs-to-apps/apps/kanban-factory/rig.yaml\" --cwd \"$PWD/my-project\" --yes"
+      }
+    ],
+    "bundle_steps": null,
+    "update": "being tested"
+  }
+}

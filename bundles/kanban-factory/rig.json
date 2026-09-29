@@ -1,0 +1,16 @@
+{
+  "descriptor_version": 1,
+  "kind": "rig-bundle",
+  "id": "kanban-factory",
+  "title": "Kanban factory",
+  "summary": "Agents run your existing tools: an orchestrator files a ticket on a self-hosted Kanboard and a board driver works it through the columns to Done, over the board's JSON-RPC API.",
+  "tags": ["kanban", "managed-service", "docker"],
+  "author": { "name": "OpenRig", "url": "https://github.com/mvschwarz/rigs-to-apps" },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "ref": "60e95884a639d6619021a7e304ca76f81b9fa80f",
+    "spec": "apps/kanban-factory/rig.yaml"
+  },
+  "media": { "screenshots": [] }
+}

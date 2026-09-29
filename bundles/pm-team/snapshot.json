@@ -531,7 +531,7 @@
       },
       {
         "label": "Make a stable project directory for the rig",
-        "command": "mkdir -p my-project && git -C my-project init"
+        "command": "mkdir -p my-project"
       },
       {
         "label": "Preview — runs the version preflight and writes a record; launches nothing",
@@ -542,8 +542,7 @@
         "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd \"$PWD/my-project\" --yes"
       }
     ],
-    "cautions": [
-      "Before launching again after `rig down <rig>`, remove it with `rig down <rig> --delete`, or you get a second rig with the same name."
-    ]
+    "bundle_steps": null,
+    "update": "being tested"
   }
 }

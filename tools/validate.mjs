@@ -355,11 +355,14 @@ function validateRegistry(registryPath) {
     if (!real || (real !== REGISTRY_ROOT && !real.startsWith(REGISTRY_ROOT + path.sep))) {
       fail("registry path escapes root (absolute or ..)");
     }
-    // Ids are unique ACROSS KINDS: an app and a rig bundle sharing an id would
-    // collide on the site's shared namespace of pages and search.
-    const id = kindOf(entry) === "rig-bundle" ? validateRigDescriptor(mp, { requireSnapshot: true }) : validateManifest(mp);
-    if (seenIds.has(id)) fail(`duplicate app id '${id}'`);
-    seenIds.add(id);
+    // Ids are unique WITHIN a kind. An app and a rig may share one (the same
+    // project can be both a Studio app and a rig): their pages live at
+    // apps/<id>/ and rigs/<id>/, and the site links the pair.
+    const kind = kindOf(entry);
+    const id = kind === "rig-bundle" ? validateRigDescriptor(mp, { requireSnapshot: true }) : validateManifest(mp);
+    const key = `${kind}:${id}`;
+    if (seenIds.has(key)) fail(`duplicate ${kind === "app" ? "app" : "rig"} id '${id}'`);
+    seenIds.add(key);
   }
   const n = list.length;
   return `registry (${n} manifest${n === 1 ? "" : "s"})`;

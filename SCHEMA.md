@@ -74,7 +74,8 @@ the same) fail `duplicate app id '<id>'`. `REGISTRY_ROOT` is env-overridable
 A rig listing is a **small presentation descriptor** at `bundles/<id>/rig.json`. It never restates runtime
 truth: pods, members, edges, agents and files are **derived at import** from the author's real `rig.yaml` by
 OpenRig's own parsers, so any key naming them is unknown and fails. `tools/validate.mjs` is still the authority;
-registry entries are dispatched by filename (`app.json` or `rig.json`), and ids are unique across both kinds.
+registry entries are dispatched by filename (`app.json` or `rig.json`). Ids are unique within a kind; an app
+and a rig may share an id (pages live at `apps/<id>/` and `rigs/<id>/`, and the site links the pair).
 
 | Field | Shape | Required | Notes |
 |---|---|---|---|
@@ -96,7 +97,11 @@ A **listed** rig (in `registry.json`) must have a `snapshot.json` beside it, pro
 
 ## Import (`tools/import-bundle.mjs`)
 
-`node tools/import-bundle.mjs bundles/<id>/rig.json --cache <dir>`
+`node tools/import-bundle.mjs bundles/<id>/rig.json --cache <dir> [--mirror <local clone>]`
+
+`--mirror` fetches the same pinned commit from a local clone (for a pin committed but not yet pushed). A
+commit id is content-addressed, so the snapshot is identical to a GitHub fetch and records only the public
+repo URL and SHA; the mirror path never appears in it.
 
 1. Validates the descriptor with `tools/validate.mjs`.
 2. Fetches **exactly** `source.ref` with git: hooks disabled, no submodules, no LFS smudge, no prompts. Bounded
@@ -107,8 +112,9 @@ A **listed** rig (in `registry.json`) must have a `snapshot.json` beside it, pro
 4. Lists (and hashes) the spec's directory, the culture file, docs, and every referenced agent directory.
    Bounded (2 000 files / 20 MB); a symlink escaping the repo fails.
 5. Writes `snapshot.json` atomically: topology, agents, files, runtimes, per-member model pins, plugins, honest
-   risk labels and the install procedure (`git clone` → `checkout <sha>` → project dir → `rig up … --plan` →
-   `rig up … --yes`), exercised by QA on OpenRig 0.6.1.
+   risk labels and the install procedure (`git clone` → `checkout <sha>` → `mkdir` a project dir →
+   `rig up … --plan` → `rig up … --yes`), exercised by QA on OpenRig 0.6.1. With `source.bundle`, a second route
+   (`rig up <bundle> --cwd <project>`) is shown. No update recipe is published until a state-preserving one is proven.
 
 ## Launch-tested (`verified.json`, maintainer-owned)
 
