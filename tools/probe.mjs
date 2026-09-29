@@ -144,6 +144,7 @@ expectRegistry(fx("registry/metadata-bad.json"), "registry/metadata-bad", 1, "re
 expectRegistry(fx("registry/path-escape.json"), "registry/path-escape", 1, "registry path escapes root (absolute or ..)");
 expectRegistry(fx("registry/rig-ok.json"), "registry/rig-ok", 0, "OK registry (1 manifest)");
 expectRegistry(fx("registry/rig-no-snapshot.json"), "registry/rig-no-snapshot", 1, "no snapshot.json for 'tiny-rig'");
+expectRegistry(fx("registry/rig-dup-source.json"), "registry/rig-dup-source", 1, "lists the same source as 'tiny-rig'");
 expectRegistry(fx("registry/dup-id.json"), "registry/dup-id", 1, "duplicate app id 'wedding-cutdown'"); // guard MUST-FIX 1
 
 // --- formatter: contents + forbidden-network cleanliness ---

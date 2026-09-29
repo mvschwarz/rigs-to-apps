@@ -1,0 +1,25 @@
+name: List my rig
+description: Put your OpenRig configuration on rigs.to — just the repository URL.
+title: "List rig: <repository>"
+labels: ["listing"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A maintainer writes the listing from your repository. Your repo stays yours; rigs.to links to it at one pinned commit.
+        What your repo needs: see docs/SUBMITTING.md ("What your repository needs").
+  - type: input
+    id: repo
+    attributes:
+      label: Repository URL
+      description: A public GitHub repository containing your rig.yaml.
+      placeholder: https://github.com/your-name/your-repo
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Path to rig.yaml (if it isn't obvious)
+      placeholder: rigs/my-team/rig.yaml
+    validations:
+      required: false

@@ -183,6 +183,19 @@ test("unsafe paths are refused: .., absolute, symlink escape, oversized, escapin
     fs.symlinkSync(path.join(outside, "rig.yaml"), path.join(rig, "agents", "lead", "stolen.md")))), /listed file escapes source repo \(symlink\)/);
 });
 
+test("an author refresh to a new commit moves the snapshot's pinned revision with it", async () => {
+  const reg = registry();
+  await run(reg, authorRepo());
+  assert.equal(JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8")).source.ref, REF);
+  const NEXT = "c".repeat(40);
+  const d = JSON.parse(fs.readFileSync(reg.descriptorPath, "utf8")); d.source.ref = NEXT;
+  fs.writeFileSync(reg.descriptorPath, JSON.stringify(d, null, 2));
+  await run(reg, authorRepo());
+  const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
+  assert.equal(s.source.ref, NEXT, "the refreshed page does not show the new commit");
+  assert.ok(s.source.tree_url.endsWith(`/tree/${NEXT}`) && s.files.entries.length > 0);
+});
+
 test("failed fetch fails loudly and preserves the last good snapshot byte-for-byte", async () => {
   const reg = registry();
   await run(reg, authorRepo());

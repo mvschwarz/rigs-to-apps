@@ -1,0 +1,34 @@
+name: Refresh or withdraw my listing
+description: Move your listing to a newer commit, correct its credit, or take it down.
+title: "<refresh|withdraw>: <listing id>"
+labels: ["listing"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A refresh moves the catalog page to a newer commit of your repository. It does not upgrade rigs people are already running.
+  - type: dropdown
+    id: action
+    attributes:
+      label: What should change?
+      options:
+        - Refresh to a newer commit
+        - Correct the credit or licence
+        - Withdraw the listing
+    validations:
+      required: true
+  - type: input
+    id: listing
+    attributes:
+      label: Listing URL or id
+      placeholder: https://rigs.to/rigs/my-team/
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: New commit (for a refresh)
+      description: The full commit SHA to pin. Leave empty to use the current head of the default branch.
+      placeholder: 0123456789abcdef0123456789abcdef01234567
+    validations:
+      required: false

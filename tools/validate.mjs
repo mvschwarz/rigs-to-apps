@@ -349,6 +349,7 @@ function validateRegistry(registryPath) {
   // so two entries resolving to the same id — same path or distinct paths with
   // the same leaf dir — is a collision).
   const seenIds = new Set();
+  const seenSources = new Map(); // repo|spec -> rig id
   for (const entry of list) {
     const mp = path.resolve(REGISTRY_ROOT, entry);
     const real = fs.existsSync(mp) ? fs.realpathSync(mp) : null;
@@ -363,6 +364,15 @@ function validateRegistry(registryPath) {
     const key = `${kind}:${id}`;
     if (seenIds.has(key)) fail(`duplicate ${kind === "app" ? "app" : "rig"} id '${id}'`);
     seenIds.add(key);
+    // One rig, one listing: the same repo + spec under a second id is a
+    // duplicate identity even though the ids differ. (A new pin of the same
+    // rig is a refresh of the existing listing, not a second one.)
+    if (kind === "rig-bundle") {
+      const src = JSON.parse(fs.readFileSync(mp, "utf8")).source;
+      const sKey = `${src.repo.toLowerCase()}|${src.spec}`;
+      if (seenSources.has(sKey)) fail(`'${id}' lists the same source as '${seenSources.get(sKey)}' (${src.repo} ${src.spec}) — refresh that listing instead of adding a second`);
+      seenSources.set(sKey, id);
+    }
   }
   const n = list.length;
   return `registry (${n} manifest${n === 1 ? "" : "s"})`;

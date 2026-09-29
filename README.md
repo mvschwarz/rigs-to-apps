@@ -11,6 +11,13 @@ rigs.to website (metadata) and a box's lead/ops agent (install instructions it
 applies with judgment). It is **not** a package manager — trusted cohort, no
 review, no dependency graph, no auth.
 
+## Rig listings
+
+rigs.to lists OpenRig **rig configurations** from their authors' own GitHub repositories, pinned to one commit.
+Authors: [`docs/SUBMITTING.md`](docs/SUBMITTING.md) (a small pull request, or an issue with just a URL; preview with
+`tools/preview-listing.mjs`). Maintainers: [`docs/MAINTAINING.md`](docs/MAINTAINING.md) (import, refresh, the
+launch-tested stamp, withdrawal, publishing order). Schema: [`SCHEMA.md`](SCHEMA.md).
+
 ## Layout
 
 ```
