@@ -403,8 +403,11 @@ export async function importBundle({
   const codexAtFloor = pods.flatMap((p) => p.members
     .filter((m) => m.permission_policy === null && (m.runtime ?? agentRuntime(m.agent)) === "codex")
     .map((m) => `${p.id}.${m.id}`));
-  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members can't reach OpenRig at the floor posture",
-    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy, so ${codexAtFloor.length === 1 ? "it launches" : "they launch"} at "floor": ${codexAtFloor.length === 1 ? "it runs, answers and writes files" : "they run, answer and write files"}, but cannot reach the OpenRig daemon, so rig queue and rig send fail unless your own Codex configuration allows network access. The rig spec cannot grant that on OpenRig 0.6.1.` });
+  // Confirmed by QA on OpenRig 0.6.1 and stated ONLY as a labelled fact:
+  // builtin:yolo was the one tested policy under which Codex members
+  // coordinated. It is broad; it is never the default or a recommendation.
+  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members can't coordinate at the default posture",
+    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy. Default posture: agents run and answer, but can't reach the rig daemon, so no coordination. Tested to coordinate only with permission_policy: builtin:yolo (Codex runs with danger-full-access and no approvals; broad).` });
   risks.push({ id: "no-author-auth", label: "Not an author signature", detail: "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them." });
 
   // Each member's EFFECTIVE model pin — the member's own, else its AgentSpec

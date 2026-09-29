@@ -113,7 +113,9 @@ test("valid import: topology, agents and imports, files and risks come from the 
   const codexRisk = s.risks.find((r) => r.id === "codex-floor");
   assert.match(codexRisk.detail, /core\.helper/);
   assert.ok(!/core\.lead/.test(codexRisk.detail), "a Claude Code member at floor was flagged — it coordinates out of the box");
-  assert.ok(!/yolo|danger|full.access/i.test(codexRisk.detail), "the risk suggests a fix");
+  // builtin:yolo appears ONLY as the labelled tested fact — never as a default or a recommendation
+  assert.match(codexRisk.detail, /Tested to coordinate only with permission_policy: builtin:yolo \(Codex runs with danger-full-access and no approvals; broad\)/);
+  assert.ok(!/recommend|we suggest|you should|set permission_policy/i.test(codexRisk.detail), "the yolo fact is phrased as advice");
   assert.match(s.risks[0].detail, /gpt-6-astra/);
   assert.equal(s.install.status, "parsed, not launch-tested");
   assert.equal(s.install.launch_tested, null);
