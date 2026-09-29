@@ -20,16 +20,18 @@ pods:
     label: Board
     summary: Files a ticket, then drives it through the board to visible Done.
     members:
+      # (member description — RigSpec members have no description field, so it is kept as a comment)
+      # Files one ticket on the board (the visitor/orchestrator side).
       - id: orchestrator
         label: Orchestrator
-        summary: Files one ticket on the board (the visitor/orchestrator side).
         agent_ref: "local:agents/orchestrator"
         profile: default
         runtime: claude-code
         cwd: "."
+      # (member description — RigSpec members have no description field, so it is kept as a comment)
+      # Picks up the ticket, moves it through the columns, does one bounded work step, lands it visibly in Done.
       - id: driver
         label: Board driver
-        summary: Picks up the ticket, moves it through the columns, does one bounded work step, lands it visibly in Done.
         agent_ref: "local:agents/board-driver"
         profile: default
         runtime: claude-code
