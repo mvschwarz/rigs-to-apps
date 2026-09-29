@@ -1,12 +1,12 @@
 {
   "snapshot_version": 1,
-  "id": "pm-team",
-  "title": "PM team",
-  "summary": "A product-management rig: a PM lead runs the feature flow from validation to handoff, with a researcher for market intelligence and a coder for mockups and prototypes.",
+  "id": "first-project",
+  "title": "First project",
+  "summary": "The smallest useful rig: two Codex seats in your own repository — an owner who takes one bounded change and an independent checker who verifies it.",
   "tags": [
-    "product",
-    "research",
-    "prototyping"
+    "starter",
+    "codex",
+    "review"
   ],
   "author": {
     "name": "OpenRig",
@@ -17,8 +17,8 @@
   "source": {
     "repo": "https://github.com/mvschwarz/openrig",
     "ref": "d83bbebe97430c3f2777226fecc089d31e276aa8",
-    "spec": "packages/daemon/specs/rigs/focused/pm-team/rig.yaml",
-    "spec_dir": "packages/daemon/specs/rigs/focused/pm-team",
+    "spec": "packages/daemon/specs/rigs/launch/first-project/rig.yaml",
+    "spec_dir": "packages/daemon/specs/rigs/launch/first-project",
     "blob_base": "https://github.com/mvschwarz/openrig/blob/d83bbebe97430c3f2777226fecc089d31e276aa8/",
     "tree_url": "https://github.com/mvschwarz/openrig/tree/d83bbebe97430c3f2777226fecc089d31e276aa8",
     "bundle": null
@@ -31,42 +31,26 @@
   "topology": {
     "pods": [
       {
-        "id": "pm",
-        "label": "Product Management",
+        "id": "dev",
+        "label": "Project",
         "members": [
           {
-            "id": "lead",
+            "id": "owner",
             "label": null,
-            "runtime": "claude-code",
-            "model": null,
-            "agent": "packages/daemon/specs/agents/product-management/pm",
-            "agent_ref": "local:../../../agents/product-management/pm",
+            "runtime": "codex",
+            "model": "gpt-6-astra",
+            "agent": "packages/daemon/specs/agents/development/implementer",
+            "agent_ref": "local:../../../agents/development/implementer",
             "cwd": ".",
             "permission_policy": null
           },
           {
-            "id": "researcher",
+            "id": "check",
             "label": null,
             "runtime": "codex",
-            "model": null,
-            "agent": "packages/daemon/specs/agents/research/analyst",
-            "agent_ref": "local:../../../agents/research/analyst",
-            "cwd": ".",
-            "permission_policy": null
-          }
-        ]
-      },
-      {
-        "id": "dev",
-        "label": "Development Support",
-        "members": [
-          {
-            "id": "coder",
-            "label": null,
-            "runtime": "claude-code",
-            "model": null,
-            "agent": "packages/daemon/specs/agents/development/implementer",
-            "agent_ref": "local:../../../agents/development/implementer",
+            "model": "gpt-6-astra",
+            "agent": "packages/daemon/specs/agents/development/qa",
+            "agent_ref": "local:../../../agents/development/qa",
             "cwd": ".",
             "permission_policy": null
           }
@@ -76,28 +60,8 @@
     "edges": [
       {
         "kind": "delegates_to",
-        "from": "pm.lead",
-        "to": "pm.researcher"
-      },
-      {
-        "kind": "escalates_to",
-        "from": "pm.researcher",
-        "to": "pm.lead"
-      },
-      {
-        "kind": "delegates_to",
-        "from": "pm.lead",
-        "to": "dev.coder"
-      },
-      {
-        "kind": "can_observe",
-        "from": "dev.coder",
-        "to": "pm.researcher"
-      },
-      {
-        "kind": "escalates_to",
-        "from": "dev.coder",
-        "to": "pm.lead"
+        "from": "dev.owner",
+        "to": "dev.check"
       }
     ]
   },
@@ -105,20 +69,14 @@
     "rig_policy": null,
     "members": [
       {
-        "member": "pm.lead",
-        "runtime": "claude-code",
-        "posture": "floor",
-        "policy": null
-      },
-      {
-        "member": "pm.researcher",
+        "member": "dev.owner",
         "runtime": "codex",
         "posture": "floor",
         "policy": null
       },
       {
-        "member": "dev.coder",
-        "runtime": "claude-code",
+        "member": "dev.check",
+        "runtime": "codex",
         "posture": "floor",
         "policy": null
       }
@@ -145,10 +103,10 @@
       ]
     },
     {
-      "path": "packages/daemon/specs/agents/product-management/pm",
-      "name": "pm",
+      "path": "packages/daemon/specs/agents/development/qa",
+      "name": "qa",
       "version": "1.0",
-      "runtime": "claude-code",
+      "runtime": "codex",
       "model": null,
       "imports": [
         "packages/daemon/specs/agents/shared"
@@ -157,28 +115,13 @@
         "shared:openrig-core"
       ],
       "skills": [
-        "backlog-capture",
-        "context-builder",
-        "exec-summary",
-        "office-hours",
-        "plan-review",
-        "requirements-writer",
-        "ui-mockup"
+        "agent-browser",
+        "development-team",
+        "dogfood",
+        "systematic-debugging",
+        "test-driven-development",
+        "verification-before-completion"
       ]
-    },
-    {
-      "path": "packages/daemon/specs/agents/research/analyst",
-      "name": "analyst",
-      "version": "1.0",
-      "runtime": "claude-code",
-      "model": null,
-      "imports": [
-        "packages/daemon/specs/agents/shared"
-      ],
-      "plugins": [
-        "shared:openrig-core"
-      ],
-      "skills": []
     },
     {
       "path": "packages/daemon/specs/agents/shared",
@@ -197,15 +140,30 @@
       "daemon": "running"
     },
     "runtimes": [
-      "claude-code",
       "codex"
     ],
-    "models": [],
+    "models": [
+      {
+        "member": "dev.owner",
+        "runtime": "codex",
+        "model": "gpt-6-astra"
+      },
+      {
+        "member": "dev.check",
+        "runtime": "codex",
+        "model": "gpt-6-astra"
+      }
+    ],
     "plugins": [
       "shared:openrig-core"
     ]
   },
   "risks": [
+    {
+      "id": "model-pins",
+      "label": "Model pins are copied verbatim",
+      "detail": "This rig pins gpt-6-astra. You need a runtime version that supports each pinned model; an older runtime refuses it at launch."
+    },
     {
       "id": "host-plugins",
       "label": "Profile plugins resolve on your host",
@@ -214,7 +172,7 @@
     {
       "id": "codex-floor",
       "label": "Codex members need a two-file project setup to coordinate",
-      "detail": "pm.researcher runs on Codex with no permission_policy. Default posture: members run and answer, but can't reach the rig daemon (Codex sandbox). The tested setup is two project files, a Codex config and a command rule — see \"Let Codex members coordinate\"."
+      "detail": "dev.owner, dev.check run on Codex with no permission_policy. Default posture: members run and answer, but can't reach the rig daemon (Codex sandbox). The tested setup is two project files, a Codex config and a command rule — see \"Let Codex members coordinate\"."
     },
     {
       "id": "no-author-auth",
@@ -223,8 +181,8 @@
     }
   ],
   "files": {
-    "count": 64,
-    "bytes": 461263,
+    "count": 62,
+    "bytes": 457425,
     "entries": [
       {
         "path": "packages/daemon/specs/agents/development/implementer/agent.yaml",
@@ -237,24 +195,14 @@
         "sha256": "dd6eae4903d032d841ceb244d4aee3a927d31bcd9c778705489155bc5cc0eccb"
       },
       {
-        "path": "packages/daemon/specs/agents/product-management/pm/agent.yaml",
-        "bytes": 941,
-        "sha256": "175cb807c506e6ea9c8a4f186fa178933d7f0659d2d35ea51e83688eef620023"
+        "path": "packages/daemon/specs/agents/development/qa/agent.yaml",
+        "bytes": 728,
+        "sha256": "13fcb51e1fcd06b41a87266538c2e383865f37dbd5ee00075265c8b49fee0702"
       },
       {
-        "path": "packages/daemon/specs/agents/product-management/pm/guidance/role.md",
-        "bytes": 2982,
-        "sha256": "a17496be701fef45e96f489d2a271c0fdfa2fc7b8a28ace1208a4821492d54fc"
-      },
-      {
-        "path": "packages/daemon/specs/agents/research/analyst/agent.yaml",
-        "bytes": 633,
-        "sha256": "3c0330cb1769e7b53e21ffdb73c243c92c6fd57053389b25b963dccfae628896"
-      },
-      {
-        "path": "packages/daemon/specs/agents/research/analyst/guidance/role.md",
-        "bytes": 1130,
-        "sha256": "b0f7d25dc65ece3895b2c18836511f6f14e7f6622851757bd6c46cd508226ba9"
+        "path": "packages/daemon/specs/agents/development/qa/guidance/role.md",
+        "bytes": 1226,
+        "sha256": "f81fde1ebd3bf5c84ee6b183ac7f1e79c546dfbed15a9eaedd9728aac1520ca2"
       },
       {
         "path": "packages/daemon/specs/agents/shared/agent.yaml",
@@ -537,14 +485,14 @@
         "sha256": "0b8cea0bb82a8ab0f015afaf84c87796e2c94eee3a83d4fa3d4461d0917950bd"
       },
       {
-        "path": "packages/daemon/specs/rigs/focused/pm-team/CULTURE.md",
-        "bytes": 1744,
-        "sha256": "fdccee4c0a3b98378a0201db13d73a987705cd2cb406edf29f0d8abf8c8d28ba"
+        "path": "packages/daemon/specs/rigs/launch/first-project/CULTURE.md",
+        "bytes": 2122,
+        "sha256": "55c362d39fd0e3c9a6784f2d24fca54c74d9e49da2971fce2766e0cd0de1f83a"
       },
       {
-        "path": "packages/daemon/specs/rigs/focused/pm-team/rig.yaml",
-        "bytes": 1260,
-        "sha256": "a058edea36503c046c555a89ec0f8d361c15cb05e3277f41e869cf9966b26b93"
+        "path": "packages/daemon/specs/rigs/launch/first-project/rig.yaml",
+        "bytes": 776,
+        "sha256": "ece93af7a7fa3b8faf0a4fb80a709d4626f21b083c662ad6df633e5c4473b00b"
       }
     ]
   },
@@ -552,8 +500,7 @@
     "launch_tested": {
       "openrig": "0.6.1",
       "runtimes": {
-        "codex": "0.159.0",
-        "claude-code": "not recorded"
+        "codex": "0.159.0"
       }
     },
     "status": "launch tested on OpenRig 0.6.1",
@@ -573,11 +520,11 @@
       },
       {
         "label": "Preview — runs the version preflight and writes a record; launches nothing",
-        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd \"$PWD/my-project\" --plan"
+        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/launch/first-project/rig.yaml\" --cwd \"$PWD/my-project\" --plan"
       },
       {
         "label": "Apply and launch — starts the rig's agents in my-project",
-        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd \"$PWD/my-project\" --yes"
+        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/launch/first-project/rig.yaml\" --cwd \"$PWD/my-project\" --yes"
       }
     ],
     "bundle_steps": null,
@@ -587,11 +534,11 @@
       "steps": [
         {
           "label": "Stop the rig and keep a snapshot",
-          "command": "rig down pm-team --snapshot"
+          "command": "rig down first-project --snapshot"
         },
         {
           "label": "Start it again from that snapshot",
-          "command": "rig up pm-team --existing --yes"
+          "command": "rig up first-project --existing --yes"
         }
       ]
     },

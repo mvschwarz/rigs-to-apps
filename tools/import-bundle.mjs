@@ -424,8 +424,8 @@ export async function importBundle({
   // project-local Codex command rule lets `rig` commands run outside the Codex
   // sandbox; everything else stays sandboxed with network off. A manual 0.6.1
   // setup — stated as tested, not as a guarantee of any later version.
-  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members need a command rule to coordinate",
-    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy. Default posture: members run and answer, but can't reach the rig daemon (Codex sandbox). The tested fix is a project-local Codex command rule — see "Let Codex members coordinate".` });
+  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members need a two-file project setup to coordinate",
+    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy. Default posture: members run and answer, but can't reach the rig daemon (Codex sandbox). The tested setup is two project files, a Codex config and a command rule — see "Let Codex members coordinate".` });
   risks.push({ id: "no-author-auth", label: "Not an author signature", detail: "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them." });
 
   // Each member's EFFECTIVE model pin — the member's own, else its AgentSpec

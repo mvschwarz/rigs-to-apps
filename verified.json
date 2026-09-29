@@ -7,5 +7,13 @@
       "codex": "0.159.0",
       "claude-code": "not recorded"
     }
+  },
+  {
+    "id": "first-project",
+    "ref": "d83bbebe97430c3f2777226fecc089d31e276aa8",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0"
+    }
   }
 ]
