@@ -370,6 +370,7 @@ export async function importBundle({
     }),
   }));
 
+  const agentRuntime = (agentPath) => (agentPath && agents.get(agentPath)?.runtime) || null;
   const memberIds = new Set(pods.flatMap((p) => p.members.map((m) => `${p.id}.${m.id}`)));
   const edges = [];
   const addEdge = (kind, from, to) => {
@@ -395,9 +396,15 @@ export async function importBundle({
   if (absoluteCwds.length) risks.push({ id: "absolute-cwd", label: "Absolute working directories", detail: `Members ${absoluteCwds.join(", ")} name an absolute cwd, which is copied verbatim.` });
   if (spec.services) risks.push({ id: "services", label: "Starts a managed service", detail: "This rig declares a services block (for example Docker Compose) that boots before any seat." });
   if (unresolved.size) risks.push({ id: "non-local-refs", label: "References outside this repo", detail: `Resolved by your OpenRig install, not shown here: ${[...unresolved].sort(byStr).join(", ")}.` });
-  const atFloor = pods.flatMap((p) => p.members.filter((m) => m.permission_policy === null).map((m) => `${p.id}.${m.id}`));
-  if (atFloor.length) risks.push({ id: "floor-posture", label: "Launches at the floor posture",
-    detail: `${atFloor.length === memberIds.size ? "Every member" : `Members ${atFloor.join(", ")}`} declare no permission_policy, so they launch at "floor": a workspace-write sandbox with restricted network and no approval prompts. The agents run and answer, but cannot reach the OpenRig daemon, so rig send and rig queue between members fail.` });
+  // Floor posture matters PER RUNTIME (QA, OpenRig 0.6.1): Claude Code members
+  // at floor coordinate out of the box; Codex members at floor run, answer and
+  // write files but cannot reach the daemon, so rig queue / rig send fail. Only
+  // the latter is a risk, and it is stated as a fact — no fix is suggested.
+  const codexAtFloor = pods.flatMap((p) => p.members
+    .filter((m) => m.permission_policy === null && (m.runtime ?? agentRuntime(m.agent)) === "codex")
+    .map((m) => `${p.id}.${m.id}`));
+  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members can't reach OpenRig at the floor posture",
+    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy, so ${codexAtFloor.length === 1 ? "it launches" : "they launch"} at "floor": ${codexAtFloor.length === 1 ? "it runs, answers and writes files" : "they run, answer and write files"}, but cannot reach the OpenRig daemon, so rig queue and rig send fail unless your own Codex configuration allows network access. The rig spec cannot grant that on OpenRig 0.6.1.` });
   risks.push({ id: "no-author-auth", label: "Not an author signature", detail: "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them." });
 
   // Each member's EFFECTIVE model pin — the member's own, else its AgentSpec
@@ -443,6 +450,7 @@ export async function importBundle({
     launch_posture: {
       rig_policy: typeof spec.permissionPolicy === "string" ? spec.permissionPolicy : null,
       members: pods.flatMap((p) => p.members.map((m) => ({ member: `${p.id}.${m.id}`,
+        runtime: m.runtime ?? agentRuntime(m.agent),
         posture: m.permission_policy === null ? "floor" : "declared", policy: m.permission_policy }))),
     },
     agents: agentList,

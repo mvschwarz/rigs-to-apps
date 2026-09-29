@@ -105,16 +105,19 @@
     "members": [
       {
         "member": "pm.lead",
+        "runtime": "claude-code",
         "posture": "floor",
         "policy": null
       },
       {
         "member": "pm.researcher",
+        "runtime": "codex",
         "posture": "floor",
         "policy": null
       },
       {
         "member": "dev.coder",
+        "runtime": "claude-code",
         "posture": "floor",
         "policy": null
       }
@@ -208,9 +211,9 @@
       "detail": "Plugins (shared:openrig-core) are not vendored; they resolve from your own OpenRig install."
     },
     {
-      "id": "floor-posture",
-      "label": "Launches at the floor posture",
-      "detail": "Every member declare no permission_policy, so they launch at \"floor\": a workspace-write sandbox with restricted network and no approval prompts. The agents run and answer, but cannot reach the OpenRig daemon, so rig send and rig queue between members fail."
+      "id": "codex-floor",
+      "label": "Codex members can't reach OpenRig at the floor posture",
+      "detail": "pm.researcher runs on Codex with no permission_policy, so it launches at \"floor\": it runs, answers and writes files, but cannot reach the OpenRig daemon, so rig queue and rig send fail unless your own Codex configuration allows network access. The rig spec cannot grant that on OpenRig 0.6.1."
     },
     {
       "id": "no-author-auth",

@@ -108,8 +108,12 @@ test("valid import: topology, agents and imports, files and risks come from the 
   assert.ok(paths.includes("rigs/tiny/agents/shared/skills/plan/SKILL.md"), "an imported agent's files were not listed");
   assert.ok(!paths.includes("UNRELATED.md"), "an unreferenced file was listed");
   assert.deepEqual(s.requirements.runtimes, ["claude-code", "codex"]);
-  assert.deepEqual(s.risks.map((r) => r.id), ["model-pins", "host-plugins", "floor-posture", "no-author-auth"]);
-  assert.deepEqual(s.launch_posture.members.map((m) => m.posture), ["floor", "floor"]);
+  assert.deepEqual(s.risks.map((r) => r.id), ["model-pins", "host-plugins", "codex-floor", "no-author-auth"]);
+  assert.deepEqual(s.launch_posture.members.map((m) => `${m.runtime}:${m.posture}`), ["claude-code:floor", "codex:floor"]);
+  const codexRisk = s.risks.find((r) => r.id === "codex-floor");
+  assert.match(codexRisk.detail, /core\.helper/);
+  assert.ok(!/core\.lead/.test(codexRisk.detail), "a Claude Code member at floor was flagged — it coordinates out of the box");
+  assert.ok(!/yolo|danger|full.access/i.test(codexRisk.detail), "the risk suggests a fix");
   assert.match(s.risks[0].detail, /gpt-6-astra/);
   assert.equal(s.install.status, "parsed, not launch-tested");
   assert.equal(s.install.launch_tested, null);
@@ -233,7 +237,7 @@ test("a declared permission_policy is shown verbatim and clears the floor risk",
   }));
   const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
   assert.deepEqual(s.launch_posture.members.map((m) => `${m.posture}:${m.policy}`), ["declared:builtin:coordinated", "declared:builtin:coordinated"]);
-  assert.ok(!s.risks.some((r) => r.id === "floor-posture"));
+  assert.ok(!s.risks.some((r) => r.id === "codex-floor"));
 });
 
 test("the real parser loader fails loudly on a version it is not pinned to", async () => {
