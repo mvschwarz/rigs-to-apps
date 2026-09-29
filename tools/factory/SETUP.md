@@ -45,7 +45,7 @@ Keep this directory: the rigs run from the native bundles inside it.
 - `FACTORY.json` lists every rig, member, skill, file hash, tool prerequisite and **permission change**.
 - `source/` is the editable source of every rig. `rig.yaml` is the recommended configuration;
   `rig.test-models.yaml` (if present) is a cheaper **test** variant.
-- `launch.mjs` is the launcher, about 220 lines. It only verifies files, copies starter files, installs context packs
+- `launch.mjs` is the launcher, a few hundred readable lines. It only verifies files, copies starter files, installs context packs
   and runs `rig` commands.
 
 ## What it adds, and what it leaves alone
@@ -75,6 +75,11 @@ This verifies every file hash and each bundle's integrity, checks OpenRig and th
 your project, **prints every permission change the factory declares** (what it does, and whether it was tested),
 and runs OpenRig's preflight (`rig up … --plan`, which writes a record and launches nothing). Context packs are
 listed but not installed.
+
+Starter files never overwrite yours. If your project already has a file with the same name and different content (a
+`.gitignore`, for example), the launcher stops and names it. Merge the factory's version (in `starter/`) into yours by
+hand, or move yours aside, then run the launcher again. A factory's starter `.gitignore` keeps the agents' own files
+(and any file holding your machine's paths) out of your repository.
 
 ## 5. Launch
 

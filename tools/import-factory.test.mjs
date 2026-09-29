@@ -94,6 +94,7 @@ test("imports a real archive: rigs, both model profiles, AgentSpec, skills, one 
   assert.equal(r.status, 0, r.stderr);
   const s = JSON.parse(fs.readFileSync(b.snapshot, "utf8"));
   assert.equal(s.archive.sha256, sha256(b.archive));
+  assert.equal(s.archive.sha256_url, `${s.archive.url}.sha256`);
   assert.match(s.setup_prompt, new RegExp(s.archive.sha256));
   assert.match(s.setup_prompt, new RegExp(s.archive.url.replace(/[.?/]/g, "\\$&")));
   const m = s.rigs[0].topology.pods[0].members[0];
@@ -181,4 +182,42 @@ test("the registry validator refuses a malformed verified record", () => {
     assert.notEqual(v.status, 0, JSON.stringify(bad));
     assert.match(v.stdout, /verified-factories\.json|unknown field/);
   }
+});
+
+test("a factory listing licence may be an SPDX expression; malformed ones are refused", () => {
+  for (const [license, good] of [["Apache-2.0 AND MIT", true], ["(MIT OR Apache-2.0) AND BSD-3-Clause", true],
+      ["GPL-2.0-only WITH Classpath-exception-2.0", true], ["Apache-2.0 AND", false], ["Apache 2.0", false],
+      ["AND MIT", false], ["(MIT", false], ["MIT; rm -rf", false]]) {
+    const b = build({ listing: { license } });
+    const v = run([path.join(TOOLS, "validate.mjs"), b.listing]);
+    assert.equal(v.status === 0, good, `${license}: ${v.stdout}`);
+  }
+});
+
+test("agent_run_version: accepted with a delta_qa and an earlier version; refused otherwise", () => {
+  const cases = [
+    [{ version: "0.1.0", agent_run_version: "0.0.9", delta_qa: "independent delta QA (non-author builder seat)" }, true],
+    [{ version: "0.1.0", agent_run_version: "0.0.9" }, false],                                  // no delta QA reference
+    [{ version: "0.1.0", agent_run_version: "0.1.0", delta_qa: "independent delta QA" }, false], // not strictly earlier
+    [{ version: "0.1.0", agent_run_version: "0.2.0", delta_qa: "independent delta QA" }, false], // later
+    [{ version: "0.1.0", delta_qa: "independent delta QA" }, false],                             // delta_qa alone
+    [{ version: "0.1.0", agent_run_version: "0.0.9", delta_qa: "checked by builder-impl" }, false], // seat-like
+  ];
+  for (const [over, good] of cases) {
+    const b = build();
+    assert.equal(importIt(b).status, 0);
+    register(b);
+    writeVerified(b, [record(b, over)]);
+    const v = validate(b);
+    assert.equal(v.status === 0, good, `${JSON.stringify(over)}: ${v.stdout}`);
+  }
+});
+
+test("the snapshot carries agent_run_version and delta_qa when the record has them", () => {
+  const b = build();
+  writeVerified(b, [record(b, { agent_run_version: "0.0.9", delta_qa: "independent delta QA (non-author builder seat)" })]);
+  assert.equal(importIt(b).status, 0);
+  const s = JSON.parse(fs.readFileSync(b.snapshot, "utf8"));
+  assert.equal(s.verified.agent_run_version, "0.0.9");
+  assert.equal(s.verified.delta_qa, "independent delta QA (non-author builder seat)");
 });

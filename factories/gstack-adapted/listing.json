@@ -1,0 +1,29 @@
+{
+  "descriptor_version": 1,
+  "kind": "factory",
+  "id": "gstack-adapted",
+  "title": "gstack, adapted for OpenRig",
+  "summary": "An OpenRig adaptation of gstack by Garry Tan and contributors (commit dcaea528): a lead plans, a builder implements, and an independent checker reviews each commit. Not affiliated with or endorsed by the upstream authors.",
+  "tags": [
+    "software",
+    "code-review",
+    "qa",
+    "claude-code",
+    "codex"
+  ],
+  "author": {
+    "name": "OpenRig contributors",
+    "url": "https://openrig.dev"
+  },
+  "license": "Apache-2.0 AND MIT",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "path": "factories/gstack-adapted/",
+    "ref": null
+  },
+  "release": {
+    "tag": "gstack-adapted-v0.1.4",
+    "asset": "gstack-adapted-0.1.4.tar.gz",
+    "sha256": "2b1f342d06da86f4b915f4caf26757e2eae1a58c340698fb47f353d268d923db"
+  }
+}

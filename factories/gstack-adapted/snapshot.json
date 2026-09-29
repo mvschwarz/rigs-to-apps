@@ -1,0 +1,1031 @@
+{
+  "snapshot_version": 1,
+  "id": "gstack-adapted",
+  "version": "0.1.4",
+  "content_id": "8bc09f56a7435c30114a246bedad2e255511081a0ab6d487577181f2d762e484",
+  "title": "gstack, adapted for OpenRig",
+  "summary": "An OpenRig adaptation of gstack by Garry Tan and contributors (commit dcaea528): a lead scopes and reviews the plan, a builder implements and repairs, and an independent checker on a different harness reports QA and review findings. Not affiliated with or endorsed by the upstream authors.",
+  "lineage": "An OpenRig adaptation of https://github.com/garrytan/gstack at commit dcaea528; upstream files are carried byte for byte under upstream/ (MIT, Garry Tan). OpenRig topology and integration maintained separately. Not affiliated with or endorsed by the upstream authors.",
+  "author": {
+    "name": "OpenRig contributors",
+    "url": "https://openrig.dev"
+  },
+  "license": "Apache-2.0 AND MIT",
+  "source": {
+    "repo": "https://github.com/mvschwarz/rigs-to-apps",
+    "path": "factories/gstack-adapted/",
+    "ref": null
+  },
+  "archive": {
+    "asset": "gstack-adapted-0.1.4.tar.gz",
+    "tag": "gstack-adapted-v0.1.4",
+    "sha256": "2b1f342d06da86f4b915f4caf26757e2eae1a58c340698fb47f353d268d923db",
+    "bytes": 607051,
+    "url": "https://github.com/mvschwarz/rigs-to-apps/releases/download/gstack-adapted-v0.1.4/gstack-adapted-0.1.4.tar.gz",
+    "sha256_url": "https://github.com/mvschwarz/rigs-to-apps/releases/download/gstack-adapted-v0.1.4/gstack-adapted-0.1.4.tar.gz.sha256"
+  },
+  "built_by": "the rigs-to-builder packaging environment (native bundles stamp sourceHost \"rigs-to-builder\")",
+  "openrig": {
+    "min": "0.6.1",
+    "tested": null,
+    "parser": "0.6.1"
+  },
+  "parsed_by": {
+    "openrig": "0.6.1",
+    "parsers": "RigSpecCodec + RigSpecSchema + AgentSpec"
+  },
+  "models_test_label": "TEST — cheap smoke-test models; the recommended configuration is the default",
+  "rigs": [
+    {
+      "id": "gstack-adapted",
+      "name": "gstack-adapted",
+      "summary": "An OpenRig adaptation of gstack by Garry Tan and contributors (commit dcaea528): a lead scopes and reviews the plan, a builder implements and repairs, and an independent checker on a different harness reports QA and review findings. Not affiliated with or endorsed by the upstream authors. Recommended models.",
+      "source_dir": "source/gstack-adapted",
+      "spec": "source/gstack-adapted/rig.yaml",
+      "test_spec": "source/gstack-adapted/rig.test-models.yaml",
+      "culture": "source/gstack-adapted/CULTURE.md",
+      "startup": [
+        "source/gstack-adapted/AGENTS.md",
+        "source/gstack-adapted/WORKFLOW.md"
+      ],
+      "bundle": {
+        "path": "bundles/gstack-adapted.rigbundle",
+        "sha256": "a0014aa2247eeee367c5d1adcb1a64cfaf384319c237eee3b7700ffe0d9d2c82",
+        "bytes": 187320
+      },
+      "test_bundle": {
+        "path": "bundles/gstack-adapted.test-models.rigbundle",
+        "sha256": "2b54eb7df2cdd9e494636d5a06b024a38dccdfc20367c6eb4fd4548153b7f9bd",
+        "bytes": 187358
+      },
+      "topology": {
+        "pods": [
+          {
+            "id": "team",
+            "label": "Team",
+            "members": [
+              {
+                "id": "lead",
+                "label": "Lead — holds the outcome, the plan and the final summary",
+                "runtime": "claude-code",
+                "model": {
+                  "recommended": "claude-opus-5-5",
+                  "test": "claude-sonnet-5"
+                },
+                "agent": "source/gstack-adapted/agents/lead"
+              },
+              {
+                "id": "builder",
+                "label": "Builder — implements, tests and repairs",
+                "runtime": "claude-code",
+                "model": {
+                  "recommended": "claude-opus-5-5",
+                  "test": "claude-sonnet-5"
+                },
+                "agent": "source/gstack-adapted/agents/builder"
+              },
+              {
+                "id": "checker",
+                "label": "Checker — independent, report-only QA and review",
+                "runtime": "codex",
+                "model": {
+                  "recommended": "gpt-6-sol",
+                  "test": "gpt-6-luna"
+                },
+                "agent": "source/gstack-adapted/agents/checker"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "collaborates_with",
+            "from": "team.lead",
+            "to": "team.builder"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "team.builder",
+            "to": "team.checker"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "team.checker",
+            "to": "team.builder"
+          },
+          {
+            "kind": "collaborates_with",
+            "from": "team.builder",
+            "to": "team.lead"
+          }
+        ]
+      },
+      "agents": [
+        {
+          "dir": "source/gstack-adapted/agents/builder",
+          "name": "gstack-adapted-builder",
+          "version": "1.0",
+          "description": null,
+          "runtime": "claude-code",
+          "skills": [
+            {
+              "id": "gstack-investigate",
+              "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate",
+              "files": [
+                {
+                  "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/SKILL.md",
+                  "bytes": 2970
+                },
+                {
+                  "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/LICENSE",
+                  "bytes": 1066
+                },
+                {
+                  "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/NOTICE.md",
+                  "bytes": 2472
+                },
+                {
+                  "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/investigate/SKILL.upstream.md",
+                  "bytes": 47563
+                },
+                {
+                  "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/licenses/Apache-2.0.txt",
+                  "bytes": 11358
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/gstack-adapted/agents/builder/guidance/role.md"
+          ],
+          "startup": [
+            "source/gstack-adapted/agents/builder/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/gstack-adapted/agents/builder/agent.yaml",
+              "bytes": 550
+            },
+            {
+              "path": "source/gstack-adapted/agents/builder/guidance/role.md",
+              "bytes": 1332
+            },
+            {
+              "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/SKILL.md",
+              "bytes": 2970
+            },
+            {
+              "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/LICENSE",
+              "bytes": 1066
+            },
+            {
+              "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/NOTICE.md",
+              "bytes": 2472
+            },
+            {
+              "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/investigate/SKILL.upstream.md",
+              "bytes": 47563
+            },
+            {
+              "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/licenses/Apache-2.0.txt",
+              "bytes": 11358
+            }
+          ]
+        },
+        {
+          "dir": "source/gstack-adapted/agents/checker",
+          "name": "gstack-adapted-checker",
+          "version": "1.0",
+          "description": null,
+          "runtime": "codex",
+          "skills": [
+            {
+              "id": "gstack-qa-only",
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only",
+              "files": [
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/SKILL.md",
+                  "bytes": 3697
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/LICENSE",
+                  "bytes": 1066
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/NOTICE.md",
+                  "bytes": 2472
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/licenses/Apache-2.0.txt",
+                  "bytes": 11358
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/sections/scope.md",
+                  "bytes": 1590
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/sections/system-functional.md",
+                  "bytes": 3816
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/templates/functional-report-template.md",
+                  "bytes": 3055
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/SKILL.upstream.md",
+                  "bytes": 43369
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/exploratory.md",
+                  "bytes": 7164
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/manifest.json",
+                  "bytes": 539
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/reporting.md",
+                  "bytes": 4881
+                }
+              ]
+            },
+            {
+              "id": "gstack-review-checklist",
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist",
+              "files": [
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/SKILL.md",
+                  "bytes": 1701
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/LICENSE",
+                  "bytes": 1066
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/NOTICE.md",
+                  "bytes": 2472
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/licenses/Apache-2.0.txt",
+                  "bytes": 11358
+                },
+                {
+                  "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/review/checklist.md",
+                  "bytes": 12449
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/gstack-adapted/agents/checker/guidance/role.md"
+          ],
+          "startup": [
+            "source/gstack-adapted/agents/checker/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/gstack-adapted/agents/checker/agent.yaml",
+              "bytes": 643
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/guidance/role.md",
+              "bytes": 1104
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/SKILL.md",
+              "bytes": 3697
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/LICENSE",
+              "bytes": 1066
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/NOTICE.md",
+              "bytes": 2472
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/licenses/Apache-2.0.txt",
+              "bytes": 11358
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/sections/scope.md",
+              "bytes": 1590
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/sections/system-functional.md",
+              "bytes": 3816
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/templates/functional-report-template.md",
+              "bytes": 3055
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/SKILL.upstream.md",
+              "bytes": 43369
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/exploratory.md",
+              "bytes": 7164
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/manifest.json",
+              "bytes": 539
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/reporting.md",
+              "bytes": 4881
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/SKILL.md",
+              "bytes": 1701
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/LICENSE",
+              "bytes": 1066
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/NOTICE.md",
+              "bytes": 2472
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/licenses/Apache-2.0.txt",
+              "bytes": 11358
+            },
+            {
+              "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/review/checklist.md",
+              "bytes": 12449
+            }
+          ]
+        },
+        {
+          "dir": "source/gstack-adapted/agents/lead",
+          "name": "gstack-adapted-lead",
+          "version": "1.0",
+          "description": null,
+          "runtime": "claude-code",
+          "skills": [
+            {
+              "id": "gstack-office-hours",
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours",
+              "files": [
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/SKILL.md",
+                  "bytes": 3234
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/LICENSE",
+                  "bytes": 1066
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/NOTICE.md",
+                  "bytes": 2472
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/licenses/Apache-2.0.txt",
+                  "bytes": 11358
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/SKILL.upstream.md",
+                  "bytes": 84719
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/design-and-handoff.md",
+                  "bytes": 37522
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/manifest.json",
+                  "bytes": 1298
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/phase-2a-startup-diagnostic.md",
+                  "bytes": 13071
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/phase-2b-builder-brainstorm.md",
+                  "bytes": 3224
+                }
+              ]
+            },
+            {
+              "id": "gstack-plan-eng-review",
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review",
+              "files": [
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/SKILL.md",
+                  "bytes": 3346
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/LICENSE",
+                  "bytes": 1066
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/NOTICE.md",
+                  "bytes": 2472
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/licenses/Apache-2.0.txt",
+                  "bytes": 11358
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/SKILL.upstream.md",
+                  "bytes": 51353
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/sections/manifest.json",
+                  "bytes": 623
+                },
+                {
+                  "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/sections/review-sections.md",
+                  "bytes": 91519
+                }
+              ]
+            }
+          ],
+          "guidance": [
+            "source/gstack-adapted/agents/lead/guidance/role.md"
+          ],
+          "startup": [
+            "source/gstack-adapted/agents/lead/guidance/role.md"
+          ],
+          "plugins": [],
+          "files": [
+            {
+              "path": "source/gstack-adapted/agents/lead/agent.yaml",
+              "bytes": 666
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/guidance/role.md",
+              "bytes": 699
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/SKILL.md",
+              "bytes": 3234
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/LICENSE",
+              "bytes": 1066
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/NOTICE.md",
+              "bytes": 2472
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/licenses/Apache-2.0.txt",
+              "bytes": 11358
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/SKILL.upstream.md",
+              "bytes": 84719
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/design-and-handoff.md",
+              "bytes": 37522
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/manifest.json",
+              "bytes": 1298
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/phase-2a-startup-diagnostic.md",
+              "bytes": 13071
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/phase-2b-builder-brainstorm.md",
+              "bytes": 3224
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/SKILL.md",
+              "bytes": 3346
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/LICENSE",
+              "bytes": 1066
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/NOTICE.md",
+              "bytes": 2472
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/licenses/Apache-2.0.txt",
+              "bytes": 11358
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/SKILL.upstream.md",
+              "bytes": 51353
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/sections/manifest.json",
+              "bytes": 623
+            },
+            {
+              "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/sections/review-sections.md",
+              "bytes": 91519
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "context_packs": [],
+  "starter": [
+    {
+      "from": "starter/.claude/settings.json",
+      "to": ".claude/settings.json"
+    },
+    {
+      "from": "starter/.codex/config.toml",
+      "to": ".codex/config.toml"
+    },
+    {
+      "from": "starter/.codex/rules/gstack-adapted.rules",
+      "to": ".codex/rules/gstack-adapted.rules"
+    },
+    {
+      "from": "starter/.gitignore",
+      "to": ".gitignore"
+    },
+    {
+      "from": "starter/BRIEF.md",
+      "to": "BRIEF.md"
+    },
+    {
+      "from": "starter/example-cli/bin/wordstat.mjs",
+      "to": "example-cli/bin/wordstat.mjs"
+    },
+    {
+      "from": "starter/example-cli/package.json",
+      "to": "example-cli/package.json"
+    },
+    {
+      "from": "starter/example-cli/src/count.mjs",
+      "to": "example-cli/src/count.mjs"
+    },
+    {
+      "from": "starter/example-cli/test/cli.test.mjs",
+      "to": "example-cli/test/cli.test.mjs"
+    },
+    {
+      "from": "starter/example-cli/test/count.test.mjs",
+      "to": "example-cli/test/count.test.mjs"
+    }
+  ],
+  "prerequisites": [
+    {
+      "name": "Node.js",
+      "check": [
+        "node",
+        "--version"
+      ],
+      "version_pattern": "v(\\d+\\.\\d+\\.\\d+)",
+      "min": "22.0.0",
+      "why": "runs the launcher, the example CLI and its tests"
+    },
+    {
+      "name": "git",
+      "check": [
+        "git",
+        "--version"
+      ],
+      "version_pattern": "git version (\\d+\\.\\d+\\.\\d+)",
+      "why": "the builder commits each change and the checker reviews commits"
+    },
+    {
+      "name": "Claude Code",
+      "check": [
+        "claude",
+        "--version"
+      ],
+      "why": "runtime for the lead and the builder; your login, never packaged"
+    },
+    {
+      "name": "Codex",
+      "check": [
+        "codex",
+        "--version"
+      ],
+      "version_pattern": "codex-cli (\\d+\\.\\d+\\.\\d+)",
+      "min": "0.159.0",
+      "why": "runtime for the independent checker; your login, never packaged"
+    }
+  ],
+  "permissions": [
+    {
+      "runtime": "codex",
+      "files": [
+        ".codex/config.toml",
+        ".codex/rules/gstack-adapted.rules"
+      ],
+      "effect": "Keeps the Codex sandbox ON (no general network). The checker can write in the project and the system's temporary folders. OpenRig also lists one more folder in the seat's sandbox policy, <OpenRig shared-docs root>/rigs/<rig>/state/<pod>, but does not create it and this factory does not use it; writes there fail unless something else has created it. One command runs outside the sandbox without a prompt: `rig …`. Codex runs a command line outside the sandbox only when EVERY command in it is allowed, so `rig` chained with any other command runs inside the sandbox and fails; run `rig` on its own, one per call. Reading the diff, running the CLI directly and writing the report work inside the sandbox; tests that start child processes do not: they fail with EPERM or hang until a timeout, so the checker probes behaviour directly and asks the builder for the suite's result. Codex loads these only for a trusted project; launching with OpenRig registers that trust.",
+      "tested": "gstack-adapted 0.1.2 author proof and 0.1.3 independent QA from the download (OpenRig 0.6.1, Codex 0.159.0, 2026-09-29): the checker's standalone rig calls handed work on; git reads, direct CLI probes and report writing ran inside the sandbox; a test suite starting child processes failed with EPERM or hung. The rules and config are unchanged in behaviour since (0.1.4 changes a comment only)."
+    },
+    {
+      "runtime": "claude-code",
+      "files": [
+        ".claude/settings.json"
+      ],
+      "effect": "Pre-approves only `rig`, `node --test`, `node example-cli/bin/wordstat.mjs`, the git commands the builder needs to set up and commit (`git init`, `status`, `diff`, `log`, `show`, `add`, `commit`, and the repository-local `git config user.name` / `git config user.email`), `mkdir` and `ls`. `git config --global` is not approved. No general shell and no `git push`; anything else asks as usual.",
+      "tested": "gstack-adapted 0.1.2 author proof and 0.1.3 independent QA from the download (OpenRig 0.6.1, Claude Code 2.1.220, 2026-09-29): the builder ran git init and the repository-local git config user.name/user.email without a prompt; no seat stopped at a permission prompt. The settings file is unchanged since 0.1.2."
+    }
+  ],
+  "first_job": "rig send team-lead@gstack-adapted \"Read BRIEF.md and run it through the team as WORKFLOW.md describes.\"",
+  "expected_output": [
+    "PLAN.md (scoped and reviewed by the lead)",
+    "example-cli gains --json, with tests; node --test passes on the builder's final commit",
+    "the checker's report naming that commit",
+    "SUMMARY.md (the lead's summary)"
+  ],
+  "verified": {
+    "verdict": "SHIP",
+    "qa": "independent QA (non-author builder seat)",
+    "date": "2026-09-29",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0",
+      "claude-code": "2.1.220"
+    },
+    "models": "test",
+    "path": "additive",
+    "agent_run_version": "0.1.3",
+    "delta_qa": "independent delta QA (non-author builder seat), with no agent run of this version"
+  },
+  "files": [
+    {
+      "path": "LICENSES/Apache-2.0.txt",
+      "bytes": 10771,
+      "sha256": "7b421fa3c301cd5b61569bae52f05648e0d784c02bfbe1bbcd86a7327be340c9"
+    },
+    {
+      "path": "LICENSES/README.md",
+      "bytes": 788,
+      "sha256": "3c31098f7a34d95780c501fe6e5bd0f7092fa796f2787b8e5f39d7cddb7db648"
+    },
+    {
+      "path": "SETUP.md",
+      "bytes": 15245,
+      "sha256": "5cddc96b121fa42d4a0ef04f5bdb67467b138ed159ce814c67c7ff2fd6f30328"
+    },
+    {
+      "path": "TESTING.md",
+      "bytes": 1890,
+      "sha256": "534175e172def26c3a2d8e246682f41c1a276e6e303e4216ad94683000b94a66"
+    },
+    {
+      "path": "bundles/gstack-adapted.rigbundle",
+      "bytes": 187320,
+      "sha256": "a0014aa2247eeee367c5d1adcb1a64cfaf384319c237eee3b7700ffe0d9d2c82"
+    },
+    {
+      "path": "bundles/gstack-adapted.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "c530e864bd8f5b773052445d2bc4764e2ee8b197656f037da4ab8e23a2a4c436"
+    },
+    {
+      "path": "bundles/gstack-adapted.test-models.rigbundle",
+      "bytes": 187358,
+      "sha256": "2b54eb7df2cdd9e494636d5a06b024a38dccdfc20367c6eb4fd4548153b7f9bd"
+    },
+    {
+      "path": "bundles/gstack-adapted.test-models.rigbundle.sha256",
+      "bytes": 64,
+      "sha256": "94989f40c7344616b6f6d13d2bea5e5564ca3cac4e7fff0588b36c55d42c1a38"
+    },
+    {
+      "path": "launch.mjs",
+      "bytes": 17032,
+      "sha256": "56461952c7cbdd6f52aa0d6f3a6fd75f8994e9339ba004402b6777ca0c1dda00"
+    },
+    {
+      "path": "source/gstack-adapted/AGENTS.md",
+      "bytes": 1927,
+      "sha256": "b91191738e467d9912cc5bc013bc2f6e75e77ab01fdfcff356c6cd7122d60435"
+    },
+    {
+      "path": "source/gstack-adapted/ATTRIBUTION.md",
+      "bytes": 4257,
+      "sha256": "b286ce84d993810e81899cc6a9f6d054b3df9c2e324bc0734a7724b3144c3725"
+    },
+    {
+      "path": "source/gstack-adapted/CULTURE.md",
+      "bytes": 1222,
+      "sha256": "0c811e455be489b29cb59bdeb100f33c5471944d956611276537c9477235f623"
+    },
+    {
+      "path": "source/gstack-adapted/PERMISSIONS.md",
+      "bytes": 3417,
+      "sha256": "8e87975d5097db40e661785a64b0b8b7976ab029a81325aca252a402f25efc19"
+    },
+    {
+      "path": "source/gstack-adapted/PROVENANCE.json",
+      "bytes": 12926,
+      "sha256": "fc76d622bfbb47ec49ee89c2005d82e4d2ceeee6fb644b819fea4235fdff8a92"
+    },
+    {
+      "path": "source/gstack-adapted/README.md",
+      "bytes": 1473,
+      "sha256": "6f184267249de50e37d3ab1a2c2a1347c5a105815343772b2c2f91b78cc000c9"
+    },
+    {
+      "path": "source/gstack-adapted/WORKFLOW.md",
+      "bytes": 3266,
+      "sha256": "cc86d59a2cc9f680c0fcd9486ea8abc27405f90d542df565d8bb15ba7c2f14bf"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/agent.yaml",
+      "bytes": 550,
+      "sha256": "a768f46abdcea29d224eabbd02d1b6f0ea77e76de0acf2ee291415d9b8baa32e"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/guidance/role.md",
+      "bytes": 1332,
+      "sha256": "5a58cae1791b96fbd1282a2e2beedbf1af85c0955b6aeeefc0f31e64484e48c3"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/SKILL.md",
+      "bytes": 2970,
+      "sha256": "0dc828f1613b4dc7fc5f7017ba4e0730be6236305877cb688872cd3960b2483f"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/LICENSE",
+      "bytes": 1066,
+      "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/NOTICE.md",
+      "bytes": 2472,
+      "sha256": "879fc62ddab70035c6f697e1bc8afaaf0a380e8b3e4ffe256ca403c28d909f7c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/investigate/SKILL.upstream.md",
+      "bytes": 47563,
+      "sha256": "c19623c1638b0acc07e5801d614e063d23bafc907b45d097bdecee143d596ab7"
+    },
+    {
+      "path": "source/gstack-adapted/agents/builder/skills/gstack-investigate/upstream/licenses/Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/agent.yaml",
+      "bytes": 643,
+      "sha256": "21453178935ec1908c572fb1542c57ed867d0e30b86be82748baac10ea07c50e"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/guidance/role.md",
+      "bytes": 1104,
+      "sha256": "c01f47817824651437626d820e796170f5aef3e121a46dd119287f90e70757d1"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/SKILL.md",
+      "bytes": 3697,
+      "sha256": "ccd90dca859068c105766288b747f68aae89fac5c7ce0c690aed9f175b830d7d"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/LICENSE",
+      "bytes": 1066,
+      "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/NOTICE.md",
+      "bytes": 2472,
+      "sha256": "879fc62ddab70035c6f697e1bc8afaaf0a380e8b3e4ffe256ca403c28d909f7c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/licenses/Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/SKILL.upstream.md",
+      "bytes": 43369,
+      "sha256": "8a6741911a08ce2774883ac3ea9f0198e085331a40106b1021a439ae23799b96"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/exploratory.md",
+      "bytes": 7164,
+      "sha256": "c627f3c35f7f105b83832538b94773eb11e296864c28fd386360883f3fb823bc"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/manifest.json",
+      "bytes": 539,
+      "sha256": "80d53ea8d8a6c6109125c8e73a018a2e2ee7794f06da5c82d641af9f9f8c5d5f"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa-only/sections/reporting.md",
+      "bytes": 4881,
+      "sha256": "74dde7559c27cfdd4f618ef3f10de8e961bb994a6fba0bc5b708cc7847530fa9"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/sections/scope.md",
+      "bytes": 1590,
+      "sha256": "dc4d1a3b6e7f90a5555860bf3cbafa47dc623a7f295428cde8a5de2043b8e245"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/sections/system-functional.md",
+      "bytes": 3816,
+      "sha256": "54ef6bc998b11d0f0a98719cbb5cd1bc26736d811fc879dbf1e27be43ac19e22"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-qa-only/upstream/qa/templates/functional-report-template.md",
+      "bytes": 3055,
+      "sha256": "aa91c89251538712e9388ffaaf2cdc08e1b1cb95f5ad4340ef72ca00829758b5"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/SKILL.md",
+      "bytes": 1701,
+      "sha256": "156e42cdf45e3995c28b81c5479505bfe7a0826d2c3a0eec65192fdaf3865159"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/LICENSE",
+      "bytes": 1066,
+      "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/NOTICE.md",
+      "bytes": 2472,
+      "sha256": "879fc62ddab70035c6f697e1bc8afaaf0a380e8b3e4ffe256ca403c28d909f7c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/licenses/Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "source/gstack-adapted/agents/checker/skills/gstack-review-checklist/upstream/review/checklist.md",
+      "bytes": 12449,
+      "sha256": "7f3a2ced1862c352d002268ed1bb4a5f332deee8a315c809ac91a41fc60533c8"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/agent.yaml",
+      "bytes": 666,
+      "sha256": "683546cf6c89a05ebf4778e63f75995311bc80e1a4a1ca1bfafd9ef8e4537d30"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/guidance/role.md",
+      "bytes": 699,
+      "sha256": "ee7818a48bcd07d6606be265021b29c6892f516132bdca36f10b8954c9d1f88a"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/SKILL.md",
+      "bytes": 3234,
+      "sha256": "13c4c847f2f377811acbee698f81fdae91a9de2a137a0bd09791714b4dcb65bb"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/LICENSE",
+      "bytes": 1066,
+      "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/NOTICE.md",
+      "bytes": 2472,
+      "sha256": "879fc62ddab70035c6f697e1bc8afaaf0a380e8b3e4ffe256ca403c28d909f7c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/licenses/Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/SKILL.upstream.md",
+      "bytes": 84719,
+      "sha256": "7f3da2f67e93fb6b42e2a28d9a0239d19529feeb7f582358d3c8409c775faf0f"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/design-and-handoff.md",
+      "bytes": 37522,
+      "sha256": "d6bdfe16f53b8d616ef66476508625f8c3b2ab562aee9ed9d380eb542ea2a955"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/manifest.json",
+      "bytes": 1298,
+      "sha256": "fd8f174c7667ac997ebc1ded92ed13304fde2aef0283fe228c1b7aa8f39344b1"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/phase-2a-startup-diagnostic.md",
+      "bytes": 13071,
+      "sha256": "b5635c91482c2a70fd3c1b710a60afb33c729e598e2ad79061d92d482b27e596"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-office-hours/upstream/office-hours/sections/phase-2b-builder-brainstorm.md",
+      "bytes": 3224,
+      "sha256": "e133bb283f35609346af9fd9928e6b7beac9b0fe3a82beec31b7ecda36b1c82c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/SKILL.md",
+      "bytes": 3346,
+      "sha256": "1184eff620d4176f8ad9457a09d2706eff5ed240c154d91a889f4edc5e058a35"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/LICENSE",
+      "bytes": 1066,
+      "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/NOTICE.md",
+      "bytes": 2472,
+      "sha256": "879fc62ddab70035c6f697e1bc8afaaf0a380e8b3e4ffe256ca403c28d909f7c"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/licenses/Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/SKILL.upstream.md",
+      "bytes": 51353,
+      "sha256": "cc996f5f016e9ae93f1fc5e94823b0b5e80b63641824d571599b97f441b96479"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/sections/manifest.json",
+      "bytes": 623,
+      "sha256": "cc1267307c035d7e4ab342ab7cf8c442e6e41dc7e2c321c6534b8305cd04b7f2"
+    },
+    {
+      "path": "source/gstack-adapted/agents/lead/skills/gstack-plan-eng-review/upstream/plan-eng-review/sections/review-sections.md",
+      "bytes": 91519,
+      "sha256": "bffa33d625a64fe03bf082df66ff27f3b9205d209b63b11b0c94653c3fe789ac"
+    },
+    {
+      "path": "source/gstack-adapted/rig.test-models.yaml",
+      "bytes": 1943,
+      "sha256": "5fada9f894b38059c92d55013b1074d90782d4b469c2b83398293827d6404826"
+    },
+    {
+      "path": "source/gstack-adapted/rig.yaml",
+      "bytes": 1795,
+      "sha256": "a366f27d2a6db3fde32283b0afebca475b4573e685405c05bc476e8dd1123821"
+    },
+    {
+      "path": "source/gstack-adapted/tools/vendor-upstream.mjs",
+      "bytes": 6928,
+      "sha256": "f54e5043960ae0d73415b8d02476af0710e91f775c6210d4f433407d60970caa"
+    },
+    {
+      "path": "source/gstack-adapted/upstream/LICENSE",
+      "bytes": 1066,
+      "sha256": "e56fbb5b3d95756f3fa1cfefa24732ec79f18ece1ad08a4e79e00df57e8b198c"
+    },
+    {
+      "path": "source/gstack-adapted/upstream/NOTICE.md",
+      "bytes": 2472,
+      "sha256": "879fc62ddab70035c6f697e1bc8afaaf0a380e8b3e4ffe256ca403c28d909f7c"
+    },
+    {
+      "path": "source/gstack-adapted/upstream/licenses/Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "starter/.claude/settings.json",
+      "bytes": 452,
+      "sha256": "b2c08886076bbb96fb36a9bfe9da08a1dde3c9a4cb0be77836bbb03d4a76b141"
+    },
+    {
+      "path": "starter/.codex/config.toml",
+      "bytes": 531,
+      "sha256": "e99af8bb2ea242b3e93201bf9898f8e1e33f8a819f1e40c2f9422871657a6070"
+    },
+    {
+      "path": "starter/.codex/rules/gstack-adapted.rules",
+      "bytes": 628,
+      "sha256": "fa0f04b26025be5ca7dbdc6b5435cd43c0cbfcd1290697cae156c69d480ec041"
+    },
+    {
+      "path": "starter/.gitignore",
+      "bytes": 1092,
+      "sha256": "e6519ecdb47c73ab6e91708cb12af847faf4a30427e19f8e1d8b59e7be36d9d9"
+    },
+    {
+      "path": "starter/BRIEF.md",
+      "bytes": 797,
+      "sha256": "be95cd37ca9128b6ed24ad32214b23c50ebd189be33e7e20b0eb3a5f2366fbab"
+    },
+    {
+      "path": "starter/example-cli/bin/wordstat.mjs",
+      "bytes": 737,
+      "sha256": "2f7a357b814fd326e6deadc23d26d02601a5f02b08952b990026c0fd77651cbd"
+    },
+    {
+      "path": "starter/example-cli/package.json",
+      "bytes": 261,
+      "sha256": "df08f12ffbd78530eb90f6c7525e26ca820f7d0ba0c6c0fc328d875f4dc437c3"
+    },
+    {
+      "path": "starter/example-cli/src/count.mjs",
+      "bytes": 388,
+      "sha256": "7c11eed00e06c5e9b2014f85804ee61826e1a44d093519c4419db7c0c5c542b2"
+    },
+    {
+      "path": "starter/example-cli/test/cli.test.mjs",
+      "bytes": 943,
+      "sha256": "77b7367f4361027ba9c9855e9dc8ea28a1fa1bfea001d7df85aba39f8b4d47a8"
+    },
+    {
+      "path": "starter/example-cli/test/count.test.mjs",
+      "bytes": 564,
+      "sha256": "e67e695e5b8c4a501eb487c46c7e099d6eae30fd915e97362fc30b3d7fb79446"
+    }
+  ],
+  "setup_prompt": "Set up gstack, adapted for OpenRig 0.1.4, an OpenRig factory from rigs.to.\n\n1. Download the archive and check its hash before unpacking. The sha256 must be exactly 2b1f342d06da86f4b915f4caf26757e2eae1a58c340698fb47f353d268d923db:\n   curl -fLO https://github.com/mvschwarz/rigs-to-apps/releases/download/gstack-adapted-v0.1.4/gstack-adapted-0.1.4.tar.gz\n   echo \"2b1f342d06da86f4b915f4caf26757e2eae1a58c340698fb47f353d268d923db  gstack-adapted-0.1.4.tar.gz\" | shasum -a 256 -c\n2. Unpack it somewhere stable and read SETUP.md inside before running anything:\n   mkdir -p ~/rig-factories && tar -xzf gstack-adapted-0.1.4.tar.gz -C ~/rig-factories\n   cd ~/rig-factories/gstack-adapted-0.1.4\n3. Follow SETUP.md with the OpenRig I already run (leave my other rigs and its kernel alone): run\n   node launch.mjs --project <dir> --plan-only, explain to me every permission change it prints, and launch only\n   after I agree. Never pipe anything into a shell."
+}

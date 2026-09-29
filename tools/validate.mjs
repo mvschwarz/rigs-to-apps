@@ -223,6 +223,23 @@ const RIG_KNOWN = {
 const GITHUB_REPO = /^https:\/\/github\.com\/[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9._-]{1,100}$/;
 const FULL_SHA = /^[0-9a-f]{40}$/;
 const LICENSE = /^[A-Za-z0-9.+-]{1,64}$/; // an SPDX id, or NOASSERTION
+// An SPDX license EXPRESSION, for factories that combine licences (e.g. an adaptation:
+// "Apache-2.0 AND MIT"): ids joined by AND / OR (an id may carry "WITH <exception>"),
+// with balanced parentheses. At most 200 chars.
+function isSpdxExpression(x) {
+  if (!isStr(x) || x.length > 200) return false;
+  const toks = x.replace(/[()]/g, " $& ").trim().split(/\s+/);
+  let i = 0;
+  const id = () => (LICENSE.test(toks[i] ?? "") && !["AND", "OR", "WITH"].includes(toks[i]) ? (i++, true) : false);
+  const term = () => {
+    if (toks[i] === "(") { i++; if (!expr() || toks[i] !== ")") return false; i++; return true; }
+    if (!id()) return false;
+    if (toks[i] === "WITH") { i++; return id(); }
+    return true;
+  };
+  const expr = () => { if (!term()) return false; while (toks[i] === "AND" || toks[i] === "OR") { i++; if (!term()) return false; } return true; };
+  return expr() && i === toks.length;
+}
 const IMAGE_EXT = /\.(png|jpe?g|webp|gif)$/i;
 const MAX_DESCRIPTOR_BYTES = 64 * 1024;
 const MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024;
@@ -363,7 +380,7 @@ function validateFactoryListing(listingPath, { requireSnapshot = false } = {}) {
   if (new Set(d.tags).size !== d.tags.length) fail("duplicate tag");
   if (!isStr(d.author.name) || d.author.name.trim() === "") fail("author requires name + url");
   if (!isStr(d.author.url) || !d.author.url.startsWith("https://")) fail("author.url must be an https URL");
-  if (!isStr(d.license) || !LICENSE.test(d.license)) fail("license must be an SPDX identifier (or NOASSERTION)");
+  if (!isSpdxExpression(d.license)) fail("license must be an SPDX identifier or expression (e.g. \"Apache-2.0 AND MIT\")");
   if (!isStr(d.source.repo) || !GITHUB_REPO.test(d.source.repo)) fail("source.repo must be a public https://github.com/<owner>/<repo> URL");
   if (d.source.path !== `factories/${d.id}/`) fail(`source.path must be "factories/${d.id}/"`);
   if (d.source.ref !== null && !(isStr(d.source.ref) && FULL_SHA.test(d.source.ref))) fail("source.ref must be null (until publication) or a full 40-character commit SHA");
@@ -408,6 +425,9 @@ function validateFactoryListing(listingPath, { requireSnapshot = false } = {}) {
 // A factory page shows "QA verified" only when an entry's id, version AND sha256
 // all equal its listing's release — a new archive loses the stamp until re-verified.
 const VERIFIED_FACTORY_KEYS = ["id", "version", "sha256", "verdict", "qa", "date", "openrig", "runtimes", "models", "path"];
+// Optional, and only together: when the agents ran an EARLIER version and this exact archive was verified as a
+// delta over that run, the record says so, so the page never implies an agent run of this version.
+const VERIFIED_FACTORY_OPTIONAL = ["agent_run_version", "delta_qa"];
 function validateVerifiedFactories(root) {
   const p = path.join(root, "verified-factories.json");
   if (!fs.existsSync(p)) return 0;
@@ -418,7 +438,7 @@ function validateVerifiedFactories(root) {
   const seen = new Set();
   for (const v of list) {
     if (!isObj(v)) fail("verified-factories.json entries must be objects");
-    unknownScan(v, VERIFIED_FACTORY_KEYS);
+    unknownScan(v, [...VERIFIED_FACTORY_KEYS, ...VERIFIED_FACTORY_OPTIONAL]);
     for (const k of VERIFIED_FACTORY_KEYS) if (!(k in v)) fail(`verified-factories.json entry is missing "${k}"`);
     if (!isStr(v.id) || !kebab(v.id)) fail("verified-factories.json id must be lowercase-kebab");
     if (!isStr(v.version) || !SEMVER.test(v.version)) fail(`verified-factories.json ${v.id}: version must be major.minor.patch`);
@@ -432,6 +452,14 @@ function validateVerifiedFactories(root) {
     if (!isObj(v.runtimes)) fail(`verified-factories.json ${v.id}: runtimes must be an object of runtime -> version`);
     if (!["test", "recommended"].includes(v.models)) fail(`verified-factories.json ${v.id}: models must be "test" or "recommended" (the profile actually run)`);
     if (v.path !== "additive") fail(`verified-factories.json ${v.id}: path must be "additive" (the user default: an existing OpenRig with its kernel)`);
+    if ("agent_run_version" in v || "delta_qa" in v) {
+      if (!isStr(v.agent_run_version) || !SEMVER.test(v.agent_run_version)) fail(`verified-factories.json ${v.id}: agent_run_version must be the major.minor.patch version whose agents ran`);
+      const [a, b] = [v.agent_run_version, v.version].map((x) => x.split(".").map(Number));
+      const earlier = a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+      if (!(earlier < 0)) fail(`verified-factories.json ${v.id}: agent_run_version ${v.agent_run_version} must be strictly earlier than version ${v.version}`);
+      if (!isStr(v.delta_qa) || v.delta_qa.trim() === "") fail(`verified-factories.json ${v.id}: agent_run_version needs delta_qa, describing the independent check of this archive's delta over that run`);
+      if (/@|-impl\b|-qa\b|\bimpl\b/.test(v.delta_qa)) fail(`verified-factories.json ${v.id}: delta_qa must not name a seat or rig (it is published)`);
+    }
     const key = `${v.id}@${v.sha256}`;
     if (seen.has(key)) fail(`verified-factories.json lists ${v.id} ${v.sha256} twice`);
     seen.add(key);

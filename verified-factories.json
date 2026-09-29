@@ -28,5 +28,22 @@
     },
     "models": "test",
     "path": "additive"
+  },
+  {
+    "id": "gstack-adapted",
+    "version": "0.1.4",
+    "sha256": "2b1f342d06da86f4b915f4caf26757e2eae1a58c340698fb47f353d268d923db",
+    "verdict": "SHIP",
+    "qa": "independent QA (non-author builder seat)",
+    "date": "2026-09-29",
+    "openrig": "0.6.1",
+    "runtimes": {
+      "codex": "0.159.0",
+      "claude-code": "2.1.220"
+    },
+    "models": "test",
+    "path": "additive",
+    "agent_run_version": "0.1.3",
+    "delta_qa": "independent delta QA (non-author builder seat), with no agent run of this version"
   }
 ]

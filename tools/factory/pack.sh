@@ -57,3 +57,6 @@ node "$TOOLS/factory/assemble.mjs" "$STAGE/src" "$STAGE/bundles" "$PKG"
 tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner --no-xattrs --no-acls --format=gnu \
   -C "$OUT" -cf - "$ID-$VER" | gzip -n -9 > "$OUT/$ID-$VER.tar.gz"
 ( cd "$OUT" && sha256sum "$ID-$VER.tar.gz" > "$ID-$VER.tar.gz.sha256" && cat "$ID-$VER.tar.gz.sha256" )
+# The release publishes BOTH files: SETUP.md tells users to download the .sha256 and check it before unpacking.
+printf '%s\n' "$ID-$VER.tar.gz" "$ID-$VER.tar.gz.sha256" > "$OUT/$ID-$VER.release-assets"
+echo "release assets (upload BOTH to tag $ID-v$VER): $ID-$VER.tar.gz $ID-$VER.tar.gz.sha256"
