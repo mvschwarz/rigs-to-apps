@@ -108,7 +108,8 @@ test("valid import: topology, agents and imports, files and risks come from the 
   assert.ok(paths.includes("rigs/tiny/agents/shared/skills/plan/SKILL.md"), "an imported agent's files were not listed");
   assert.ok(!paths.includes("UNRELATED.md"), "an unreferenced file was listed");
   assert.deepEqual(s.requirements.runtimes, ["claude-code", "codex"]);
-  assert.deepEqual(s.risks.map((r) => r.id), ["model-pins", "host-plugins", "no-author-auth"]);
+  assert.deepEqual(s.risks.map((r) => r.id), ["model-pins", "host-plugins", "floor-posture", "no-author-auth"]);
+  assert.deepEqual(s.launch_posture.members.map((m) => m.posture), ["floor", "floor"]);
   assert.match(s.risks[0].detail, /gpt-6-astra/);
   assert.equal(s.install.status, "parsed, not launch-tested");
   assert.equal(s.install.launch_tested, null);
@@ -222,6 +223,17 @@ test("launch-tested comes ONLY from verified.json, and only for the exact id + c
   s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
   assert.equal(s.install.status, "launch tested on OpenRig 0.6.1");
   assert.deepEqual(s.install.launch_tested, { openrig: "0.6.1", runtimes: { codex: "0.159" } });
+});
+
+test("a declared permission_policy is shown verbatim and clears the floor risk", async () => {
+  const reg = registry();
+  await run(reg, authorRepo((repo, rig) => {
+    const spec = JSON.parse(JSON.stringify(RIG)); spec.permissionPolicy = "builtin:coordinated";
+    fs.writeFileSync(path.join(rig, "rig.yaml"), JSON.stringify(spec));
+  }));
+  const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
+  assert.deepEqual(s.launch_posture.members.map((m) => `${m.posture}:${m.policy}`), ["declared:builtin:coordinated", "declared:builtin:coordinated"]);
+  assert.ok(!s.risks.some((r) => r.id === "floor-posture"));
 });
 
 test("the real parser loader fails loudly on a version it is not pinned to", async () => {

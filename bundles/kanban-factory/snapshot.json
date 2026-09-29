@@ -40,7 +40,8 @@
             "model": null,
             "agent": "apps/kanban-factory/agents/orchestrator",
             "agent_ref": "local:agents/orchestrator",
-            "cwd": "."
+            "cwd": ".",
+            "permission_policy": null
           },
           {
             "id": "driver",
@@ -49,7 +50,8 @@
             "model": null,
             "agent": "apps/kanban-factory/agents/board-driver",
             "agent_ref": "local:agents/board-driver",
-            "cwd": "."
+            "cwd": ".",
+            "permission_policy": null
           }
         ]
       }
@@ -59,6 +61,21 @@
         "kind": "delegates_to",
         "from": "board.orchestrator",
         "to": "board.driver"
+      }
+    ]
+  },
+  "launch_posture": {
+    "rig_policy": null,
+    "members": [
+      {
+        "member": "board.orchestrator",
+        "posture": "floor",
+        "policy": null
+      },
+      {
+        "member": "board.driver",
+        "posture": "floor",
+        "policy": null
       }
     ]
   },
@@ -100,6 +117,11 @@
       "id": "services",
       "label": "Starts a managed service",
       "detail": "This rig declares a services block (for example Docker Compose) that boots before any seat."
+    },
+    {
+      "id": "floor-posture",
+      "label": "Launches at the floor posture",
+      "detail": "Every member declare no permission_policy, so they launch at \"floor\": a workspace-write sandbox with restricted network and no approval prompts. The agents run and answer, but cannot reach the OpenRig daemon, so rig send and rig queue between members fail."
     },
     {
       "id": "no-author-auth",

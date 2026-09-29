@@ -362,6 +362,10 @@ export async function importBundle({
         agent,
         agent_ref: typeof m.agentRef === "string" ? m.agentRef : null,
         cwd: typeof m.cwd === "string" ? m.cwd : null,
+        // Effective launch posture: the member's own permission_policy, else
+        // the rig's, else OpenRig's explicit "floor". Declared refs verbatim.
+        permission_policy: typeof m.permissionPolicy === "string" ? m.permissionPolicy
+          : typeof spec.permissionPolicy === "string" ? spec.permissionPolicy : null,
       };
     }),
   }));
@@ -391,6 +395,9 @@ export async function importBundle({
   if (absoluteCwds.length) risks.push({ id: "absolute-cwd", label: "Absolute working directories", detail: `Members ${absoluteCwds.join(", ")} name an absolute cwd, which is copied verbatim.` });
   if (spec.services) risks.push({ id: "services", label: "Starts a managed service", detail: "This rig declares a services block (for example Docker Compose) that boots before any seat." });
   if (unresolved.size) risks.push({ id: "non-local-refs", label: "References outside this repo", detail: `Resolved by your OpenRig install, not shown here: ${[...unresolved].sort(byStr).join(", ")}.` });
+  const atFloor = pods.flatMap((p) => p.members.filter((m) => m.permission_policy === null).map((m) => `${p.id}.${m.id}`));
+  if (atFloor.length) risks.push({ id: "floor-posture", label: "Launches at the floor posture",
+    detail: `${atFloor.length === memberIds.size ? "Every member" : `Members ${atFloor.join(", ")}`} declare no permission_policy, so they launch at "floor": a workspace-write sandbox with restricted network and no approval prompts. The agents run and answer, but cannot reach the OpenRig daemon, so rig send and rig queue between members fail.` });
   risks.push({ id: "no-author-auth", label: "Not an author signature", detail: "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them." });
 
   // Each member's EFFECTIVE model pin — the member's own, else its AgentSpec
@@ -433,6 +440,11 @@ export async function importBundle({
       note: "Read from OpenRig's internal, version-coupled modules — not a public OpenRig export.",
     },
     topology: { pods, edges },
+    launch_posture: {
+      rig_policy: typeof spec.permissionPolicy === "string" ? spec.permissionPolicy : null,
+      members: pods.flatMap((p) => p.members.map((m) => ({ member: `${p.id}.${m.id}`,
+        posture: m.permission_policy === null ? "floor" : "declared", policy: m.permission_policy }))),
+    },
     agents: agentList,
     requirements: {
       // the OpenRig version the install PROCEDURE below was exercised on

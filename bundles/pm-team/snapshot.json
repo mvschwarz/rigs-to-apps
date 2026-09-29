@@ -40,7 +40,8 @@
             "model": null,
             "agent": "packages/daemon/specs/agents/product-management/pm",
             "agent_ref": "local:../../../agents/product-management/pm",
-            "cwd": "."
+            "cwd": ".",
+            "permission_policy": null
           },
           {
             "id": "researcher",
@@ -49,7 +50,8 @@
             "model": null,
             "agent": "packages/daemon/specs/agents/research/analyst",
             "agent_ref": "local:../../../agents/research/analyst",
-            "cwd": "."
+            "cwd": ".",
+            "permission_policy": null
           }
         ]
       },
@@ -64,7 +66,8 @@
             "model": null,
             "agent": "packages/daemon/specs/agents/development/implementer",
             "agent_ref": "local:../../../agents/development/implementer",
-            "cwd": "."
+            "cwd": ".",
+            "permission_policy": null
           }
         ]
       }
@@ -94,6 +97,26 @@
         "kind": "escalates_to",
         "from": "dev.coder",
         "to": "pm.lead"
+      }
+    ]
+  },
+  "launch_posture": {
+    "rig_policy": null,
+    "members": [
+      {
+        "member": "pm.lead",
+        "posture": "floor",
+        "policy": null
+      },
+      {
+        "member": "pm.researcher",
+        "posture": "floor",
+        "policy": null
+      },
+      {
+        "member": "dev.coder",
+        "posture": "floor",
+        "policy": null
       }
     ]
   },
@@ -183,6 +206,11 @@
       "id": "host-plugins",
       "label": "Profile plugins resolve on your host",
       "detail": "Plugins (shared:openrig-core) are not vendored; they resolve from your own OpenRig install."
+    },
+    {
+      "id": "floor-posture",
+      "label": "Launches at the floor posture",
+      "detail": "Every member declare no permission_policy, so they launch at \"floor\": a workspace-write sandbox with restricted network and no approval prompts. The agents run and answer, but cannot reach the OpenRig daemon, so rig send and rig queue between members fail."
     },
     {
       "id": "no-author-auth",
