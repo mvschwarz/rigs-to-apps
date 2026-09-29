@@ -97,6 +97,19 @@ const INVALID = [
 for (const [scenario, sub] of INVALID)
   expectFail(fx("invalid", scenario, "wedding-cutdown/app.json"), `invalid/${scenario}`, sub);
 
+// --- rig-bundle descriptors (bundles/<id>/rig.json): one intended defect each ---
+expectValid(fx("valid-rig/tiny-rig/rig.json"), "valid-rig/tiny-rig", "OK tiny-rig");
+const INVALID_RIG = [
+  ["moving-ref", "full 40-character commit SHA"],
+  ["not-github", "public https://github.com/<owner>/<repo>"],
+  ["restated-topology", "unknown field 'pods'"],
+  ["spec-escape", "path escapes source repo: source.spec"],
+  ["bad-bundle", "source.bundle must name a .rigbundle file"],
+  ["bad-kind", 'kind must be "rig-bundle"'],
+];
+for (const [scenario, sub] of INVALID_RIG)
+  expectFail(fx("invalid-rig", scenario, "tiny-rig/rig.json"), `invalid-rig/${scenario}`, sub);
+
 // Guard MUST-FIX 3: prove the symlink-escape fixture is PORTABLE + self-contained
 // (not a leak to the original checkout): its stored target is RELATIVE, and it
 // realpath-resolves INSIDE the active scaffold (under REGISTRY_ROOT) yet OUTSIDE
@@ -129,6 +142,8 @@ for (const [scenario, sub] of INVALID)
 expectRegistry(fx("registry/bare-ok.json"), "registry/bare-ok", 0, "OK registry (1 manifest)");
 expectRegistry(fx("registry/metadata-bad.json"), "registry/metadata-bad", 1, "registry must be a bare list of manifest paths");
 expectRegistry(fx("registry/path-escape.json"), "registry/path-escape", 1, "registry path escapes root (absolute or ..)");
+expectRegistry(fx("registry/rig-ok.json"), "registry/rig-ok", 0, "OK registry (1 manifest)");
+expectRegistry(fx("registry/rig-no-snapshot.json"), "registry/rig-no-snapshot", 1, "no snapshot.json for 'tiny-rig'");
 expectRegistry(fx("registry/dup-id.json"), "registry/dup-id", 1, "duplicate app id 'wedding-cutdown'"); // guard MUST-FIX 1
 
 // --- formatter: contents + forbidden-network cleanliness ---

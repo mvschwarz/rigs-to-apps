@@ -1,0 +1,533 @@
+{
+  "snapshot_version": 1,
+  "id": "pm-team",
+  "title": "PM team",
+  "summary": "A product-management rig: a PM lead runs the feature flow from validation to handoff, with a researcher for market intelligence and a coder for mockups and prototypes.",
+  "tags": [
+    "product",
+    "research",
+    "prototyping"
+  ],
+  "author": {
+    "name": "OpenRig",
+    "url": "https://github.com/mvschwarz/openrig"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/openrig",
+    "ref": "f6e5df150b790ed534f8a7fdbc2bde16e994634a",
+    "spec": "packages/daemon/specs/rigs/focused/pm-team/rig.yaml",
+    "spec_dir": "packages/daemon/specs/rigs/focused/pm-team",
+    "blob_base": "https://github.com/mvschwarz/openrig/blob/f6e5df150b790ed534f8a7fdbc2bde16e994634a/",
+    "tree_url": "https://github.com/mvschwarz/openrig/tree/f6e5df150b790ed534f8a7fdbc2bde16e994634a",
+    "bundle": null
+  },
+  "parsed_by": {
+    "openrig": "0.5.14",
+    "parsers": "RigSpecCodec + RigSpecSchema + AgentSpec (parseAgentSpec)",
+    "note": "Read from OpenRig's internal, version-coupled modules — not a public OpenRig export."
+  },
+  "topology": {
+    "pods": [
+      {
+        "id": "pm",
+        "label": "Product Management",
+        "members": [
+          {
+            "id": "lead",
+            "label": null,
+            "runtime": "claude-code",
+            "model": null,
+            "agent": "packages/daemon/specs/agents/product-management/pm",
+            "agent_ref": "local:../../../agents/product-management/pm",
+            "cwd": "."
+          },
+          {
+            "id": "researcher",
+            "label": null,
+            "runtime": "codex",
+            "model": null,
+            "agent": "packages/daemon/specs/agents/research/analyst",
+            "agent_ref": "local:../../../agents/research/analyst",
+            "cwd": "."
+          }
+        ]
+      },
+      {
+        "id": "dev",
+        "label": "Development Support",
+        "members": [
+          {
+            "id": "coder",
+            "label": null,
+            "runtime": "claude-code",
+            "model": null,
+            "agent": "packages/daemon/specs/agents/development/implementer",
+            "agent_ref": "local:../../../agents/development/implementer",
+            "cwd": "."
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "delegates_to",
+        "from": "pm.lead",
+        "to": "pm.researcher"
+      },
+      {
+        "kind": "escalates_to",
+        "from": "pm.researcher",
+        "to": "pm.lead"
+      },
+      {
+        "kind": "delegates_to",
+        "from": "pm.lead",
+        "to": "dev.coder"
+      },
+      {
+        "kind": "can_observe",
+        "from": "dev.coder",
+        "to": "pm.researcher"
+      },
+      {
+        "kind": "escalates_to",
+        "from": "dev.coder",
+        "to": "pm.lead"
+      }
+    ]
+  },
+  "agents": [
+    {
+      "path": "packages/daemon/specs/agents/development/implementer",
+      "name": "implementer",
+      "version": "1.0",
+      "runtime": "claude-code",
+      "model": null,
+      "imports": [
+        "packages/daemon/specs/agents/shared"
+      ],
+      "plugins": [
+        "shared:openrig-core"
+      ],
+      "skills": [
+        "development-team",
+        "systematic-debugging",
+        "test-driven-development",
+        "verification-before-completion"
+      ]
+    },
+    {
+      "path": "packages/daemon/specs/agents/product-management/pm",
+      "name": "pm",
+      "version": "1.0",
+      "runtime": "claude-code",
+      "model": null,
+      "imports": [
+        "packages/daemon/specs/agents/shared"
+      ],
+      "plugins": [
+        "shared:openrig-core"
+      ],
+      "skills": [
+        "backlog-capture",
+        "context-builder",
+        "exec-summary",
+        "office-hours",
+        "plan-review",
+        "requirements-writer",
+        "ui-mockup"
+      ]
+    },
+    {
+      "path": "packages/daemon/specs/agents/research/analyst",
+      "name": "analyst",
+      "version": "1.0",
+      "runtime": "claude-code",
+      "model": null,
+      "imports": [
+        "packages/daemon/specs/agents/shared"
+      ],
+      "plugins": [
+        "shared:openrig-core"
+      ],
+      "skills": []
+    },
+    {
+      "path": "packages/daemon/specs/agents/shared",
+      "name": "shared",
+      "version": "1.0",
+      "runtime": null,
+      "model": null,
+      "imports": [],
+      "plugins": [],
+      "skills": []
+    }
+  ],
+  "requirements": {
+    "runtimes": [
+      "claude-code",
+      "codex"
+    ],
+    "plugins": [
+      "shared:openrig-core"
+    ]
+  },
+  "risks": [
+    {
+      "id": "host-plugins",
+      "label": "Profile plugins resolve on your host",
+      "detail": "Plugins (shared:openrig-core) are not vendored; they resolve from your own OpenRig install."
+    },
+    {
+      "id": "no-author-auth",
+      "label": "Not an author signature",
+      "detail": "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them."
+    }
+  ],
+  "files": {
+    "count": 64,
+    "bytes": 461263,
+    "entries": [
+      {
+        "path": "packages/daemon/specs/agents/development/implementer/agent.yaml",
+        "bytes": 726,
+        "sha256": "75623d7787af30fc9dc61ab499b54e5e159a9077773801397f34fe741e7bbf75"
+      },
+      {
+        "path": "packages/daemon/specs/agents/development/implementer/guidance/role.md",
+        "bytes": 1225,
+        "sha256": "dd6eae4903d032d841ceb244d4aee3a927d31bcd9c778705489155bc5cc0eccb"
+      },
+      {
+        "path": "packages/daemon/specs/agents/product-management/pm/agent.yaml",
+        "bytes": 941,
+        "sha256": "175cb807c506e6ea9c8a4f186fa178933d7f0659d2d35ea51e83688eef620023"
+      },
+      {
+        "path": "packages/daemon/specs/agents/product-management/pm/guidance/role.md",
+        "bytes": 2982,
+        "sha256": "a17496be701fef45e96f489d2a271c0fdfa2fc7b8a28ace1208a4821492d54fc"
+      },
+      {
+        "path": "packages/daemon/specs/agents/research/analyst/agent.yaml",
+        "bytes": 633,
+        "sha256": "3c0330cb1769e7b53e21ffdb73c243c92c6fd57053389b25b963dccfae628896"
+      },
+      {
+        "path": "packages/daemon/specs/agents/research/analyst/guidance/role.md",
+        "bytes": 1130,
+        "sha256": "b0f7d25dc65ece3895b2c18836511f6f14e7f6622851757bd6c46cd508226ba9"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/agent.yaml",
+        "bytes": 2113,
+        "sha256": "b0ef9d89dd752e9204e8007fa17a8cb609a173c0b539b3a6675bd1984df13cca"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/runtime/claude-activity-hooks.json",
+        "bytes": 300,
+        "sha256": "1555916b0c13a02eeca2767f3d90822320572704db189d8c97e2d1b62ca57428"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/runtime/claude-mcp.fragment.json",
+        "bytes": 196,
+        "sha256": "ff1f9ed2cf9b13172f1efa6f5153b389c1518f54efe520bc4a4396b3fc048677"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/runtime/claude-settings.fragment.json",
+        "bytes": 120,
+        "sha256": "e3c43ee60d53bf5f680e9417eea16b0a4e61994992dac4194fd4541f6e71dcda"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/runtime/codex-config.fragment.toml",
+        "bytes": 110,
+        "sha256": "9e28e9bd20de05c291a3ca91109421665fcf96ca702b69b1a971a06075c3a493"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/agent-starters/SKILL.md",
+        "bytes": 7052,
+        "sha256": "66cbaa251b05cde6a09f51b08c70ea78c6c4f75ae5db0f95baa15b8255714a1d"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/agent-startup-and-context-ingestion/SKILL.md",
+        "bytes": 7166,
+        "sha256": "ed9a3fba75d9c53d44d3fb2a9b4703a1bdb5d13e78e4e34f18c2887c23c9d248"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/cross-host-rig-commands/SKILL.md",
+        "bytes": 5376,
+        "sha256": "844a578d0f51cf8f02f8bfd7ffb3bbd6a37d511f721266c0d758c49157c1447a"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/human-in-the-loop/SKILL.md",
+        "bytes": 5255,
+        "sha256": "14cf0c4a0dc89179121465d4b8d81d40406427351adcdc34f875097d1e6e9ab2"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/messaging-the-human/SKILL.md",
+        "bytes": 5744,
+        "sha256": "95abf815707ad557a55b20ad5d37dcf3d61369d086c6f0c52da116206a076f05"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-architect/SKILL.md",
+        "bytes": 20523,
+        "sha256": "0c3f1b7ff5bf185c9da963905229e951ffe1fb6d45a3cc9247cb747fc1d9a59d"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-cmux/SKILL.md",
+        "bytes": 4780,
+        "sha256": "73a86eac45d68b16a38fc0a4438713c634d86061073dac96a4d9e656ea5d34dc"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-herdr/SKILL.md",
+        "bytes": 8309,
+        "sha256": "37508a02f50bb69ee97c22c37ccf70aa8e37dc0784061eb2a5ad813571eebd1a"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-skills/SKILL.md",
+        "bytes": 10302,
+        "sha256": "fee88b59cf454156ab7d04bae9ae01ce6bba01a89643f3c39fea7425df247457"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-software-factory/SKILL.md",
+        "bytes": 7869,
+        "sha256": "ecf4597abb7cca469febc614d87d6d529842f37369bac2925243d64221fabbd5"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-software-factory/references/worked-example.md",
+        "bytes": 38304,
+        "sha256": "ff5485a0e84de43188cf791cc96258abe038d035d439997f21865e33a1916bc5"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-upgrade/SKILL.md",
+        "bytes": 11444,
+        "sha256": "c3555c66abe0426e2990aec024849f644cf43320a65b8f1211e96d3b234f6e83"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-upgrade/scripts/backup-sqlite.mjs",
+        "bytes": 2435,
+        "sha256": "52fe3015a0399986b586b6603e0664f61136d2210611b1638110a7b6b06e38b4"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-upgrade/scripts/inspect-upgrade.mjs",
+        "bytes": 1582,
+        "sha256": "0f9239f3f8ad75885e985433576ffba9cf155dd8616801dd73d60bf3e9990a2a"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-upgrade/scripts/migrate-telemetry-state-0.5.9.mjs",
+        "bytes": 61540,
+        "sha256": "3d7bdb43ce0618cf1d939e08c3f91531d866ac5b6fec5c4c3e4308d61e2bfc9f"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/openrig-upgrade/scripts/refresh-managed-plugin.mjs",
+        "bytes": 5463,
+        "sha256": "cd117e3e891d6ad632f88a0ad10f5fc8a68ea724ce2715c89f45b6000307cf81"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/rig-bundles-and-shareable-artifacts/SKILL.md",
+        "bytes": 4403,
+        "sha256": "e9d5103f419b971373e374474e6ef464e05f242f3fa25e63acfc0b2106651748"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/rig-lifecycle/SKILL.md",
+        "bytes": 6129,
+        "sha256": "8346e01d532795b24c3dba63413ca662c7b44cc5eed39ee2e85568580f40adca"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/session-source-fork/SKILL.md",
+        "bytes": 9191,
+        "sha256": "b2e650d3c89c8fb9d4ccc142c4fdbc969b5286b8141cc070565abac268decba9"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/specification-system/SKILL.md",
+        "bytes": 4931,
+        "sha256": "5226d6e8b1362df89ba3d5afd82e4b4add355870132ca4b140d7f9f4324ffdc1"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/topology-mutation-and-seat-management/SKILL.md",
+        "bytes": 5683,
+        "sha256": "32dccee6817b53ef6f800fa1cff6b388d7aa82642a358f1ffed48ef71c234682"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/core/watchdog/SKILL.md",
+        "bytes": 5928,
+        "sha256": "24b2e756e3e9d067fa93a4b5fa5f48a5cce511e8b1a5b360b1c39bc09bc95d82"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/backlog-capture/SKILL.md",
+        "bytes": 2043,
+        "sha256": "345c2b47fc85e48c15c0d42bbb48fb27dd3b0ceec36bf59dc6ed20daaea47a84"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/context-builder/SKILL.md",
+        "bytes": 3409,
+        "sha256": "0134c9b0a9f196565109f7f51b6ec78d5c3e4b5982a0d7105a93b29952625b3c"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/exec-summary/SKILL.md",
+        "bytes": 2904,
+        "sha256": "ada0f42337920e7acdd94e24cad4f5c269b057e750f4a7fc627ea9efbc02fcb6"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/office-hours/SKILL.md",
+        "bytes": 5055,
+        "sha256": "c09b92957e709e43b28186883aca9e73218b412a69355051b76700efac88b4cf"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/plan-review/SKILL.md",
+        "bytes": 3386,
+        "sha256": "42f1b746d9ceae32587fc754fcc96462af44ba7f0078407f505d7a30b88a1469"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/requirements-writer/SKILL.md",
+        "bytes": 4328,
+        "sha256": "04cfb8853553f1538fd202e9804e14e6b259f3a4c12b5f255c30169cf66ed0af"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pm/ui-mockup/SKILL.md",
+        "bytes": 2626,
+        "sha256": "a597fad7dcdebf43e74e01a607e12eabf848c831c96be3da2f1aeeb12f82ef08"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pods/development-team/SKILL.md",
+        "bytes": 2883,
+        "sha256": "3d712a94a1725b543371ffc502d3f5641e3b77d9d566aa0f99a2977682241f9b"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pods/orchestration-team/SKILL.md",
+        "bytes": 19021,
+        "sha256": "d13e08782a64b92b4db3f51d083f11fd6753f06e68052dbf2da174ab5618fa90"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pods/oversight-team/SKILL.md",
+        "bytes": 6347,
+        "sha256": "a48de41350453a09b231e01a89cc1dd3d4a64e082df090a7b0e04034227d2bb4"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/pods/review-team/SKILL.md",
+        "bytes": 9209,
+        "sha256": "e669a893d5bd1d01fdd5e357a0f0f56425fc2fb845705bddc629016e04c8a6da"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/agent-browser/LOCAL-INSIGHTS.md",
+        "bytes": 6630,
+        "sha256": "3e37c298514506099c8212e32c58e78cd77781637a368a5db1acf1982d93a0f4"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/agent-browser/OPENRIG.md",
+        "bytes": 2518,
+        "sha256": "d15123689824c934b51ba572bc7c4d995651e2f606e0e53697263f4ecde108c9"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/agent-browser/SKILL.md",
+        "bytes": 16560,
+        "sha256": "f2709bae71a8c60f6a4b80a6873560cdea9632000ed4b28d082dfae58801199b"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/context-engineering/SKILL.md",
+        "bytes": 32916,
+        "sha256": "ef052238060410f8f49d94baaede14e569f3c943a7dba79ed98d4fc0a117af64"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/dogfood/SKILL.md",
+        "bytes": 10848,
+        "sha256": "8addc5d22813193649e8286b354ae2282975d75f1dda6d5d4b33d6ace47f438b"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/dogfood/references/issue-taxonomy.md",
+        "bytes": 3626,
+        "sha256": "dee7e925f7fe001903de6cc14f9656bcda90d069bbf65a2273f22202efebba09"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/dogfood/templates/dogfood-report-template.md",
+        "bytes": 1470,
+        "sha256": "55eef9286e32e595dcfca30db76352e9f1d149a78b60b54644eb701072364f35"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/frontend-design/LICENSE.txt",
+        "bytes": 10174,
+        "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/frontend-design/SKILL.md",
+        "bytes": 4733,
+        "sha256": "3897488693335f3b350292abe067e9f4a39a64af5ac6b1feb82074a36930273d"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/systematic-debugging/SKILL.md",
+        "bytes": 10116,
+        "sha256": "b2adbca870df5232f018a43f6715c7a97c3ddd9429aefa11f9248a859280c2c5"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/systematic-debugging/condition-based-waiting-example.ts",
+        "bytes": 5054,
+        "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/systematic-debugging/condition-based-waiting.md",
+        "bytes": 3516,
+        "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/systematic-debugging/defense-in-depth.md",
+        "bytes": 3650,
+        "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/systematic-debugging/find-polluter.sh",
+        "bytes": 2026,
+        "sha256": "a9b088099dde5a07e303de5ecf07604f2b9b608770125b481c8db52b85227c51"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/systematic-debugging/root-cause-tracing.md",
+        "bytes": 5327,
+        "sha256": "a81bee9448794d261b4aca8487c595d11ff4bd4e10a5f96bca1117dd32527050"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/test-driven-development/SKILL.md",
+        "bytes": 12399,
+        "sha256": "51f65d2bc71dd6fc84640bf113acf287f4e003ef325ed91cb112fce59149a298"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/test-driven-development/testing-anti-patterns.md",
+        "bytes": 8251,
+        "sha256": "bde453bc258f06543987477c837939afaa774ea2acbd9f308d702fc452bc4283"
+      },
+      {
+        "path": "packages/daemon/specs/agents/shared/skills/process/verification-before-completion/SKILL.md",
+        "bytes": 7349,
+        "sha256": "0b8cea0bb82a8ab0f015afaf84c87796e2c94eee3a83d4fa3d4461d0917950bd"
+      },
+      {
+        "path": "packages/daemon/specs/rigs/focused/pm-team/CULTURE.md",
+        "bytes": 1744,
+        "sha256": "fdccee4c0a3b98378a0201db13d73a987705cd2cb406edf29f0d8abf8c8d28ba"
+      },
+      {
+        "path": "packages/daemon/specs/rigs/focused/pm-team/rig.yaml",
+        "bytes": 1260,
+        "sha256": "a058edea36503c046c555a89ec0f8d361c15cb05e3277f41e869cf9966b26b93"
+      }
+    ]
+  },
+  "install": {
+    "status": "untested",
+    "note": "Built from shipped OpenRig commands. This exact sequence has not yet been run end to end on a clean install.",
+    "tested_on": null,
+    "steps": [
+      {
+        "label": "Get the source at the pinned revision",
+        "command": "git clone https://github.com/mvschwarz/openrig openrig && git -C openrig checkout f6e5df150b790ed534f8a7fdbc2bde16e994634a"
+      },
+      {
+        "label": "Plan: runs preflight (including your runtimes' --version checks) and writes a bootstrap record",
+        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd /path/to/your/project --plan"
+      },
+      {
+        "label": "Apply and launch: starts the rig's seats with /path/to/your/project as their stable project directory",
+        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd /path/to/your/project"
+      }
+    ]
+  }
+}

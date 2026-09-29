@@ -68,3 +68,57 @@ manifest is validated, and **app ids must be unique across the list** — two
 entries resolving to the same id (same path, or distinct paths whose leaf dir is
 the same) fail `duplicate app id '<id>'`. `REGISTRY_ROOT` is env-overridable
 (default: cwd). Empty (`[]`) validates as `OK registry (0 manifests)`.
+
+# rig.json schema (rig-bundle listings, descriptor v1)
+
+A rig listing is a **small presentation descriptor** at `bundles/<id>/rig.json`. It never restates runtime
+truth: pods, members, edges, agents and files are **derived at import** from the author's real `rig.yaml` by
+OpenRig's own parsers, so any key naming them is unknown and fails. `tools/validate.mjs` is still the authority;
+registry entries are dispatched by filename (`app.json` or `rig.json`), and ids are unique across both kinds.
+
+| Field | Shape | Required | Notes |
+|---|---|---|---|
+| `descriptor_version` | integer | yes | known value only (`1`). |
+| `kind` | string | yes | exactly `"rig-bundle"`. |
+| `id` | string | yes | lowercase-kebab; equals the directory containing `rig.json`. |
+| `title` | string | yes | at most 80 chars. |
+| `summary` | string | yes | at most 240 chars. |
+| `tags[]` | `[string]` | yes (may be `[]`) | lowercase-kebab, unique, at most 8. |
+| `author` | `{ name, url }` | yes | `url` must be `https://`. Credit is first-class. |
+| `license` | string | yes | an SPDX identifier, or `NOASSERTION`. |
+| `source.repo` | string | yes | a public `https://github.com/<owner>/<repo>` URL, no `.git`. |
+| `source.ref` | string | yes | a **full 40-character commit SHA**. Branches and tags move; a listing pins. |
+| `source.spec` | string | yes | repo-relative path to the `rig.yaml` entrypoint (the primary route). No `..`, `.`, absolute or `\`. |
+| `source.bundle` | string | optional | repo-relative path to a prebuilt `.rigbundle` at the same pin. Recorded, never opened. |
+| `media.screenshots[]` | `[{ src, alt }]` | yes (may be `[]`) | png/jpg/webp/gif inside the listing dir, a regular file, at most 2 MB, at most 6. Same realpath containment as apps. |
+
+A **listed** rig (in `registry.json`) must have a `snapshot.json` beside it, produced by `tools/import-bundle.mjs`.
+
+## Import (`tools/import-bundle.mjs`)
+
+`node tools/import-bundle.mjs bundles/<id>/rig.json --cache <dir>`
+
+1. Validates the descriptor with `tools/validate.mjs`.
+2. Fetches **exactly** `source.ref` with git: hooks disabled, no submodules, no LFS smudge, no prompts. Bounded
+   (20 000 files / 200 MB).
+3. Reads `source.spec` (at most 256 KB, realpath-contained) and parses it with **OpenRig's own**
+   `RigSpecCodec` + `RigSpecSchema`; follows each member's `local:` agent_ref and every AgentSpec `imports`
+   entry with OpenRig's AgentSpec parser. No hand parser, no fallback.
+4. Lists (and hashes) the spec's directory, the culture file, docs, and every referenced agent directory.
+   Bounded (2 000 files / 20 MB); a symlink escaping the repo fails.
+5. Writes `snapshot.json` atomically: topology, agents, files, runtimes, plugins, honest risk labels and the
+   install steps (marked `untested` until exercised).
+
+**Nothing from the author's repo is executed, packed or launched** — no `rig bundle create`, `install` or `up`,
+and so no host/session provenance is ever read or stamped. A final scan refuses to write a snapshot that names
+this host, home directory, session or the import cache. Any failure prints `FAIL: <reason>` and leaves the
+previous `snapshot.json` byte-for-byte intact. Two imports at one pin are byte-identical.
+
+**Version coupling.** OpenRig exposes no public parsed-spec output, so the importer loads the parsers from the
+active install's `daemon/dist/domain/` and fails loudly unless it is exactly `PARSER_CLI_VERSION`. Bumping it
+is deliberate: re-import every listing and diff. A supported export (or a parsed spec on
+`rig bundle inspect --json`) would retire this.
+
+`node --test tools/import-bundle.test.mjs` covers valid import, determinism, invalid descriptors, unsafe paths
+(`..`, absolute, symlink escape, oversized, escaping `agent_ref`), failed fetch and parser rejection (both
+preserving the last good snapshot), the private-term refusal, and the optional bundle.

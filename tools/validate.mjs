@@ -204,6 +204,130 @@ function validateManifest(manifestPath) {
   return m.id;
 }
 
+// --- rig-bundle descriptor validation ------------------------------------
+//
+// A rig-bundle listing is a SMALL presentation descriptor at
+// bundles/<id>/rig.json. It never restates runtime truth: pods, members,
+// edges, agents and files are DERIVED at import from the author's real spec
+// (OpenRig's own parser + `rig bundle inspect`), so any key naming them is
+// unknown here and fails. Same discipline as app.json: fail-first, unknown
+// keys at every level, field-scoped path safety.
+
+const RIG_KNOWN = {
+  root: ["descriptor_version", "kind", "id", "title", "summary", "tags", "author", "license", "source", "media"],
+  author: ["name", "url"],
+  source: ["repo", "ref", "spec", "bundle"],
+  media: ["screenshots"],
+  screenshot: ["src", "alt"],
+};
+const GITHUB_REPO = /^https:\/\/github\.com\/[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9._-]{1,100}$/;
+const FULL_SHA = /^[0-9a-f]{40}$/;
+const LICENSE = /^[A-Za-z0-9.+-]{1,64}$/; // an SPDX id, or NOASSERTION
+const IMAGE_EXT = /\.(png|jpe?g|webp|gif)$/i;
+const MAX_DESCRIPTOR_BYTES = 64 * 1024;
+const MAX_SCREENSHOT_BYTES = 2 * 1024 * 1024;
+const MAX_SCREENSHOTS = 6;
+const MAX_TAGS = 8;
+
+// source.spec lives in the AUTHOR'S repo, so only its lexical shape is
+// checkable here; the importer re-checks it against the fetched checkout
+// with realpath containment.
+function checkRepoRelative(field, rel, ext = /\.ya?ml$/, what = "a .yaml rig spec") {
+  if (!isStr(rel) || rel === "") fail(`${field} must be a non-empty string`);
+  if (rel.length > 300) fail(`${field} is too long`);
+  const segs = rel.split("/");
+  if (path.isAbsolute(rel) || rel.includes("\\") || segs.includes("..") || segs.includes(".")) {
+    fail(`path escapes source repo: ${field}`);
+  }
+  if (!ext.test(rel)) fail(`${field} must name ${what}`);
+}
+
+function validateRigDescriptor(descriptorPath, { requireSnapshot = false } = {}) {
+  let stat;
+  try { stat = fs.statSync(descriptorPath); } catch { fail(`cannot read descriptor: ${descriptorPath}`); }
+  if (stat.size > MAX_DESCRIPTOR_BYTES) fail(`descriptor too large (${stat.size} > ${MAX_DESCRIPTOR_BYTES} bytes)`);
+  let d;
+  try { d = JSON.parse(fs.readFileSync(descriptorPath, "utf8")); }
+  catch (e) { fail(`invalid JSON: ${String(e.message)}`); }
+
+  guardProto(d);
+  if (!isObj(d)) fail("descriptor must be a JSON object");
+
+  const dirReal = fs.realpathSync(path.dirname(path.resolve(descriptorPath)));
+  const dirName = path.basename(dirReal);
+  if (!isStr(d.id)) fail("id must be a string");
+  if (!kebab(d.id)) fail("id must be lowercase-kebab");
+  if (d.id !== dirName) fail(`id must equal the bundle directory name ('${dirName}')`);
+
+  unknownScan(d, RIG_KNOWN.root);
+  if (isObj(d.author)) unknownScan(d.author, RIG_KNOWN.author);
+  if (isObj(d.source)) unknownScan(d.source, RIG_KNOWN.source);
+  if (isObj(d.media)) unknownScan(d.media, RIG_KNOWN.media);
+  if (isObj(d.media) && Array.isArray(d.media.screenshots))
+    for (const s of d.media.screenshots) if (isObj(s)) unknownScan(s, RIG_KNOWN.screenshot);
+
+  if (!isInt(d.descriptor_version)) fail("descriptor_version must be an integer");
+  if (d.descriptor_version !== 1) fail(`unknown descriptor_version ${d.descriptor_version}`);
+  if (d.kind !== "rig-bundle") fail("kind must be \"rig-bundle\"");
+
+  if (!isStr(d.title) || d.title.trim() === "" || d.title.length > 80) fail("title must be a non-empty string of at most 80 chars");
+  if (!isStr(d.summary) || d.summary.trim() === "" || d.summary.length > 240) fail("summary must be a non-empty string of at most 240 chars");
+
+  if (!Array.isArray(d.tags)) fail("tags must be an array (may be [])");
+  if (d.tags.length > MAX_TAGS) fail(`at most ${MAX_TAGS} tags`);
+  for (const t of d.tags) if (!isStr(t) || !kebab(t)) fail("each tag must be lowercase-kebab");
+  if (new Set(d.tags).size !== d.tags.length) fail("duplicate tag");
+
+  if (!isObj(d.author)) fail("author must be an object");
+  if (!isStr(d.author.name) || d.author.name.trim() === "") fail("author requires name + url");
+  if (!isStr(d.author.url) || !d.author.url.startsWith("https://")) fail("author.url must be an https URL");
+
+  if (!isStr(d.license) || !LICENSE.test(d.license)) fail("license must be an SPDX identifier (or NOASSERTION)");
+
+  if (!isObj(d.source)) fail("source must be an object");
+  if (!isStr(d.source.repo) || !GITHUB_REPO.test(d.source.repo) || d.source.repo.endsWith(".git"))
+    fail("source.repo must be a public https://github.com/<owner>/<repo> URL");
+  if (!isStr(d.source.ref) || !FULL_SHA.test(d.source.ref))
+    fail("source.ref must be a full 40-character commit SHA (branches and tags move; a listing pins)");
+  // spec is the primary route (a pinned rig.yaml entrypoint); bundle is an
+  // OPTIONAL prebuilt .rigbundle in the same repo at the same pin.
+  checkRepoRelative("source.spec", d.source.spec);
+  if ("bundle" in d.source) checkRepoRelative("source.bundle", d.source.bundle, /\.rigbundle$/, "a .rigbundle file");
+
+  if (!isObj(d.media)) fail("media object is required");
+  if (!Array.isArray(d.media.screenshots)) fail("media.screenshots must be an array (may be [])");
+  if (d.media.screenshots.length > MAX_SCREENSHOTS) fail(`at most ${MAX_SCREENSHOTS} screenshots`);
+  for (const s of d.media.screenshots) {
+    if (!isObj(s) || !isStr(s.src) || !isStr(s.alt) || s.alt.trim() === "") fail("each screenshot needs src + alt");
+    if (!IMAGE_EXT.test(s.src)) fail("media.screenshots[].src must be a png/jpg/webp/gif image");
+    checkRelFileInside("media.screenshots[].src", s.src, dirReal);
+    if (fs.statSync(path.resolve(dirReal, s.src)).size > MAX_SCREENSHOT_BYTES)
+      fail(`screenshot too large (> ${MAX_SCREENSHOT_BYTES} bytes): ${s.src}`);
+  }
+
+  // A LISTED bundle must have a successful import beside it — the site renders
+  // the snapshot, never the descriptor alone. A snapshot at an OLDER ref than
+  // the descriptor is allowed: that is a pending refresh, and the page shows
+  // the last good import with its own pinned ref.
+  if (requireSnapshot) {
+    const snap = path.join(dirReal, "snapshot.json");
+    if (!fs.existsSync(snap) || !fs.statSync(snap).isFile()) fail(`no snapshot.json for '${d.id}' — run tools/import-bundle.mjs`);
+    let s;
+    try { s = JSON.parse(fs.readFileSync(snap, "utf8")); } catch (e) { fail(`snapshot.json for '${d.id}' is invalid JSON: ${String(e.message)}`); }
+    guardProto(s);
+    if (!isObj(s) || s.id !== d.id) fail(`snapshot.json id does not match descriptor '${d.id}'`);
+  }
+  return d.id;
+}
+
+// Which kind a registry entry is, by its fixed filename. Only these two.
+function kindOf(entry) {
+  const base = entry.split(/[\\/]/).pop();
+  if (base === "app.json") return "app";
+  if (base === "rig.json") return "rig-bundle";
+  fail(`registry entry must name an app.json or rig.json: ${entry}`);
+}
+
 // --- registry validation -------------------------------------------------
 
 function validateRegistry(registryPath) {
@@ -231,7 +355,9 @@ function validateRegistry(registryPath) {
     if (!real || (real !== REGISTRY_ROOT && !real.startsWith(REGISTRY_ROOT + path.sep))) {
       fail("registry path escapes root (absolute or ..)");
     }
-    const id = validateManifest(mp);
+    // Ids are unique ACROSS KINDS: an app and a rig bundle sharing an id would
+    // collide on the site's shared namespace of pages and search.
+    const id = kindOf(entry) === "rig-bundle" ? validateRigDescriptor(mp, { requireSnapshot: true }) : validateManifest(mp);
     if (seenIds.has(id)) fail(`duplicate app id '${id}'`);
     seenIds.add(id);
   }
@@ -249,8 +375,8 @@ function main() {
     return `OK ${validateRegistry(p)}`;
   }
   const p = args[0];
-  if (!p) fail("usage: validate.mjs <app.json> | --registry <list.json>");
-  return `OK ${validateManifest(p)}`;
+  if (!p) fail("usage: validate.mjs <app.json|rig.json> | --registry <list.json>");
+  return `OK ${kindOf(p) === "rig-bundle" ? validateRigDescriptor(p) : validateManifest(p)}`;
 }
 
 try {

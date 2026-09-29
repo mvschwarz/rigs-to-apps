@@ -1,0 +1,23 @@
+{
+  "descriptor_version": 1,
+  "kind": "rig-bundle",
+  "id": "tiny-rig",
+  "title": "Tiny rig",
+  "summary": "A two-member example rig.",
+  "tags": [
+    "example"
+  ],
+  "author": {
+    "name": "Example Author",
+    "url": "https://github.com/example-author"
+  },
+  "license": "MIT",
+  "source": {
+    "repo": "https://github.com/example-author/tiny-rig",
+    "ref": "0000000000000000000000000000000000000000",
+    "spec": "../rig.yaml"
+  },
+  "media": {
+    "screenshots": []
+  }
+}

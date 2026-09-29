@@ -1,0 +1,25 @@
+{
+  "descriptor_version": 1,
+  "kind": "rig-bundle",
+  "id": "pm-team",
+  "title": "PM team",
+  "summary": "A product-management rig: a PM lead runs the feature flow from validation to handoff, with a researcher for market intelligence and a coder for mockups and prototypes.",
+  "tags": [
+    "product",
+    "research",
+    "prototyping"
+  ],
+  "author": {
+    "name": "OpenRig",
+    "url": "https://github.com/mvschwarz/openrig"
+  },
+  "license": "Apache-2.0",
+  "source": {
+    "repo": "https://github.com/mvschwarz/openrig",
+    "ref": "f6e5df150b790ed534f8a7fdbc2bde16e994634a",
+    "spec": "packages/daemon/specs/rigs/focused/pm-team/rig.yaml"
+  },
+  "media": {
+    "screenshots": []
+  }
+}
