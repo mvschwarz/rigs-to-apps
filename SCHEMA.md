@@ -106,8 +106,16 @@ A **listed** rig (in `registry.json`) must have a `snapshot.json` beside it, pro
    entry with OpenRig's AgentSpec parser. No hand parser, no fallback.
 4. Lists (and hashes) the spec's directory, the culture file, docs, and every referenced agent directory.
    Bounded (2 000 files / 20 MB); a symlink escaping the repo fails.
-5. Writes `snapshot.json` atomically: topology, agents, files, runtimes, plugins, honest risk labels and the
-   install steps (marked `untested` until exercised).
+5. Writes `snapshot.json` atomically: topology, agents, files, runtimes, per-member model pins, plugins, honest
+   risk labels and the install procedure (`git clone` → `checkout <sha>` → project dir → `rig up … --plan` →
+   `rig up … --yes`), exercised by QA on OpenRig 0.6.1.
+
+## Launch-tested (`verified.json`, maintainer-owned)
+
+A listing reads **"launch tested on OpenRig <v>"** only if `verified.json` at the registry root has an entry
+`{ id, ref, openrig, runtimes }` for that exact id **and** full commit SHA — a QA fact recorded by maintainers,
+never by the author or the importer. A new ref loses the stamp until it is re-run. Everything else reads
+**"parsed, not launch-tested"**.
 
 **Nothing from the author's repo is executed, packed or launched** — no `rig bundle create`, `install` or `up`,
 and so no host/session provenance is ever read or stamped. A final scan refuses to write a snapshot that names

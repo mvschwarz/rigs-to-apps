@@ -41,6 +41,11 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const PARSER_CLI_VERSION = "0.5.14";
 const SNAPSHOT_VERSION = 1;
 
+// The install PROCEDURE's exercised version — the clone/checkout/init/up
+// sequence was run end to end by QA on a clean instance. Distinct from any
+// one listing being launch-tested (that is verified.json, per id + commit).
+export const TESTED_PROCEDURE = { openrig: "0.6.1", against: "the first-project rig on a clean VPS instance" };
+
 // Bounds. Every one is a refusal with a named reason, never a silent truncation.
 export const LIMITS = {
   checkoutFiles: 20000,
@@ -224,6 +229,22 @@ function parseAgent(text, parser, where) {
   return parser.agent.normalize(raw);
 }
 
+// verified.json (registry root, maintainer-owned): [{ id, ref, openrig,
+// runtimes: { <runtime>: <version> } }]. Absent file = nothing verified.
+function readVerified(registryRoot) {
+  const p = path.join(registryRoot, "verified.json");
+  if (!fs.existsSync(p)) return [];
+  let list;
+  try { list = JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { fail(`verified.json is invalid JSON: ${String(e.message)}`); }
+  if (!Array.isArray(list)) fail("verified.json must be a list");
+  for (const v of list) {
+    if (!isObj(v) || typeof v.id !== "string" || !/^[0-9a-f]{40}$/.test(v.ref ?? "") || typeof v.openrig !== "string" || !isObj(v.runtimes)) {
+      fail("verified.json entries need { id, ref (full sha), openrig, runtimes{} }");
+    }
+  }
+  return list;
+}
+
 // `local:<path>` refs are resolved inside the checkout; anything else (builtin:,
 // library refs) is recorded as-is and never resolved here.
 const localRef = (ref) => (typeof ref === "string" && ref.startsWith("local:") ? ref.slice("local:".length) : null);
@@ -243,12 +264,15 @@ export async function importBundle({
   rig = runRig,
   validate = validateWithRegistryValidator,
   leakTerms = defaultLeakTerms(),
+  registryRoot,
 }) {
   if (!cacheDir) fail("usage: import-bundle.mjs <bundles/<id>/rig.json> --cache <dir>");
   const v = validate(descriptorPath);
   if (v.status !== 0) fail(`descriptor invalid — ${(v.stdout + v.stderr).trim().replace(/^FAIL:\s*/, "")}`);
   const d = JSON.parse(fs.readFileSync(descriptorPath, "utf8"));
   const snapshotPath = path.join(path.dirname(path.resolve(descriptorPath)), "snapshot.json");
+  // bundles/<id>/rig.json -> the registry root two levels up
+  if (!registryRoot) registryRoot = path.resolve(path.dirname(path.resolve(descriptorPath)), "..", "..");
   const cache = path.resolve(cacheDir);
   fs.mkdirSync(cache, { recursive: true });
   const cacheReal = fs.realpathSync(cache);
@@ -355,14 +379,30 @@ export async function importBundle({
   const models = [...new Set([...pods.flatMap((p) => p.members.map((m) => m.model)), ...agentList.map((a) => a.model)].filter(Boolean))].sort(byStr);
   const absoluteCwds = pods.flatMap((p) => p.members.filter((m) => m.cwd && m.cwd.startsWith("/")).map((m) => `${p.id}.${m.id}`));
   const risks = [];
-  if (models.length) risks.push({ id: "model-pins", label: "Model pins are copied verbatim", detail: `This rig pins ${models.join(", ")}. Your runtime must offer that exact model.` });
+  if (models.length) risks.push({ id: "model-pins", label: "Model pins are copied verbatim", detail: `This rig pins ${models.join(", ")}. You need a runtime version that supports each pinned model; an older runtime refuses it at launch.` });
   if (plugins.length) risks.push({ id: "host-plugins", label: "Profile plugins resolve on your host", detail: `Plugins (${plugins.join(", ")}) are not vendored; they resolve from your own OpenRig install.` });
   if (absoluteCwds.length) risks.push({ id: "absolute-cwd", label: "Absolute working directories", detail: `Members ${absoluteCwds.join(", ")} name an absolute cwd, which is copied verbatim.` });
   if (spec.services) risks.push({ id: "services", label: "Starts a managed service", detail: "This rig declares a services block (for example Docker Compose) that boots before any seat." });
   if (unresolved.size) risks.push({ id: "non-local-refs", label: "References outside this repo", detail: `Resolved by your OpenRig install, not shown here: ${[...unresolved].sort(byStr).join(", ")}.` });
   risks.push({ id: "no-author-auth", label: "Not an author signature", detail: "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them." });
 
+  // Each member's EFFECTIVE model pin — the member's own, else its AgentSpec
+  // default. Pins are copied verbatim and a runtime too old for the model
+  // refuses it, so every pin is surfaced beside the runtime that must support it.
+  const agentByPath = new Map(agentList.map((a) => [a.path, a]));
+  const memberModels = pods.flatMap((p) => p.members.map((m) => ({
+    member: `${p.id}.${m.id}`,
+    runtime: m.runtime ?? agentByPath.get(m.agent)?.runtime ?? null,
+    model: m.model ?? agentByPath.get(m.agent)?.model ?? null,
+  }))).filter((x) => x.model);
+
+  // LAUNCH-TESTED is a QA fact, not something the author or this importer can
+  // claim: it comes only from the maintainer-owned verified.json, and only for
+  // this exact id AND commit. A new ref loses the stamp until it is re-run.
+  const launchTested = readVerified(registryRoot).find((v) => v.id === d.id && v.ref === d.source.ref) ?? null;
+
   const dir = d.source.repo.split("/").pop();
+  const specAbs = `"$PWD/${dir}/${d.source.spec}"`;
   const snapshot = {
     snapshot_version: SNAPSHOT_VERSION,
     id: d.id,
@@ -387,17 +427,30 @@ export async function importBundle({
     },
     topology: { pods, edges },
     agents: agentList,
-    requirements: { runtimes, plugins },
+    requirements: {
+      // the OpenRig version the install PROCEDURE below was exercised on
+      openrig: { min: TESTED_PROCEDURE.openrig, daemon: "running" },
+      runtimes,
+      models: memberModels,
+      plugins,
+    },
     risks,
     files: { count: files.length, bytes: files.reduce((n, f) => n + f.bytes, 0), entries: files },
     install: {
-      status: "untested",
-      note: "Built from shipped OpenRig commands. This exact sequence has not yet been run end to end on a clean install.",
-      tested_on: null,
+      launch_tested: launchTested
+        ? { openrig: launchTested.openrig, runtimes: launchTested.runtimes }
+        : null,
+      status: launchTested ? `launch tested on OpenRig ${launchTested.openrig}` : "parsed, not launch-tested",
+      procedure_note: `This procedure was exercised end to end on OpenRig ${TESTED_PROCEDURE.openrig} with ${TESTED_PROCEDURE.against}.`,
       steps: [
-        { label: "Get the source at the pinned revision", command: `git clone ${d.source.repo} ${dir} && git -C ${dir} checkout ${d.source.ref}` },
-        { label: "Plan: runs preflight (including your runtimes' --version checks) and writes a bootstrap record", command: `rig up "$PWD/${dir}/${d.source.spec}" --cwd /path/to/your/project --plan` },
-        { label: "Apply and launch: starts the rig's seats with /path/to/your/project as their stable project directory", command: `rig up "$PWD/${dir}/${d.source.spec}" --cwd /path/to/your/project` },
+        { label: "Get the source", command: `git clone ${d.source.repo} ${dir}` },
+        { label: "Pin the exact reviewed revision", command: `git -C ${dir} checkout ${d.source.ref}` },
+        { label: "Make a stable project directory for the rig", command: "mkdir -p my-project && git -C my-project init" },
+        { label: "Preview — runs the version preflight and writes a record; launches nothing", command: `rig up ${specAbs} --cwd "$PWD/my-project" --plan` },
+        { label: "Apply and launch — starts the rig's agents in my-project", command: `rig up ${specAbs} --cwd "$PWD/my-project" --yes` },
+      ],
+      cautions: [
+        "Before launching again after `rig down <rig>`, remove it with `rig down <rig> --delete`, or you get a second rig with the same name.",
       ],
     },
   };

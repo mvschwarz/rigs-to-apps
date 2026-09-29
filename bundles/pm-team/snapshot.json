@@ -165,10 +165,15 @@
     }
   ],
   "requirements": {
+    "openrig": {
+      "min": "0.6.1",
+      "daemon": "running"
+    },
     "runtimes": [
       "claude-code",
       "codex"
     ],
+    "models": [],
     "plugins": [
       "shared:openrig-core"
     ]
@@ -512,22 +517,33 @@
     ]
   },
   "install": {
-    "status": "untested",
-    "note": "Built from shipped OpenRig commands. This exact sequence has not yet been run end to end on a clean install.",
-    "tested_on": null,
+    "launch_tested": null,
+    "status": "parsed, not launch-tested",
+    "procedure_note": "This procedure was exercised end to end on OpenRig 0.6.1 with the first-project rig on a clean VPS instance.",
     "steps": [
       {
-        "label": "Get the source at the pinned revision",
-        "command": "git clone https://github.com/mvschwarz/openrig openrig && git -C openrig checkout f6e5df150b790ed534f8a7fdbc2bde16e994634a"
+        "label": "Get the source",
+        "command": "git clone https://github.com/mvschwarz/openrig openrig"
       },
       {
-        "label": "Plan: runs preflight (including your runtimes' --version checks) and writes a bootstrap record",
-        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd /path/to/your/project --plan"
+        "label": "Pin the exact reviewed revision",
+        "command": "git -C openrig checkout f6e5df150b790ed534f8a7fdbc2bde16e994634a"
       },
       {
-        "label": "Apply and launch: starts the rig's seats with /path/to/your/project as their stable project directory",
-        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd /path/to/your/project"
+        "label": "Make a stable project directory for the rig",
+        "command": "mkdir -p my-project && git -C my-project init"
+      },
+      {
+        "label": "Preview — runs the version preflight and writes a record; launches nothing",
+        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd \"$PWD/my-project\" --plan"
+      },
+      {
+        "label": "Apply and launch — starts the rig's agents in my-project",
+        "command": "rig up \"$PWD/openrig/packages/daemon/specs/rigs/focused/pm-team/rig.yaml\" --cwd \"$PWD/my-project\" --yes"
       }
+    ],
+    "cautions": [
+      "Before launching again after `rig down <rig>`, remove it with `rig down <rig> --delete`, or you get a second rig with the same name."
     ]
   }
 }

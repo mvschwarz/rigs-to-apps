@@ -110,7 +110,11 @@ test("valid import: topology, agents and imports, files and risks come from the 
   assert.deepEqual(s.requirements.runtimes, ["claude-code", "codex"]);
   assert.deepEqual(s.risks.map((r) => r.id), ["model-pins", "host-plugins", "no-author-auth"]);
   assert.match(s.risks[0].detail, /gpt-6-astra/);
-  assert.equal(s.install.status, "untested");
+  assert.equal(s.install.status, "parsed, not launch-tested");
+  assert.equal(s.install.launch_tested, null);
+  assert.deepEqual(s.requirements.models, [{ member: "core.helper", runtime: "codex", model: "gpt-6-astra" }]);
+  assert.equal(s.requirements.openrig.min, "0.6.1");
+  assert.ok(s.install.steps.some((st) => /--plan$/.test(st.command)) && s.install.steps.some((st) => /--yes$/.test(st.command)));
   assert.ok(s.install.steps.every((st) => !/bundle (create|install)/.test(st.command)), "the install block still packs a bundle");
 });
 
@@ -202,6 +206,20 @@ test("an optional prebuilt .rigbundle is recorded (hashed, linked), never opened
   assert.equal(s.source.bundle.path, "dist/tiny.rigbundle");
   assert.match(s.source.bundle.sha256, /^[0-9a-f]{64}$/);
   await assert.rejects(run(registry({ source: { bundle: "dist/missing.rigbundle" } }), authorRepo()), /source.bundle not found/);
+});
+
+test("launch-tested comes ONLY from verified.json, and only for the exact id + commit", async () => {
+  const reg = registry();
+  const root = path.resolve(path.dirname(reg.descriptorPath), "..", "..");
+  fs.writeFileSync(path.join(root, "verified.json"), JSON.stringify([{ id: "tiny", ref: "b".repeat(40), openrig: "0.6.1", runtimes: { codex: "0.159" } }]));
+  await run(reg, authorRepo());
+  let s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
+  assert.equal(s.install.launch_tested, null, "a verification for a DIFFERENT commit was applied to this one");
+  fs.writeFileSync(path.join(root, "verified.json"), JSON.stringify([{ id: "tiny", ref: REF, openrig: "0.6.1", runtimes: { codex: "0.159" } }]));
+  await run(reg, authorRepo());
+  s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
+  assert.equal(s.install.status, "launch tested on OpenRig 0.6.1");
+  assert.deepEqual(s.install.launch_tested, { openrig: "0.6.1", runtimes: { codex: "0.159" } });
 });
 
 test("the real parser loader fails loudly on a version it is not pinned to", async () => {
