@@ -15,11 +15,11 @@
   "license": "Apache-2.0",
   "source": {
     "repo": "https://github.com/mvschwarz/openrig",
-    "ref": "f6e5df150b790ed534f8a7fdbc2bde16e994634a",
+    "ref": "d83bbebe97430c3f2777226fecc089d31e276aa8",
     "spec": "packages/daemon/specs/rigs/focused/pm-team/rig.yaml",
     "spec_dir": "packages/daemon/specs/rigs/focused/pm-team",
-    "blob_base": "https://github.com/mvschwarz/openrig/blob/f6e5df150b790ed534f8a7fdbc2bde16e994634a/",
-    "tree_url": "https://github.com/mvschwarz/openrig/tree/f6e5df150b790ed534f8a7fdbc2bde16e994634a",
+    "blob_base": "https://github.com/mvschwarz/openrig/blob/d83bbebe97430c3f2777226fecc089d31e276aa8/",
+    "tree_url": "https://github.com/mvschwarz/openrig/tree/d83bbebe97430c3f2777226fecc089d31e276aa8",
     "bundle": null
   },
   "parsed_by": {
@@ -548,8 +548,14 @@
     ]
   },
   "install": {
-    "launch_tested": null,
-    "status": "parsed, not launch-tested",
+    "launch_tested": {
+      "openrig": "0.6.1",
+      "runtimes": {
+        "codex": "0.159.0",
+        "claude-code": "not recorded"
+      }
+    },
+    "status": "launch tested on OpenRig 0.6.1",
     "procedure_note": "This procedure was exercised end to end on OpenRig 0.6.1 with the first-project rig on a clean VPS instance.",
     "steps": [
       {
@@ -558,7 +564,7 @@
       },
       {
         "label": "Pin the exact reviewed revision",
-        "command": "git -C openrig checkout f6e5df150b790ed534f8a7fdbc2bde16e994634a"
+        "command": "git -C openrig checkout d83bbebe97430c3f2777226fecc089d31e276aa8"
       },
       {
         "label": "Make a stable project directory for the rig",
