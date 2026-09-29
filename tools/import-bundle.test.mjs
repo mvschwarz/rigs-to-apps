@@ -14,6 +14,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { importBundle, loadOpenRigParser, LIMITS } from "./import-bundle.mjs";
 
 const REF = "a".repeat(40);
@@ -270,6 +272,22 @@ test("the licence links to the repo's own licence file at the pinned commit when
   await run(reg, authorRepo((repo) => fs.writeFileSync(path.join(repo, "LICENSE"), "MIT License\n")));
   const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
   assert.equal(s.license_url, `https://github.com/test-author/tiny/blob/${REF}/LICENSE`);
+});
+
+test("the CLI runs when invoked through a symlinked path (macOS /tmp -> /private/tmp)", () => {
+  // QA-found: the run-as-CLI guard compared argv[1] as given against the
+  // realpath'd module URL, so a symlinked invocation path skipped main() and
+  // EXITED 0 HAVING DONE NOTHING — a check that cannot fail. Invoked with no
+  // arguments through a symlink, the CLI must refuse loudly like it does
+  // through its real path.
+  const tools = path.dirname(fileURLToPath(import.meta.url));
+  const alias = path.join(tmp("rigsto-alias-"), "tools");
+  fs.symlinkSync(tools, alias, "dir");
+  for (const script of [path.join(tools, "import-bundle.mjs"), path.join(alias, "import-bundle.mjs")]) {
+    const r = spawnSync(process.execPath, [script], { encoding: "utf8" });
+    assert.equal(r.status, 1, `${script === path.join(alias, "import-bundle.mjs") ? "symlinked" : "real"} path exited ${r.status} — silent success`);
+    assert.match(r.stdout, /^FAIL: usage: import-bundle\.mjs/);
+  }
 });
 
 test("the real parser loader fails loudly on a version it is not pinned to", async () => {

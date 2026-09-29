@@ -564,7 +564,16 @@ async function main() {
   return `OK ${r.id} ${r.ref}`;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Run as a CLI only when invoked directly. Compare REAL paths on both sides:
+// import.meta.url is already realpath'd by Node, so comparing it with argv[1]
+// as typed made a symlinked invocation (macOS /tmp -> /private/tmp) skip
+// main() and exit 0 having done nothing — a check that could not fail.
+const invokedDirectly = (() => {
+  if (!process.argv[1]) return false;
+  try { return fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url)); }
+  catch { return false; }
+})();
+if (invokedDirectly) {
   main().then((m) => { console.log(m); process.exit(0); }, (e) => {
     console.log(`FAIL: ${e instanceof Fail ? e.message : String(e && e.message || e)}`);
     process.exit(1);
