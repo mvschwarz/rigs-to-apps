@@ -30,7 +30,7 @@
     "showcase": {
       "src": "showcase.mp4",
       "poster": "showcase.png",
-      "caption": "A 6-second film this factory's own agents made from the starter brief, on the test models: a Blender still of a wireframe icosphere with a slow push-in and a title. The object itself does not move.",
+      "caption": "A 6-second film this factory's own agents made from an independent QA test brief, on the test models: a Blender still of a wireframe icosphere with a slow push-in and a title. The object itself does not move.",
       "version": "0.1.5"
     }
   }
