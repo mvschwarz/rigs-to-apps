@@ -13,6 +13,7 @@
     "url": "https://github.com/mvschwarz/openrig"
   },
   "license": "Apache-2.0",
+  "license_url": "https://github.com/mvschwarz/openrig/blob/d83bbebe97430c3f2777226fecc089d31e276aa8/LICENSE",
   "source": {
     "repo": "https://github.com/mvschwarz/openrig",
     "ref": "d83bbebe97430c3f2777226fecc089d31e276aa8",
@@ -600,10 +601,21 @@
         "openrig": "0.6.1",
         "codex": "0.159"
       },
-      "path": ".codex/rules/openrig.rules",
-      "text": "prefix_rule(\n    pattern = [\"rig\"],\n    decision = \"allow\",\n    justification = \"Allow OpenRig coordination commands\",\n)\n",
-      "effect": "Commands that start with `rig` run outside the Codex sandbox without a prompt. Everything else stays sandboxed with the network off — a plain curl to the daemon still fails. It is a command exception, not a network rule.",
-      "trust": "Codex loads rules only from a trusted project, at startup: add the file, then restart the rig. A rules file in an untrusted project does nothing."
+      "files": [
+        {
+          "path": ".codex/config.toml",
+          "as_tested": true,
+          "text": "approval_policy = \"never\"\nsandbox_mode = \"workspace-write\"\n[sandbox_workspace_write]\nnetwork_access = false\n"
+        },
+        {
+          "path": ".codex/rules/openrig.rules",
+          "as_tested": false,
+          "note": "Equivalent to the tested rule: same pattern and decision. The tested file's justification named the test host, and it also carried inline match/not_match self-test examples; both are omitted here.",
+          "text": "prefix_rule(\n    pattern = [\"rig\"],\n    decision = \"allow\",\n    justification = \"Allow OpenRig coordination commands\",\n)\n"
+        }
+      ],
+      "effect": "Tested configuration: with these two files, rig commands run outside the Codex sandbox without a prompt, and other commands stay sandboxed with network off (tested on OpenRig 0.6.1 + Codex 0.159). In that test a plain curl to the daemon still failed.",
+      "trust": "Codex loads these only from a trusted project, at startup: add both files, then restart the rig. Files in an untrusted project do nothing."
     }
   }
 }

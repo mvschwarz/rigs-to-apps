@@ -46,15 +46,21 @@ const SNAPSHOT_VERSION = 1;
 // one listing being launch-tested (that is verified.json, per id + commit).
 export const TESTED_PROCEDURE = { openrig: "0.6.1", against: "the first-project rig on a clean VPS instance" };
 
-// QA-tested (OpenRig 0.6.1 + Codex 0.159) project-local rule letting Codex
-// members run `rig` commands outside the sandbox. Only `rig` is excepted:
-// everything else stays sandboxed with network off. Not a network rule.
-export const CODEX_RULE = {
+// The QA-tested Codex coordination setup (OpenRig 0.6.1 + Codex 0.159) is TWO
+// project files. The config file is what keeps other commands sandboxed with
+// network off; the rule alone promises nothing about the network, so the
+// effect is stated only for the two together, as tested.
+export const CODEX_SETUP = {
   tested_on: { openrig: "0.6.1", codex: "0.159" },
-  path: ".codex/rules/openrig.rules",
-  text: 'prefix_rule(\n    pattern = ["rig"],\n    decision = "allow",\n    justification = "Allow OpenRig coordination commands",\n)\n',
-  effect: "Commands that start with `rig` run outside the Codex sandbox without a prompt. Everything else stays sandboxed with the network off — a plain curl to the daemon still fails. It is a command exception, not a network rule.",
-  trust: "Codex loads rules only from a trusted project, at startup: add the file, then restart the rig. A rules file in an untrusted project does nothing.",
+  files: [
+    { path: ".codex/config.toml", as_tested: true,
+      text: 'approval_policy = "never"\nsandbox_mode = "workspace-write"\n[sandbox_workspace_write]\nnetwork_access = false\n' },
+    { path: ".codex/rules/openrig.rules", as_tested: false,
+      note: "Equivalent to the tested rule: same pattern and decision. The tested file's justification named the test host, and it also carried inline match/not_match self-test examples; both are omitted here.",
+      text: 'prefix_rule(\n    pattern = ["rig"],\n    decision = "allow",\n    justification = "Allow OpenRig coordination commands",\n)\n' },
+  ],
+  effect: "Tested configuration: with these two files, rig commands run outside the Codex sandbox without a prompt, and other commands stay sandboxed with network off (tested on OpenRig 0.6.1 + Codex 0.159). In that test a plain curl to the daemon still failed.",
+  trust: "Codex loads these only from a trusted project, at startup: add both files, then restart the rig. Files in an untrusted project do nothing.",
 };
 
 // Bounds. Every one is a refusal with a named reason, never a silent truncation.
@@ -437,6 +443,12 @@ export async function importBundle({
   // this exact id AND commit. A new ref loses the stamp until it is re-run.
   const launchTested = readVerified(registryRoot).find((v) => v.id === d.id && v.ref === d.source.ref) ?? null;
 
+  // License link: the repository's own licence file at the pinned commit if
+  // there is one at its root; otherwise the SPDX page for the declared id.
+  const licenceFile = fs.readdirSync(root).filter((n) => /^(licen[cs]e|copying)(\.(md|txt|rst))?$/i.test(n) && fs.statSync(path.join(root, n)).isFile()).sort(byStr)[0];
+  const licenseUrl = licenceFile ? `${d.source.repo}/blob/${d.source.ref}/${licenceFile}`
+    : d.license === "NOASSERTION" ? null : `https://spdx.org/licenses/${d.license}.html`;
+
   const dir = d.source.repo.split("/").pop();
   const specAbs = `"$PWD/${dir}/${d.source.spec}"`;
   const snapshot = {
@@ -447,6 +459,7 @@ export async function importBundle({
     tags: [...d.tags],
     author: { name: d.author.name, url: d.author.url },
     license: d.license,
+    license_url: licenseUrl,
     source: {
       repo: d.source.repo,
       ref: d.source.ref,
@@ -513,7 +526,7 @@ export async function importBundle({
       },
       // Stated plainly; no workaround recipe is published.
       update: "OpenRig 0.6.1 can't update a running rig to a newer source commit in place. Re-running rig up refuses a name collision while the rig runs, and after a plain down it creates a duplicate rig.",
-      codex_coordination: codexAtFloor.length ? CODEX_RULE : null,
+      codex_coordination: codexAtFloor.length ? CODEX_SETUP : null,
     },
   };
 

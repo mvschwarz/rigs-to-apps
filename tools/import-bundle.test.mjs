@@ -114,9 +114,12 @@ test("valid import: topology, agents and imports, files and risks come from the 
   assert.match(codexRisk.detail, /core\.helper/);
   assert.ok(!/core\.lead/.test(codexRisk.detail), "a Claude Code member at floor was flagged — it coordinates out of the box");
   assert.ok(!/yolo|danger-full-access/i.test(JSON.stringify(s)), "the retired yolo line is still in the snapshot");
-  assert.equal(s.install.codex_coordination.path, ".codex/rules/openrig.rules");
-  assert.match(s.install.codex_coordination.text, /pattern = \["rig"\]/);
-  assert.match(s.install.codex_coordination.effect, /not a network rule/);
+  const files = s.install.codex_coordination.files;
+  assert.deepEqual(files.map((f) => f.path), [".codex/config.toml", ".codex/rules/openrig.rules"], "the tested setup is TWO files");
+  assert.match(files[0].text, /approval_policy = "never"[\s\S]*sandbox_mode = "workspace-write"[\s\S]*\[sandbox_workspace_write\][\s\S]*network_access = false/);
+  assert.match(files[1].text, /pattern = \["rig"\],\n    decision = "allow"/);
+  assert.match(s.install.codex_coordination.effect, /^Tested configuration: with these two files,/);
+  assert.equal(s.license_url, "https://spdx.org/licenses/MIT.html", "no licence file in the fixture repo -> the SPDX page");
   assert.deepEqual(s.install.restart.steps.map((x) => x.command), ["rig down tiny --snapshot", "rig up tiny --existing --yes"]);
   assert.equal(s.install.restart.label, "Restart the rig (keeps its agents, files and workspace)");
   assert.ok(!/configuration change/i.test(JSON.stringify(s.install)), "restart is still described as applying a config change");
@@ -247,6 +250,13 @@ test("a declared permission_policy is shown verbatim and clears the floor risk",
   assert.deepEqual(s.launch_posture.members.map((m) => `${m.posture}:${m.policy}`), ["declared:builtin:coordinated", "declared:builtin:coordinated"]);
   assert.ok(!s.risks.some((r) => r.id === "codex-floor"));
   assert.equal(s.install.codex_coordination, null, "a Codex rule was shown for a listing with no Codex member at floor");
+});
+
+test("the licence links to the repo's own licence file at the pinned commit when it has one", async () => {
+  const reg = registry();
+  await run(reg, authorRepo((repo) => fs.writeFileSync(path.join(repo, "LICENSE"), "MIT License\n")));
+  const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
+  assert.equal(s.license_url, `https://github.com/test-author/tiny/blob/${REF}/LICENSE`);
 });
 
 test("the real parser loader fails loudly on a version it is not pinned to", async () => {
