@@ -113,9 +113,11 @@ test("valid import: topology, agents and imports, files and risks come from the 
   const codexRisk = s.risks.find((r) => r.id === "codex-floor");
   assert.match(codexRisk.detail, /core\.helper/);
   assert.ok(!/core\.lead/.test(codexRisk.detail), "a Claude Code member at floor was flagged — it coordinates out of the box");
-  // builtin:yolo appears ONLY as the labelled tested fact — never as a default or a recommendation
-  assert.match(codexRisk.detail, /Tested to coordinate only with permission_policy: builtin:yolo \(Codex runs with danger-full-access and no approvals; broad\)/);
-  assert.ok(!/recommend|we suggest|you should|set permission_policy/i.test(codexRisk.detail), "the yolo fact is phrased as advice");
+  assert.ok(!/yolo|danger-full-access/i.test(JSON.stringify(s)), "the retired yolo line is still in the snapshot");
+  assert.equal(s.install.codex_coordination.path, ".codex/rules/openrig.rules");
+  assert.match(s.install.codex_coordination.text, /pattern = \["rig"\]/);
+  assert.match(s.install.codex_coordination.effect, /not a network rule/);
+  assert.deepEqual(s.install.restart.steps.map((x) => x.command), ["rig down tiny --snapshot", "rig up tiny --existing --yes"]);
   assert.match(s.risks[0].detail, /gpt-6-astra/);
   assert.equal(s.install.status, "parsed, not launch-tested");
   assert.equal(s.install.launch_tested, null);
@@ -240,6 +242,7 @@ test("a declared permission_policy is shown verbatim and clears the floor risk",
   const s = JSON.parse(fs.readFileSync(reg.snapshotPath, "utf8"));
   assert.deepEqual(s.launch_posture.members.map((m) => `${m.posture}:${m.policy}`), ["declared:builtin:coordinated", "declared:builtin:coordinated"]);
   assert.ok(!s.risks.some((r) => r.id === "codex-floor"));
+  assert.equal(s.install.codex_coordination, null, "a Codex rule was shown for a listing with no Codex member at floor");
 });
 
 test("the real parser loader fails loudly on a version it is not pinned to", async () => {

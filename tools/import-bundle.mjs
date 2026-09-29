@@ -46,6 +46,17 @@ const SNAPSHOT_VERSION = 1;
 // one listing being launch-tested (that is verified.json, per id + commit).
 export const TESTED_PROCEDURE = { openrig: "0.6.1", against: "the first-project rig on a clean VPS instance" };
 
+// QA-tested (OpenRig 0.6.1 + Codex 0.159) project-local rule letting Codex
+// members run `rig` commands outside the sandbox. Only `rig` is excepted:
+// everything else stays sandboxed with network off. Not a network rule.
+export const CODEX_RULE = {
+  tested_on: { openrig: "0.6.1", codex: "0.159" },
+  path: ".codex/rules/openrig.rules",
+  text: 'prefix_rule(\n    pattern = ["rig"],\n    decision = "allow",\n    justification = "Allow OpenRig coordination commands",\n)\n',
+  effect: "Commands that start with `rig` run outside the Codex sandbox without a prompt. Everything else stays sandboxed with the network off — a plain curl to the daemon still fails. It is a command exception, not a network rule.",
+  trust: "Codex loads rules only from a trusted project, at startup: add the file, then restart the rig. A rules file in an untrusted project does nothing.",
+};
+
 // Bounds. Every one is a refusal with a named reason, never a silent truncation.
 export const LIMITS = {
   checkoutFiles: 20000,
@@ -403,11 +414,12 @@ export async function importBundle({
   const codexAtFloor = pods.flatMap((p) => p.members
     .filter((m) => m.permission_policy === null && (m.runtime ?? agentRuntime(m.agent)) === "codex")
     .map((m) => `${p.id}.${m.id}`));
-  // Confirmed by QA on OpenRig 0.6.1 and stated ONLY as a labelled fact:
-  // builtin:yolo was the one tested policy under which Codex members
-  // coordinated. It is broad; it is never the default or a recommendation.
-  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members can't coordinate at the default posture",
-    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy. Default posture: agents run and answer, but can't reach the rig daemon, so no coordination. Tested to coordinate only with permission_policy: builtin:yolo (Codex runs with danger-full-access and no approvals; broad).` });
+  // Codex coordination, as QA tested it (OpenRig 0.6.1 + Codex 0.159): a
+  // project-local Codex command rule lets `rig` commands run outside the Codex
+  // sandbox; everything else stays sandboxed with network off. A manual 0.6.1
+  // setup — stated as tested, not as a guarantee of any later version.
+  if (codexAtFloor.length) risks.push({ id: "codex-floor", label: "Codex members need a command rule to coordinate",
+    detail: `${codexAtFloor.join(", ")} run${codexAtFloor.length === 1 ? "s" : ""} on Codex with no permission_policy. Default posture: members run and answer, but can't reach the rig daemon (Codex sandbox). The tested fix is a project-local Codex command rule — see "Let Codex members coordinate".` });
   risks.push({ id: "no-author-auth", label: "Not an author signature", detail: "rigs.to pins and shows an exact commit. That proves which files you get, not who wrote them." });
 
   // Each member's EFFECTIVE model pin — the member's own, else its AgentSpec
@@ -488,8 +500,18 @@ export async function importBundle({
         { label: "Preview — runs the version preflight and writes a record; launches nothing", command: `rig up "$PWD/${dir}/${bundle.path}" --cwd "$PWD/my-project" --plan` },
         { label: "Apply and launch — starts the rig's agents in my-project", command: `rig up "$PWD/${dir}/${bundle.path}" --cwd "$PWD/my-project" --yes` },
       ] : null,
-      // No update recipe is published until one that preserves state is proven.
-      update: "being tested",
+      // Tested (OpenRig 0.6.1): restarting the SAME rig preserves its seats.
+      // Moving a launched rig to a NEW source commit is still being tested.
+      restart: {
+        tested_on: TESTED_PROCEDURE.openrig,
+        note: "Apply a configuration change by restarting the same rig; its seats are preserved.",
+        steps: [
+          { label: "Stop the rig and keep a snapshot", command: `rig down ${spec.name} --snapshot` },
+          { label: "Start it again from that snapshot", command: `rig up ${spec.name} --existing --yes` },
+        ],
+      },
+      update: "Updating a launched rig to a new source commit is being tested.",
+      codex_coordination: codexAtFloor.length ? CODEX_RULE : null,
     },
   };
 

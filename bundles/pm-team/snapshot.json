@@ -212,8 +212,8 @@
     },
     {
       "id": "codex-floor",
-      "label": "Codex members can't coordinate at the default posture",
-      "detail": "pm.researcher runs on Codex with no permission_policy. Default posture: agents run and answer, but can't reach the rig daemon, so no coordination. Tested to coordinate only with permission_policy: builtin:yolo (Codex runs with danger-full-access and no approvals; broad)."
+      "label": "Codex members need a command rule to coordinate",
+      "detail": "pm.researcher runs on Codex with no permission_policy. Default posture: members run and answer, but can't reach the rig daemon (Codex sandbox). The tested fix is a project-local Codex command rule — see \"Let Codex members coordinate\"."
     },
     {
       "id": "no-author-auth",
@@ -574,6 +574,30 @@
       }
     ],
     "bundle_steps": null,
-    "update": "being tested"
+    "restart": {
+      "tested_on": "0.6.1",
+      "note": "Apply a configuration change by restarting the same rig; its seats are preserved.",
+      "steps": [
+        {
+          "label": "Stop the rig and keep a snapshot",
+          "command": "rig down pm-team --snapshot"
+        },
+        {
+          "label": "Start it again from that snapshot",
+          "command": "rig up pm-team --existing --yes"
+        }
+      ]
+    },
+    "update": "Updating a launched rig to a new source commit is being tested.",
+    "codex_coordination": {
+      "tested_on": {
+        "openrig": "0.6.1",
+        "codex": "0.159"
+      },
+      "path": ".codex/rules/openrig.rules",
+      "text": "prefix_rule(\n    pattern = [\"rig\"],\n    decision = \"allow\",\n    justification = \"Allow OpenRig coordination commands\",\n)\n",
+      "effect": "Commands that start with `rig` run outside the Codex sandbox without a prompt. Everything else stays sandboxed with the network off — a plain curl to the daemon still fails. It is a command exception, not a network rule.",
+      "trust": "Codex loads rules only from a trusted project, at startup: add the file, then restart the rig. A rules file in an untrusted project does nothing."
+    }
   }
 }

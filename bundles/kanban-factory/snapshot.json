@@ -214,6 +214,21 @@
       }
     ],
     "bundle_steps": null,
-    "update": "being tested"
+    "restart": {
+      "tested_on": "0.6.1",
+      "note": "Apply a configuration change by restarting the same rig; its seats are preserved.",
+      "steps": [
+        {
+          "label": "Stop the rig and keep a snapshot",
+          "command": "rig down kanban-factory --snapshot"
+        },
+        {
+          "label": "Start it again from that snapshot",
+          "command": "rig up kanban-factory --existing --yes"
+        }
+      ]
+    },
+    "update": "Updating a launched rig to a new source commit is being tested.",
+    "codex_coordination": null
   }
 }
